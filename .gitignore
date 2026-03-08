@@ -1,0 +1,10 @@
+# data folder to ignore
+data
+# ignore all .ipynb files
+*.ipynb
+
+.vscode/
+__pycache__/
+
+# ignore cache file
+*.npy

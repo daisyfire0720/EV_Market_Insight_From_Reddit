@@ -1,70 +1,106 @@
 # EV Reddit BERTopic Pipeline
 
-This project provides Python runners for BERTopic on EV-related Reddit datasets.
+This project processes EV-related Reddit data in three stages:
 
-## Scripts
+1. Topic extraction from raw Reddit submissions/comments.
+2. Rule-based topic refinement.
+3. LLM refinement to produce human-readable topic labels and summaries.
 
-- `code/run_ev_reddit.py`
-: Runs BERTopic for one subreddit dataset (default: `r/electricvehicles` from `data/data_evforum`).
+Core modules live in `src/ev_bertopic/`.
 
-- `code/run_ev_other.py`
-: Runs BERTopic for EV-related content across multiple non-EV subreddits in `data/data_other`.
+## 📁 Standard Project Layout
 
-- `code/run_ev_all.py`
-: Runs BERTopic across all EV files in `data/data_all` and supports per-subreddit source-tag mapping.
+This repo now follows the common Python project structure:
 
-Core processing lives in `code/ev_bertopic/`.
+- `src/ev_bertopic/`: package code (pipelines)
+- `scripts/`: executable runner scripts
+- `data/`: raw and filtered Reddit datasets
+- `output/`: extraction/refinement/exploration outputs
+- `code/`: notebooks and ad-hoc analysis workspace
 
-## Run
-
-Run from the `code/` folder:
-
-```bash
-python run_ev_reddit.py
-python run_ev_other.py
-python run_ev_all.py
-```
-
-Examples:
+Install package in editable mode (recommended):
 
 ```bash
-# Single subreddit dataset
-python run_ev_reddit.py --submissions ../data/data_evforum/electricvehicles_submissions.csv --comments ../data/data_evforum/electricvehicles_comments.csv
-
-# Subset of "other" subreddits
-python run_ev_other.py --subreddits carbuying autos
-
-# All datasets with source-tag mapping overrides
-python run_ev_all.py --source-tag electricvehicles=evforum carbuying=carbuying
+pip install -e .
 ```
 
-## Key Outputs
+## Pipeline Stages
 
-Each runner writes 3 CSV files to its `--output-dir`:
+### 1) 📥 Extract Topics From Raw Reddit Data
 
-- `*_yearly_stats.csv`
-- `*_topic_info.csv`
-- `*_documents_topics.csv`
+Use BERTopic extraction runners:
 
-## Added Columns
+- `scripts/run_ev_reddit_extract.py`
+- `scripts/run_ev_other_extract.py`
+- `scripts/run_ev_all_extract.py`
 
-`*_documents_topics.csv` includes:
+`run_ev_all_extract.py` reads from `data/data_all` and writes extraction outputs to `output/topic_extraction` by default.
 
-- `topic`
-- `topic_probability_max`
+Main extraction outputs:
 
-`topic_probability_max` is populated for both BERTopic probability shapes:
+- `all_subreddits_yearly_stats.csv`
+- `all_subreddits_topic_info.csv`
+- `all_subreddits_documents_topics.csv`
 
-- 2D probability matrix: uses row-wise max
-- 1D probability vector: uses the value directly
+### 2) 🧠 Rule-Based Topic Refinement
 
-`*_topic_info.csv` includes:
+Rule-based refinement is implemented in `src/ev_bertopic/topic_refine_pipeline.py`.
 
-- `topic_label_generated`
+It consumes extraction topic info and generates cleaned labels/keyword columns.
 
-`topic_label_generated` is generated from BERTopic's `model.generate_topic_labels(...)` with a fallback to top topic words if needed.
+### 3) 🤖 LLM Topic Refinement
 
-## Notes
+LLM refinement is implemented in `src/ev_bertopic/topic_llm_pipeline.py`.
 
-- `run_ev_all.py` default source-tag mapping includes `electricvehicles=evforum`.
-- If a comments file is missing for a matched submissions file, the scripts continue with an empty comments table for that source.
+It consumes the Stage 2 refined CSV and produces final human-readable topic labels and summaries.
+
+## 🚀 End-to-End Refinement Runner
+
+Use `scripts/run_ev_all_refine.py` to chain Stage 2 and Stage 3 for the `run_ev_all_extract.py` extraction output.
+
+It performs:
+
+1. Read extraction output: `all_subreddits_topic_info.csv`.
+2. Run rule-based refinement and save intermediate CSV.
+3. Run LLM refinement and save final CSV.
+
+Run from the repository root:
+
+```bash
+python scripts/run_ev_all_refine.py
+```
+
+Example:
+
+```bash
+python scripts/run_ev_all_refine.py \
+	--extraction-dir output/topic_extraction \
+	--refinement-dir output/topic_refinement
+```
+
+Default outputs:
+
+- 🟡 Intermediate: `output/topic_refinement/all_subreddits_topic_labels_refined.csv`
+- ✅ Final: `output/topic_refinement/all_subreddits_topic_labels_llm.csv`
+- 📝 Gemini call log: `output/topic_refinement/gemini_call_log_all_subreddits.json`
+
+## 📊 Explore Pipeline
+
+`src/ev_bertopic/topic_explore_pipeline.py` is intended to read final cleaned topic results directly (preferably LLM outputs) and does not need to run rule-based refinement classes internally.
+
+If `topic_label_llm` is present, exploration uses it as the working topic label.
+
+## ⚡ Quick Start Commands
+
+```bash
+# 1) 📥 Extract topics from raw Reddit data
+python scripts/run_ev_all_extract.py
+
+# 2) 🧠🤖 Run rule-based + LLM refinement chain (saves intermediate and final outputs)
+python scripts/run_ev_all_refine.py
+```
+
+## ℹ️ Notes
+
+- `run_ev_all_extract.py` default source-tag mapping includes `electricvehicles=evforum`.
+- If a comments file is missing for a matched submissions file, extraction continues with an empty comments table for that source.

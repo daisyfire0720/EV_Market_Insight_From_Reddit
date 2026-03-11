@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ev_bertopic.pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
+from ev_bertopic.topic_extraction_pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,16 +20,16 @@ def parse_args() -> argparse.Namespace:
         description="Run BERTopic pipeline for EV-related submissions + comments from other car subreddits.",
         epilog=(
             "Examples:\n"
-            "  python run_ev_other.py\n"
-            "  python run_ev_other.py --subreddits carbuying\n"
-            "  python run_ev_other.py --subreddits carbuying, autos --output-dir ../data/data_other/output/topics"
+            "  python run_ev_other_extract.py\n"
+            "  python run_ev_other_extract.py --subreddits carbuying\n"
+            "  python run_ev_other_extract.py --subreddits carbuying, autos\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--input-folder",
         type=str,
-        default="../data/data_other",
+        default="data/data_other",
         help="Folder containing *_submissions_ev.csv and *_comments_ev.csv files.",
     )
     parser.add_argument(
@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="../data/data_other/output/topics",
+        default="output/topic_extraction",
         help="Directory to write output CSV files.",
     )
     parser.add_argument(
@@ -96,7 +96,7 @@ def _parse_target_subreddits(args: argparse.Namespace) -> list[str]:
     return ordered_unique
 
 
-def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 6) -> pd.Series:
+def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 8) -> pd.Series:
     """Generate labels from BERTopic and align them to topics_df by topic id."""
     if "Topic" not in topics_df.columns:
         return pd.Series([np.nan] * len(topics_df), index=topics_df.index)
@@ -215,7 +215,7 @@ def main() -> None:
         all_docs_df["topic_probability_max"] = np.nan
 
     topics_df = pipeline.model.get_topic_info()
-    topics_df["topic_label_generated"] = generate_topic_labels(pipeline.model, topics_df)
+    topics_df["topic_label_bert"] = generate_topic_labels(pipeline.model, topics_df)
     yearly_stats = (
         all_docs_df.groupby("created_year", dropna=False)
         .agg(

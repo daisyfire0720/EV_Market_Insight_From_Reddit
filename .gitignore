@@ -1,5 +1,6 @@
 # data folder to ignore
 data
+output
 # ignore all .ipynb files
 *.ipynb
 
@@ -7,4 +8,5 @@ data
 __pycache__/
 
 # ignore cache file
+code/cache/
 *.npy

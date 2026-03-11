@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import os
 import re
+import html
 import json
 import hashlib
 import inspect
@@ -100,7 +101,19 @@ _USER_RE = re.compile(r"\bu/[A-Za-z0-9_-]+\b")
 _SUB_RE = re.compile(r"\br/[A-Za-z0-9_-]+\b")
 _WHITESPACE_RE = re.compile(r"\s+")
 _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
-_HTML_ENTITY_RE = re.compile(r"&(?:amp|lt|gt|quot|#39);")
+_HTML_ENTITY_RE = re.compile(r"&(?:amp|lt|gt);")
+_ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\ufeff]")
+
+_UNICODE_PUNCT_TRANSLATION = str.maketrans({
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2013": "-",
+    "\u2014": "-",
+    "\u2026": "...",
+    "\u00a0": " ",
+})
 
 _DEFAULT_NEGATIONS = {"no", "nor", "not", "never", "without", "n't"}
 
@@ -133,6 +146,17 @@ def _ensure_dir(p: str | Path) -> Path:
     return p
 
 
+def _repair_common_mojibake(text: str) -> str:
+    # Repair common UTF-8 decoded as Latin-1 artifacts (e.g., "â€™", "Ã").
+    if not any(marker in text for marker in ("\u00e2", "\u00c3", "\u00c2")):
+        return text
+    try:
+        repaired = text.encode("latin1", errors="ignore").decode("utf-8", errors="ignore")
+        return repaired or text
+    except Exception:
+        return text
+
+
 def clean_reddit_text(text: str) -> str:
     """
     Reddit-aware text cleaning:
@@ -146,6 +170,15 @@ def clean_reddit_text(text: str) -> str:
     if text is None:
         return ""
     t = str(text)
+
+    # Normalize common mojibake and unicode punctuation artifacts.
+    t = _repair_common_mojibake(t)
+    t = html.unescape(t)
+    t = t.replace("\\'", "'").replace('\\"', '"')
+    t = t.translate(_UNICODE_PUNCT_TRANSLATION)
+    # Preserve contractions like I`m / they`re before removing markdown ticks.
+    t = re.sub(r"(?<=\w)`(?=\w)", "'", t)
+    t = _ZERO_WIDTH_RE.sub(" ", t)
 
     t = _MD_CODEBLOCK_RE.sub(" ", t)
     t = _MD_QUOTE_RE.sub(" ", t)

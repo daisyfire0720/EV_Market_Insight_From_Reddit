@@ -20,16 +20,16 @@ def parse_args() -> argparse.Namespace:
         description="Run BERTopic pipeline for all EV-related subreddit files in data_all.",
         epilog=(
             "Examples:\n"
-            "  python run_ev_all.py\n"
-            "  python run_ev_all.py --input-folder ../data/data_all --output-dir ../data/data_all/output/topics\n"
-            "  python run_ev_all.py --source-tag electricvehicles=evforum carbuying=carbuying"
+            "  python run_ev_all_extract.py\n"
+            "  python run_ev_all_extract.py --input-folder data/data_all --output-dir output/topic_extraction\n"
+            "  python run_ev_all_extract.py --source-tag electricvehicles=evforum carbuying=carbuying"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--input-folder",
         type=str,
-        default="../data/data_all",
+        default="data/data_all",
         help="Folder containing *_submissions_ev.csv and *_comments_ev.csv files.",
     )
     parser.add_argument(
@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="../data/data_all/output/topics",
+        default="output/topic_extraction",
         help="Directory to write output CSV files.",
     )
     parser.add_argument(
@@ -86,8 +86,7 @@ def _parse_source_tag_map(raw_items: list[str]) -> dict[str, str]:
     return mapping
 
 
-def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 6) -> pd.Series:
-    """Generate labels from BERTopic and align them to topics_df by topic id."""
+def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 8) -> pd.Series:
     if "Topic" not in topics_df.columns:
         return pd.Series([np.nan] * len(topics_df), index=topics_df.index)
 
@@ -185,7 +184,7 @@ def main() -> None:
         all_docs_df["topic_probability_max"] = np.nan
 
     topics_df = pipeline.model.get_topic_info()
-    topics_df["topic_label_generated"] = generate_topic_labels(pipeline.model, topics_df)
+    topics_df["topic_label_bert"] = generate_topic_labels(pipeline.model, topics_df)
     yearly_stats = (
         all_docs_df.groupby(["source_tag", "created_year"], dropna=False)
         .agg(

@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ev_bertopic.pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
+from ev_bertopic.topic_extraction_pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,28 +20,28 @@ def parse_args() -> argparse.Namespace:
         description="Run BERTopic pipeline for r/electricvehicles submissions + comments.",
         epilog=(
             "Examples:\n"
-            "  python run_ev_reddit.py\n"
-            "  python run_ev_reddit.py --submissions ../data/data_evforum/electricvehicles_submissions.csv "
-            "--comments ../data/data_evforum/electricvehicles_comments.csv --output-dir ../data/data_evforum/output/topics"
+            "  python run_ev_reddit_extract.py\n"
+            "  python run_ev_reddit_extract.py --submissions data/data_evforum/electricvehicles_submissions.csv "
+            "--comments data/data_evforum/electricvehicles_comments.csv --output-dir output/topic_extraction"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--submissions",
         type=str,
-        default="../data/data_evforum/electricvehicles_submissions.csv",
+        default="data/data_evforum/electricvehicles_submissions.csv",
         help="Path to r/electricvehicles submissions CSV.",
     )
     parser.add_argument(
         "--comments",
         type=str,
-        default="../data/data_evforum/electricvehicles_comments.csv",
+        default="data/data_evforum/electricvehicles_comments.csv",
         help="Path to r/electricvehicles comments CSV.",
     )
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="../data/data_evforum/output/topics",
+        default="output/topic_extraction",
         help="Directory to write output CSV files.",
     )
     parser.add_argument(
@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 6) -> pd.Series:
+def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int = 8) -> pd.Series:
     """Generate labels from BERTopic and align them to topics_df by topic id."""
     if "Topic" not in topics_df.columns:
         return pd.Series([np.nan] * len(topics_df), index=topics_df.index)
@@ -123,7 +123,7 @@ def main() -> None:
         canonical_df["topic_probability_max"] = np.nan
 
     topics_df = pipeline.model.get_topic_info()
-    topics_df["topic_label_generated"] = generate_topic_labels(pipeline.model, topics_df)
+    topics_df["topic_label_bert"] = generate_topic_labels(pipeline.model, topics_df)
     yearly_stats = (
         canonical_df.groupby("created_year", dropna=False)
         .agg(

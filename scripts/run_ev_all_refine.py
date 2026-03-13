@@ -11,7 +11,13 @@ This script saves both intermediate and final outputs.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from ev_bertopic.topic_llm_pipeline import TopicLLMConfig, TopicLLMPipeline
 from ev_bertopic.topic_refine_pipeline import TopicRefinementPipeline
@@ -82,6 +88,13 @@ def parse_args() -> argparse.Namespace:
         default="gemini_call_log_all_subreddits.json",
         help="Call log filename saved under refinement-dir.",
     )
+    parser.add_argument(
+        "--embed-device",
+        type=str,
+        default="cuda",
+        choices=["cuda", "cpu"],
+        help="Embedding device for sentence-transformers in LLM refinement.",
+    )
     return parser.parse_args()
 
 
@@ -89,12 +102,16 @@ def main() -> None:
     args = parse_args()
 
     extraction_dir = Path(args.extraction_dir)
+    if not extraction_dir.is_absolute():
+        extraction_dir = PROJECT_ROOT / extraction_dir
     topic_info_path = extraction_dir / args.topic_info_file
 
     if not topic_info_path.exists():
         raise FileNotFoundError(f"Topic info file not found: {topic_info_path}")
 
     refinement_dir = Path(args.refinement_dir)
+    if not refinement_dir.is_absolute():
+        refinement_dir = PROJECT_ROOT / refinement_dir
     refinement_dir.mkdir(parents=True, exist_ok=True)
 
     refined_path = refinement_dir / args.refined_file
@@ -111,6 +128,7 @@ def main() -> None:
     llm_cfg = TopicLLMConfig(
         input_path=str(refined_path),
         output_path=str(llm_path),
+        embed_device=args.embed_device,
         gemini_api_key=args.api_key,
         call_interval_seconds=args.call_interval_seconds,
         daily_call_limit=args.daily_call_limit,

@@ -7,12 +7,18 @@ creates canonical documents, fits BERTopic, and writes analysis outputs.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from ev_bertopic.topic_extraction_pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ev_bertopic.topic_extract_pipeline import BERTopicConfig, RedditBERTopicPipeline, RedditDatasetBuilder
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,6 +62,13 @@ def parse_args() -> argparse.Namespace:
         default="evforum",
         help="Source label to store in canonical output.",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        choices=["cuda", "cpu"],
+        help="Embedding device for sentence-transformers.",
+    )
     return parser.parse_args()
 
 
@@ -89,18 +102,61 @@ def generate_topic_labels(topic_model, topics_df: pd.DataFrame, top_n_words: int
     return topics_df["Topic"].apply(_label_for_topic)
 
 
+def apply_document_sanity_checks(all_docs_df: pd.DataFrame, min_tokens: int) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Remove rows that are invalid for topic modeling and report removal counts."""
+    sanity_stats = {
+        "input_rows": int(len(all_docs_df)),
+        "removed_empty_or_marker": 0,
+        "removed_too_short": 0,
+        "removed_duplicate_doc_id": 0,
+        "output_rows": int(len(all_docs_df)),
+    }
+
+    if all_docs_df.empty:
+        return all_docs_df, sanity_stats
+
+    text = all_docs_df["text_clean"].fillna("").astype(str).str.strip()
+    lowered = text.str.lower()
+    marker_values = {"", "nan", "none", "deleted", "removed", "[deleted]", "[removed]"}
+
+    mask_empty_or_marker = lowered.isin(marker_values)
+    token_counts = text.str.split().str.len().fillna(0).astype(int)
+    mask_too_short = token_counts < int(min_tokens)
+
+    sanity_stats["removed_empty_or_marker"] = int(mask_empty_or_marker.sum())
+    sanity_stats["removed_too_short"] = int((~mask_empty_or_marker & mask_too_short).sum())
+
+    keep_mask = ~(mask_empty_or_marker | mask_too_short)
+    cleaned = all_docs_df.loc[keep_mask].copy()
+
+    if "doc_id" in cleaned.columns:
+        dup_mask = cleaned.duplicated(subset=["doc_id"], keep="first")
+        sanity_stats["removed_duplicate_doc_id"] = int(dup_mask.sum())
+        cleaned = cleaned.loc[~dup_mask].copy()
+
+    sanity_stats["output_rows"] = int(len(cleaned))
+    return cleaned.reset_index(drop=True), sanity_stats
+
+
 def main() -> None:
     args = parse_args()
 
     pd.options.display.float_format = "{:.2f}".format
     pd.options.display.max_columns = None
 
-    cfg = BERTopicConfig()
+    cfg = BERTopicConfig(embedding_device=args.device)
     builder = RedditDatasetBuilder(cfg)
     pipeline = RedditBERTopicPipeline(cfg)
 
-    submissions_df = pd.read_csv(args.submissions)
-    comments_df = pd.read_csv(args.comments)
+    submissions_path = Path(args.submissions)
+    comments_path = Path(args.comments)
+    if not submissions_path.is_absolute():
+        submissions_path = PROJECT_ROOT / submissions_path
+    if not comments_path.is_absolute():
+        comments_path = PROJECT_ROOT / comments_path
+
+    submissions_df = pd.read_csv(submissions_path)
+    comments_df = pd.read_csv(comments_path)
 
     canonical_df = builder.build_canonical_df(
         submissions_df=submissions_df,
@@ -108,6 +164,11 @@ def main() -> None:
         subreddit=args.subreddit,
         source_tag=args.source_tag,
     )
+
+    canonical_df, sanity_stats = apply_document_sanity_checks(canonical_df, min_tokens=cfg.min_tokens)
+    if canonical_df.empty:
+        raise ValueError("No valid documents remain after sanity checks. Adjust filters or inspect source CSV files.")
+
     documents = canonical_df["text_clean"].fillna("").astype(str).tolist()
 
     topics, probs, _embeddings = pipeline.fit_transform(documents)
@@ -137,6 +198,8 @@ def main() -> None:
     )
 
     output_dir = Path(args.output_dir)
+    if not output_dir.is_absolute():
+        output_dir = PROJECT_ROOT / output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
     stats_path = output_dir / "electricvehicles_yearly_stats.csv"
@@ -150,7 +213,14 @@ def main() -> None:
     print(f"Submission rows: {len(submissions_df)}")
     print(f"Comment rows: {len(comments_df)}")
     print(f"Canonical rows: {len(canonical_df)}")
+    print(
+        "Sanity checks removed: "
+        f"empty/markers={sanity_stats['removed_empty_or_marker']}, "
+        f"too_short={sanity_stats['removed_too_short']}, "
+        f"duplicate_doc_id={sanity_stats['removed_duplicate_doc_id']}"
+    )
     print(f"Documents used: {len(documents)}")
+    print(f"Embedding device: {cfg.embedding_device}")
     print(f"Saved yearly stats: {stats_path}")
     print(f"Saved topic info: {topics_path}")
     print(f"Saved documents+topics: {docs_path}")

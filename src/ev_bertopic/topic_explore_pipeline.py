@@ -29,7 +29,7 @@ class TopicHierarchyExplorer:
 	def _topic_text(topic_info: pd.DataFrame) -> pd.Series:
 		def row_text(row: pd.Series) -> str:
 			parts = [
-				str(row.get("topic_label_refined", "")),
+				str(row.get("topic_label_llm", "")),
 				str(row.get("Name", "")),
 				str(row.get("topic_keywords_clean", "")),
 				str(row.get("topic_keybert_clean", "")),
@@ -60,9 +60,9 @@ class TopicHierarchyExplorer:
 					rows.append(
 						{
 							"topic_a": int(use.iloc[i]["Topic"]),
-							"label_a": use.iloc[i].get("topic_label_refined"),
+							"label_a": use.iloc[i].get("topic_label_llm"),
 							"topic_b": int(use.iloc[j]["Topic"]),
-							"label_b": use.iloc[j].get("topic_label_refined"),
+							"label_b": use.iloc[j].get("topic_label_llm"),
 							"similarity": round(s, 4),
 						}
 					)
@@ -93,11 +93,11 @@ class RedditTopicEDA:
 		self.yearly_stats = yearly_stats.copy() if yearly_stats is not None else None
 
 		self.topic_info = self.topic_info_raw.copy()
-		# Prefer final LLM labels for exploration; keep backward compatibility with older refined outputs.
-		if "topic_label_llm" in self.topic_info.columns:
-			self.topic_info["topic_label_refined"] = self.topic_info["topic_label_llm"]
-		elif "topic_label_refined" not in self.topic_info.columns:
-			self.topic_info["topic_label_refined"] = self.topic_info.get("topic_label_bert", "")
+		# Use final LLM labels for exploration; keep backward compatibility with older outputs.
+		if "topic_label_llm" not in self.topic_info.columns and "topic_label_refined" in self.topic_info.columns:
+			self.topic_info["topic_label_llm"] = self.topic_info["topic_label_refined"]
+		elif "topic_label_llm" not in self.topic_info.columns:
+			self.topic_info["topic_label_llm"] = self.topic_info.get("topic_label_bert", "")
 		self.documents = self._prepare_documents(self.document_topics_raw)
 		self.documents_enriched = self._attach_topic_info(self.documents, self.topic_info)
 
@@ -136,7 +136,7 @@ class RedditTopicEDA:
 
 	def _attach_topic_info(self, docs: pd.DataFrame, topic_info: pd.DataFrame) -> pd.DataFrame:
 		right_cols = [
-			c for c in ["Topic", "Count", "Name", "topic_label_refined", "topic_keywords_clean", "topic_keybert_clean"]
+			c for c in ["Topic", "Count", "Name", "topic_label_llm", "topic_keywords_clean", "topic_keybert_clean"]
 			if c in topic_info.columns
 		]
 		merged = docs.merge(topic_info[right_cols], left_on="topic", right_on="Topic", how="left")
@@ -151,7 +151,7 @@ class RedditTopicEDA:
 	def topic_prevalence(self) -> pd.DataFrame:
 		df = self._filter_topic_rows(self.documents_enriched)
 		out = (
-			df.groupby(["topic", "topic_label_refined"], dropna=False)
+			df.groupby(["topic", "topic_label_llm"], dropna=False)
 			.size()
 			.reset_index(name="doc_count")
 			.sort_values("doc_count", ascending=False)
@@ -164,7 +164,7 @@ class RedditTopicEDA:
 	def topic_trends(self) -> pd.DataFrame:
 		df = self._filter_topic_rows(self.documents_enriched)
 		out = (
-			df.groupby(["created_year", "topic", "topic_label_refined"], dropna=False)
+			df.groupby(["created_year", "topic", "topic_label_llm"], dropna=False)
 			.size()
 			.reset_index(name="count")
 			.sort_values(["created_year", "count"], ascending=[True, False])
@@ -177,7 +177,7 @@ class RedditTopicEDA:
 			raise ValueError(f"{level} not found in document table.")
 		df = self._filter_topic_rows(self.documents_enriched)
 		out = (
-			df.groupby([level, "topic", "topic_label_refined"], dropna=False)
+			df.groupby([level, "topic", "topic_label_llm"], dropna=False)
 			.size()
 			.reset_index(name="count")
 		)
@@ -189,7 +189,7 @@ class RedditTopicEDA:
 		if "score" not in df.columns:
 			raise ValueError("score column not found in document table.")
 		out = (
-			df.groupby(["topic", "topic_label_refined"], dropna=False)
+			df.groupby(["topic", "topic_label_llm"], dropna=False)
 			.agg(
 				doc_count=("score", "size"),
 				avg_score=("score", "mean"),
@@ -230,7 +230,7 @@ class RedditTopicEDA:
 		outdir = Path(outdir)
 		outdir.mkdir(parents=True, exist_ok=True)
 		paths = {
-			"topic_labels": outdir / "topic_labels_refined.csv",
+			"topic_labels": outdir / "topic_labels_llm.csv",
 			"topic_prevalence": outdir / "eda_topic_prevalence.csv",
 			"topic_trends": outdir / "eda_topic_trends.csv",
 			"subreddit_difference": outdir / "eda_subreddit_difference.csv",
@@ -270,7 +270,7 @@ class RedditTopicEDA:
 		top_n = top_n or self.config.top_n_topics_overall
 		data = self.topic_prevalence().head(top_n).sort_values("doc_count", ascending=True)
 		fig, ax = plt.subplots(figsize=(10, max(5, 0.4 * len(data))))
-		ax.barh(data["topic_label_refined"], data["doc_count"])
+		ax.barh(data["topic_label_llm"], data["doc_count"])
 		ax.set_title("Top Topic Prevalence")
 		ax.set_xlabel("Document Count")
 		ax.set_ylabel("Topic")
@@ -284,12 +284,12 @@ class RedditTopicEDA:
 		show: bool = False,
 	) -> pd.DataFrame:
 		top_n = top_n or self.config.top_n_topics_trend
-		top_topics = self.topic_prevalence().head(top_n)[["topic", "topic_label_refined"]]
-		data = self.topic_trends().merge(top_topics, on=["topic", "topic_label_refined"], how="inner")
+		top_topics = self.topic_prevalence().head(top_n)[["topic", "topic_label_llm"]]
+		data = self.topic_trends().merge(top_topics, on=["topic", "topic_label_llm"], how="inner")
 		fig, ax = plt.subplots(figsize=(11, 6))
 		for _topic_id, d in data.groupby("topic"):
 			d = d.sort_values("created_year")
-			ax.plot(d["created_year"], d["share_within_year"], marker="o", label=d["topic_label_refined"].iloc[0])
+			ax.plot(d["created_year"], d["share_within_year"], marker="o", label=d["topic_label_llm"].iloc[0])
 		ax.set_title("Topic Share Trends Over Time")
 		ax.set_xlabel("Year")
 		ax.set_ylabel("Share Within Year")
@@ -305,11 +305,11 @@ class RedditTopicEDA:
 		show: bool = False,
 	) -> pd.DataFrame:
 		top_n = top_n or self.config.top_n_topics_overall
-		top_labels = self.topic_prevalence().head(top_n)["topic_label_refined"].tolist()
+		top_labels = self.topic_prevalence().head(top_n)["topic_label_llm"].tolist()
 		data = self.subreddit_difference(level=level)
 		pivot = (
-			data[data["topic_label_refined"].isin(top_labels)]
-			.pivot_table(index="topic_label_refined", columns=level, values="share_within_group", fill_value=0.0)
+			data[data["topic_label_llm"].isin(top_labels)]
+			.pivot_table(index="topic_label_llm", columns=level, values="share_within_group", fill_value=0.0)
 		)
 		fig, ax = plt.subplots(figsize=(max(8, 0.8 * pivot.shape[1]), max(5, 0.45 * pivot.shape[0])))
 		im = ax.imshow(pivot.values, aspect="auto")
@@ -330,7 +330,7 @@ class RedditTopicEDA:
 	) -> pd.DataFrame:
 		data = self.engagement_analysis().head(top_n).sort_values("avg_score", ascending=True)
 		fig, ax = plt.subplots(figsize=(10, max(5, 0.4 * len(data))))
-		ax.barh(data["topic_label_refined"], data["avg_score"])
+		ax.barh(data["topic_label_llm"], data["avg_score"])
 		ax.set_title("Most Engaging Topics")
 		ax.set_xlabel("Average Reddit Score")
 		ax.set_ylabel("Topic")

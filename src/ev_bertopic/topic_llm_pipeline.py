@@ -25,6 +25,7 @@ class TopicLLMConfig:
     input_path: str = "../../output/topic_refinement/topic_labels_refined.csv"
     output_path: str = "../../output/topic_refinement/topic_labels_llm.csv"
     embed_model_name: str = "sentence-transformers/all-mpnet-base-v2"
+    embed_device: str = "cuda"
     gemini_model_name: str = "gemini-2.5-flash"
     gemini_api_key: Optional[str] = None
     call_interval_seconds: float = 30.0
@@ -132,7 +133,10 @@ class TopicLLMPipeline:
 
     def _get_embedder(self) -> SentenceTransformer:
         if self._embedder is None:
-            self._embedder = SentenceTransformer(self.cfg.embed_model_name)
+            self._embedder = SentenceTransformer(
+                self.cfg.embed_model_name,
+                device=self.cfg.embed_device,
+            )
         return self._embedder
 
     def _get_client(self) -> Any:
@@ -290,6 +294,7 @@ class TopicLLMPipeline:
             results.append(
                 {
                     "topic_id": row.get("Topic", i),
+                    "doc_count": row.get("Count", np.nan),
                     "topic_label_bert": row.get("topic_label_bert", ""),
                     "topic_label_refined": row.get("topic_label_refined", ""),
                     "rep_doc_centroid": doc_a,
@@ -323,6 +328,7 @@ if __name__ == "__main__":
     parser.add_argument("--input", default=TopicLLMConfig.input_path)
     parser.add_argument("--output", default=TopicLLMConfig.output_path)
     parser.add_argument("--api-key", default=None)
+    parser.add_argument("--embed-device", default=TopicLLMConfig.embed_device, choices=["cuda", "cpu"])
     parser.add_argument("--call-interval-seconds", type=float, default=TopicLLMConfig.call_interval_seconds)
     parser.add_argument("--daily-call-limit", type=int, default=TopicLLMConfig.daily_call_limit)
     parser.add_argument("--call-log-path", default=TopicLLMConfig.call_log_path)
@@ -332,6 +338,7 @@ if __name__ == "__main__":
         input_path=args.input,
         output_path=args.output,
         gemini_api_key=args.api_key,
+        embed_device=args.embed_device,
         call_interval_seconds=args.call_interval_seconds,
         daily_call_limit=args.daily_call_limit,
         call_log_path=args.call_log_path,

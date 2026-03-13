@@ -8,6 +8,10 @@ import html
 import json
 import hashlib
 import inspect
+import time
+from http.client import IncompleteRead
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 from typing import Optional, Sequence, Dict, Any, List, Tuple, Iterable
 
 import numpy as np
@@ -257,6 +261,132 @@ def _patch_sentence_transformers_static_embedding_compat() -> None:
             )
 
     st_models.StaticEmbedding = StaticEmbedding
+
+
+def _patch_huggingface_hub_cached_download_compat() -> None:
+    """
+    Compatibility shim for libraries that still import
+    huggingface_hub.cached_download, which was removed in newer
+    huggingface_hub releases.
+    """
+    try:
+        import huggingface_hub as hf_hub
+    except Exception:
+        return
+
+    if hasattr(hf_hub, "cached_download"):
+        return
+
+    hf_hub_download = getattr(hf_hub, "hf_hub_download", None)
+    if hf_hub_download is None:
+        return
+
+    hf_hub_download_params = set(inspect.signature(hf_hub_download).parameters.keys())
+
+    def _default_hf_cache_dir() -> Path:
+        constants = getattr(hf_hub, "constants", None)
+        if constants is not None:
+            cache_dir = getattr(constants, "HF_HUB_CACHE", None)
+            if cache_dir:
+                return Path(cache_dir)
+            cache_dir = getattr(constants, "HUGGINGFACE_HUB_CACHE", None)
+            if cache_dir:
+                return Path(cache_dir)
+        return Path.home() / ".cache" / "huggingface" / "hub"
+
+    def _cached_download_url(url: str, **kwargs) -> str:
+        cache_dir = kwargs.pop("cache_dir", None)
+        force_download = bool(kwargs.pop("force_download", False))
+        local_files_only = bool(kwargs.pop("local_files_only", False))
+        force_filename = kwargs.pop("force_filename", None)
+        token = kwargs.pop("token", None) or kwargs.pop("use_auth_token", None)
+        kwargs.pop("resume_download", None)
+        max_retries = int(kwargs.pop("max_retries", 4))
+        timeout = float(kwargs.pop("timeout", 60.0))
+        chunk_size = int(kwargs.pop("chunk_size", 1024 * 1024))
+
+        target_root = Path(cache_dir) if cache_dir else _default_hf_cache_dir()
+        target_root.mkdir(parents=True, exist_ok=True)
+
+        parsed = urlparse(url)
+        guessed_name = Path(parsed.path).name if parsed.path else "download.bin"
+        file_name = force_filename or guessed_name or "download.bin"
+        file_name = str(file_name).replace("\\", "/")
+        file_parts = [p for p in Path(file_name).parts if p not in ("", ".", "..")]
+        if not file_parts:
+            file_parts = ["download.bin"]
+
+        # Keep legacy cached_download behavior: when force_filename is provided,
+        # write to cache_dir/force_filename so downstream loaders find expected files.
+        if force_filename:
+            target_file = target_root.joinpath(*file_parts)
+        else:
+            target_file = target_root / f"legacy_{_hash_text(url)}_{file_parts[-1]}"
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+
+        if target_file.exists() and not force_download:
+            return str(target_file)
+        if local_files_only and not target_file.exists():
+            raise FileNotFoundError(f"File is not available in cache: {target_file}")
+
+        tmp_target = target_file.with_suffix(target_file.suffix + f".{os.getpid()}.tmp")
+        tmp_target.parent.mkdir(parents=True, exist_ok=True)
+
+        for attempt in range(max_retries + 1):
+            downloaded = tmp_target.stat().st_size if tmp_target.exists() else 0
+            req = Request(url)
+            if token:
+                req.add_header("Authorization", f"Bearer {token}")
+            if downloaded > 0:
+                req.add_header("Range", f"bytes={downloaded}-")
+
+            try:
+                with urlopen(req, timeout=timeout) as response:
+                    status = getattr(response, "status", None)
+                    if downloaded > 0 and status == 200:
+                        downloaded = 0
+                        with open(tmp_target, "wb"):
+                            pass
+
+                    mode = "ab" if downloaded > 0 else "wb"
+                    with open(tmp_target, mode) as f:
+                        while True:
+                            try:
+                                chunk = response.read(chunk_size)
+                            except IncompleteRead as exc:
+                                partial = exc.partial or b""
+                                if partial:
+                                    f.write(partial)
+                                raise
+                            if not chunk:
+                                break
+                            f.write(chunk)
+                break
+            except IncompleteRead:
+                if attempt >= max_retries:
+                    raise
+                time.sleep(min(2 ** attempt, 8))
+                continue
+
+        tmp_target.replace(target_file)
+        return str(target_file)
+
+    def cached_download(*args, **kwargs):  # pragma: no cover - compatibility shim
+        url = kwargs.pop("url", None)
+        remaining_args = list(args)
+        if url is None and remaining_args and isinstance(remaining_args[0], str):
+            first = remaining_args[0]
+            if first.startswith("http://") or first.startswith("https://"):
+                url = first
+                remaining_args = remaining_args[1:]
+
+        if url is not None:
+            return _cached_download_url(url, **kwargs)
+
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in hf_hub_download_params}
+        return hf_hub_download(*remaining_args, **filtered_kwargs)
+
+    hf_hub.cached_download = cached_download
 
 
 # -----------------------------
@@ -520,6 +650,8 @@ class RedditBERTopicPipeline:
 
         # Keep hdbscan compatible with newer scikit-learn check_array kwargs.
         _patch_sklearn_check_array_compat()
+        # Keep downstream libraries compatible with newer huggingface_hub.
+        _patch_huggingface_hub_cached_download_compat()
         # Keep BERTopic import compatible with older sentence-transformers.
         _patch_sentence_transformers_static_embedding_compat()
 

@@ -32,8 +32,9 @@ def parse_args() -> argparse.Namespace:
         epilog=(
             "Examples:\n"
             "  python run_ev_all_extract.py\n"
-            "  python run_ev_all_extract.py --input-folder data/data_all --output-dir output/topic_extraction\n"
-            "  python run_ev_all_extract.py --source-tag electricvehicles=evforum carbuying=carbuying"
+            "  python run_ev_all_extract.py --input-folder data/data_all --output-dir output/topic_extraction --data-type submissions\n"
+            "  python run_ev_all_extract.py --source-tag electricvehicles=evforum carbuying=carbuying\n"
+            "  python run_ev_all_extract.py --save-embeddings output/topic_extraction/embeddings.npy\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -76,6 +77,27 @@ def parse_args() -> argparse.Namespace:
         default="cuda",
         choices=["cuda", "cpu"],
         help="Embedding device for sentence-transformers.",
+    )
+    parser.add_argument(
+        "--save-embeddings",
+        type=str,
+        default="output/topic_extraction/ev_all_embeddings.npy",
+        metavar="PATH",
+        help=(
+            "Path to save the full embeddings matrix as a .npy file after encoding. "
+            "Can be loaded later with run_ev_all_reload.py --embeddings PATH to skip re-encoding. "
+            "Default: output/topic_extraction/ev_all_embeddings.npy"
+        ),
+    )
+    parser.add_argument(
+        "--data-type",
+        type=str,
+        default="all",
+        choices=["all", "submissions", "comments"],
+        help=(
+            "Which document types to include. 'submissions' loads only submission files, "
+            "'comments' loads only comment files, 'all' loads both (default)."
+        ),
     )
     return parser.parse_args()
 
@@ -187,8 +209,17 @@ def main() -> None:
     submission_files = sorted(input_dir.glob(args.submissions_pattern))
     comment_files = sorted(input_dir.glob(args.comments_pattern))
 
-    if not submission_files:
-        raise FileNotFoundError(f"No submission files found for pattern: {args.submissions_pattern}")
+    data_type = args.data_type
+    if data_type == "comments":
+        primary_files = comment_files
+        primary_suffix = "_comments_ev"
+    else:
+        primary_files = submission_files
+        primary_suffix = "_submissions_ev"
+
+    if not primary_files:
+        pattern = args.comments_pattern if data_type == "comments" else args.submissions_pattern
+        raise FileNotFoundError(f"No files found for pattern: {pattern}")
 
     comments_by_prefix = {
         _prefix_from_stem(p.stem, "_comments_ev").lower(): p
@@ -200,31 +231,38 @@ def main() -> None:
     total_comment_rows = 0
 
     if tqdm is not None:
-        progress_iter = tqdm(submission_files, desc="Processing subreddit files", unit="file")
+        progress_iter = tqdm(primary_files, desc="Processing subreddit files", unit="file")
     else:
-        progress_iter = submission_files
+        progress_iter = primary_files
 
-    for idx, sub_path in enumerate(progress_iter, start=1):
+    for idx, primary_path in enumerate(progress_iter, start=1):
         if tqdm is not None:
-            progress_iter.set_postfix_str(sub_path.name)
+            progress_iter.set_postfix_str(primary_path.name)
         else:
-            print(f"[{idx}/{len(submission_files)}] Processing {sub_path.name}")
+            print(f"[{idx}/{len(primary_files)}] Processing {primary_path.name}")
 
-        prefix = _prefix_from_stem(sub_path.stem, "_submissions_ev")
+        prefix = _prefix_from_stem(primary_path.stem, primary_suffix)
         prefix_key = prefix.lower()
         subreddit = prefix
         source_tag = source_tag_map.get(prefix_key, prefix_key)
 
-        submissions_df = pd.read_csv(sub_path)
-        total_submission_rows += len(submissions_df)
-
-        comment_path = comments_by_prefix.get(prefix_key)
-        if comment_path is not None and comment_path.exists():
-            comments_df = pd.read_csv(comment_path)
-        else:
+        if data_type == "submissions":
+            submissions_df = pd.read_csv(primary_path)
+            total_submission_rows += len(submissions_df)
             comments_df = pd.DataFrame(columns=["author", "score", "created", "link", "body"])
-
-        total_comment_rows += len(comments_df)
+        elif data_type == "comments":
+            submissions_df = pd.DataFrame(columns=["author", "score", "created", "link", "title", "text"])
+            comments_df = pd.read_csv(primary_path)
+            total_comment_rows += len(comments_df)
+        else:
+            submissions_df = pd.read_csv(primary_path)
+            total_submission_rows += len(submissions_df)
+            comment_path = comments_by_prefix.get(prefix_key)
+            if comment_path is not None and comment_path.exists():
+                comments_df = pd.read_csv(comment_path)
+            else:
+                comments_df = pd.DataFrame(columns=["author", "score", "created", "link", "body"])
+            total_comment_rows += len(comments_df)
 
         canonical_df = builder.build_canonical_df(
             submissions_df=submissions_df,
@@ -241,7 +279,13 @@ def main() -> None:
 
     documents = all_docs_df["text_clean"].fillna("").astype(str).tolist()
 
-    topics, probs, _embeddings = pipeline.fit_transform(documents)
+    topics, probs, embeddings = pipeline.fit_transform(documents)
+
+    emb_path = Path(args.save_embeddings)
+    if not emb_path.is_absolute():
+        emb_path = PROJECT_ROOT / emb_path
+    pipeline.save_embeddings(embeddings, emb_path)
+
     all_docs_df["topic"] = topics
     if isinstance(probs, np.ndarray):
         if probs.ndim == 2:
@@ -281,6 +325,8 @@ def main() -> None:
     all_docs_df.to_csv(docs_path, index=False)
 
     print(f"Subreddit files: {len(submission_files)}")
+    print(f"Data type: {data_type}")
+    print(f"Subreddit files: {len(primary_files)}")
     print(f"Submission rows: {total_submission_rows}")
     print(f"Comment rows: {total_comment_rows}")
     print(f"Canonical rows: {len(all_docs_df)}")
@@ -293,6 +339,7 @@ def main() -> None:
     print(f"Documents used: {len(documents)}")
     print(f"Source tags: {', '.join(sorted(all_docs_df['source_tag'].dropna().astype(str).unique()))}")
     print(f"Embedding device: {cfg.embedding_device}")
+    print(f"Saved embeddings: {emb_path}")
     print(f"Saved yearly stats: {stats_path}")
     print(f"Saved topic info: {topics_path}")
     print(f"Saved documents+topics: {docs_path}")

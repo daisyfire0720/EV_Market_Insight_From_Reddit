@@ -27,8 +27,8 @@ def parse_args() -> argparse.Namespace:
         epilog=(
             "Examples:\n"
             "  python run_ev_other_extract.py\n"
-            "  python run_ev_other_extract.py --subreddits carbuying\n"
-            "  python run_ev_other_extract.py --subreddits carbuying, autos\n"
+            "  python run_ev_other_extract.py --subreddits carbuying --data-type submissions\n"
+            "  python run_ev_other_extract.py --subreddits carbuying, autos --data-type comments\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -77,6 +77,16 @@ def parse_args() -> argparse.Namespace:
         default="cuda",
         choices=["cuda", "cpu"],
         help="Embedding device for sentence-transformers.",
+    )
+    parser.add_argument(
+        "--data-type",
+        type=str,
+        default="all",
+        choices=["all", "submissions", "comments"],
+        help=(
+            "Which document types to include. 'submissions' loads only submission files, "
+            "'comments' loads only comment files, 'all' loads both (default)."
+        ),
     )
     return parser.parse_args()
 
@@ -190,57 +200,71 @@ def main() -> None:
         input_dir = PROJECT_ROOT / input_dir
     target_subreddits = _parse_target_subreddits(args)
     all_submission_files = sorted(input_dir.glob(args.submissions_pattern))
+    all_comment_files = sorted(input_dir.glob(args.comments_pattern))
+
+    data_type = args.data_type
+    if data_type == "comments":
+        all_primary_files = all_comment_files
+        primary_suffix = "_comments_ev"
+    else:
+        all_primary_files = all_submission_files
+        primary_suffix = "_submissions_ev"
 
     if target_subreddits:
         target_set = {s.lower() for s in target_subreddits}
-        submission_files = [
-            p for p in all_submission_files
-            if _prefix_from_stem(p.stem, "_submissions_ev").lower() in target_set
+        primary_files = [
+            p for p in all_primary_files
+            if _prefix_from_stem(p.stem, primary_suffix).lower() in target_set
         ]
-
         found_prefixes = {
-            _prefix_from_stem(p.stem, "_submissions_ev").lower()
-            for p in submission_files
+            _prefix_from_stem(p.stem, primary_suffix).lower()
+            for p in primary_files
         }
         missing = [name for name in target_subreddits if name.lower() not in found_prefixes]
         if missing:
             missing_list = ", ".join(missing)
+            pattern = args.comments_pattern if data_type == "comments" else args.submissions_pattern
             raise FileNotFoundError(
-                f"No submission files matched for subreddit prefix(es): {missing_list} "
-                f"using pattern '{args.submissions_pattern}'."
+                f"No files matched for subreddit prefix(es): {missing_list} "
+                f"using pattern '{pattern}'."
             )
     else:
-        submission_files = all_submission_files
+        primary_files = all_primary_files
 
-    comment_files = sorted(input_dir.glob(args.comments_pattern))
-
-    if not submission_files:
-        raise FileNotFoundError(f"No submission files found for pattern: {args.submissions_pattern}")
+    if not primary_files:
+        pattern = args.comments_pattern if data_type == "comments" else args.submissions_pattern
+        raise FileNotFoundError(f"No files found for pattern: {pattern}")
 
     comments_by_prefix = {
         _prefix_from_stem(p.stem, "_comments_ev"): p
-        for p in comment_files
+        for p in all_comment_files
     }
 
     canonical_parts: list[pd.DataFrame] = []
     total_submission_rows = 0
     total_comment_rows = 0
 
-    for sub_path in submission_files:
-        prefix = _prefix_from_stem(sub_path.stem, "_submissions_ev")
+    for primary_path in primary_files:
+        prefix = _prefix_from_stem(primary_path.stem, primary_suffix)
         subreddit = prefix
 
-        submissions_df = pd.read_csv(sub_path)
-        total_submission_rows += len(submissions_df)
-
-        comment_path = comments_by_prefix.get(prefix)
-        if comment_path is not None and comment_path.exists():
-            comments_df = pd.read_csv(comment_path)
-        else:
-            # Keep pipeline behavior consistent even if comments are missing for one subreddit.
+        if data_type == "submissions":
+            submissions_df = pd.read_csv(primary_path)
+            total_submission_rows += len(submissions_df)
             comments_df = pd.DataFrame(columns=["author", "score", "created", "link", "body"])
-
-        total_comment_rows += len(comments_df)
+        elif data_type == "comments":
+            submissions_df = pd.DataFrame(columns=["author", "score", "created", "link", "title", "text"])
+            comments_df = pd.read_csv(primary_path)
+            total_comment_rows += len(comments_df)
+        else:
+            submissions_df = pd.read_csv(primary_path)
+            total_submission_rows += len(submissions_df)
+            comment_path = comments_by_prefix.get(prefix)
+            if comment_path is not None and comment_path.exists():
+                comments_df = pd.read_csv(comment_path)
+            else:
+                comments_df = pd.DataFrame(columns=["author", "score", "created", "link", "body"])
+            total_comment_rows += len(comments_df)
 
         canonical_df = builder.build_canonical_df(
             submissions_df=submissions_df,
@@ -297,6 +321,8 @@ def main() -> None:
     all_docs_df.to_csv(docs_path, index=False)
 
     print(f"Subreddit files: {len(submission_files)}")
+    print(f"Data type: {data_type}")
+    print(f"Subreddit files: {len(primary_files)}")
     print(f"Submission rows: {total_submission_rows}")
     print(f"Comment rows: {total_comment_rows}")
     print(f"Canonical rows: {len(all_docs_df)}")

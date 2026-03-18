@@ -69,6 +69,16 @@ def parse_args() -> argparse.Namespace:
         choices=["cuda", "cpu"],
         help="Embedding device for sentence-transformers.",
     )
+    parser.add_argument(
+        "--data-type",
+        type=str,
+        default="all",
+        choices=["all", "submissions", "comments"],
+        help=(
+            "Which document types to include. 'submissions' loads only the submissions file, "
+            "'comments' loads only the comments file, 'all' loads both (default)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -156,7 +166,16 @@ def main() -> None:
         comments_path = PROJECT_ROOT / comments_path
 
     submissions_df = pd.read_csv(submissions_path)
-    comments_df = pd.read_csv(comments_path)
+    data_type = args.data_type
+    if data_type == "submissions":
+        submissions_df = pd.read_csv(submissions_path)
+        comments_df = pd.DataFrame(columns=["author", "score", "created", "link", "body"])
+    elif data_type == "comments":
+        submissions_df = pd.DataFrame(columns=["author", "score", "created", "link", "title", "text"])
+        comments_df = pd.read_csv(comments_path)
+    else:
+        submissions_df = pd.read_csv(submissions_path)
+        comments_df = pd.read_csv(comments_path)
 
     canonical_df = builder.build_canonical_df(
         submissions_df=submissions_df,
@@ -211,6 +230,7 @@ def main() -> None:
     canonical_df.to_csv(docs_path, index=False)
 
     print(f"Submission rows: {len(submissions_df)}")
+    print(f"Data type: {data_type}")
     print(f"Comment rows: {len(comments_df)}")
     print(f"Canonical rows: {len(canonical_df)}")
     print(

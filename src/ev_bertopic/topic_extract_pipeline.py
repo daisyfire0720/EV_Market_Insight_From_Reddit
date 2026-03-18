@@ -16,6 +16,7 @@ from typing import Optional, Sequence, Dict, Any, List, Tuple, Iterable
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from sklearn.feature_extraction.text import CountVectorizer, ENGLISH_STOP_WORDS
 
 
@@ -26,7 +27,7 @@ from sklearn.feature_extraction.text import CountVectorizer, ENGLISH_STOP_WORDS
 class BERTopicConfig:
     # General
     language: str = "english"
-    calculate_probabilities: bool = True
+    calculate_probabilities: bool = False
     verbose: bool = True
     top_n_words: int = 10
     random_state: int = 42
@@ -47,7 +48,7 @@ class BERTopicConfig:
     )
 
     # Embeddings
-    embedding_model_name: str = "sentence-transformers/all-mpnet-base-v2"
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_device: Optional[str] = "cuda"   # "cuda", "cpu", or None
     embedding_batch_size: int = 128
     embedding_show_progress: bool = True
@@ -64,7 +65,7 @@ class BERTopicConfig:
     umap_metric: str = "cosine"
 
     # HDBSCAN
-    hdbscan_min_cluster_size: int = 15
+    hdbscan_min_cluster_size: int = 30
     hdbscan_min_samples: int = 5
     hdbscan_metric: str = "euclidean"
 
@@ -77,7 +78,7 @@ class BERTopicConfig:
     enable_probabilities: Optional[bool] = None
 
     # Dataset cleaning / filtering
-    min_tokens: int = 3
+    min_tokens: int = 8
     drop_automoderator: bool = True
     drop_probable_bots: bool = True
     # Match common bot-style account names (e.g., remindmebot, x_bot).
@@ -89,9 +90,35 @@ class BERTopicConfig:
         "please contact the moderators",
         "bot here",
     )
-
+    # Generic / low-value text filtering
+    drop_generic_comments: bool = True
+    generic_comment_max_tokens: int = 12
+    generic_comment_exact_phrases: Tuple[str, ...] = (
+        "lol", "lmao", "lmfao", "same", "this", "agreed", "true", "yep", "yeah",
+        "thanks", "thank you", "good point", "exactly", "for sure", "interesting",
+        "nice", "wow", "damn", "idk", "i dont know", "who knows", "maybe",
+    "depends", "fair", "makes sense", "not sure"
+)
+    generic_comment_contains_phrases: Tuple[str, ...] = (
+        "thanks for sharing",
+        "good luck",
+        "sorry to hear that",
+        "congrats",
+        "congratulations",
+        "check the wiki",
+        "search the sub",
+        "use the search bar",
+    )
+    # Score filtering
+    min_submission_score: Optional[float] = 2
+    min_comment_score: Optional[float] = None
+    # Percentile-based comment filtering
+    use_comment_score_percentile: bool = True
+    comment_score_percentile: float = 0.25
+    comment_score_floor: float = 1
+    comment_score_cap: Optional[float] = None
     # Deduplication policy
-    dedup_subset: Tuple[str, ...] = ("subreddit", "is_submission", "text_clean")
+    dedup_subset: Tuple[str, ...] = ("is_submission", "text_clean")
     dedup_on: Optional[str] = None
     dedup_keep: str = "first"
 
@@ -413,6 +440,38 @@ class RedditDatasetBuilder:
         t = (text or "").lower()
         return any(p in t for p in self.cfg.bot_phrases)
 
+    def _normalize_simple_text(self, text: str) -> str:
+        text = str(text).strip().lower()
+        text = re.sub(r"\s+", " ", text)
+        return text
+
+    def _is_generic_comment(self, text: str, n_tokens: int, is_submission: bool) -> bool:
+        cfg = self.cfg
+
+        if is_submission:
+            return False
+        if not cfg.drop_generic_comments:
+            return False
+
+        norm = self._normalize_simple_text(text)
+
+        # very short exact reactions
+        if n_tokens <= cfg.generic_comment_max_tokens:
+            if norm in set(cfg.generic_comment_exact_phrases):
+                return True
+
+        # boilerplate / generic patterns
+        for phrase in cfg.generic_comment_contains_phrases:
+            if phrase in norm and n_tokens <= max(cfg.generic_comment_max_tokens, 20):
+                return True
+
+        # punctuation-only / near-empty reactions
+        stripped = re.sub(r"[^\w\s]", "", norm).strip()
+        if n_tokens <= 5 and stripped in {"", "lol", "ok", "okay", "yep", "yeah", "nah", "nope"}:
+            return True
+
+        return False
+
     @staticmethod
     def _token_count(text: str) -> int:
         if not text:
@@ -483,7 +542,16 @@ class RedditDatasetBuilder:
 
         # ---- unify
         df = pd.concat([s, c], ignore_index=True, sort=False)
-
+        filter_stats = {
+            "subreddit": subreddit,
+            "input_rows": int(len(df)),
+            "removed_min_tokens": 0,
+            "removed_submission_score": 0,
+            "removed_comment_score": 0,
+            "removed_bots": 0,
+            "removed_generic_comments": 0,
+            "removed_dedup": 0,
+        }
         # Author flags
         df["author"] = df["author"].astype(str).fillna("")
         df["author_deleted"] = df["author"].str.strip().str.lower().isin({"[deleted]", "deleted", "nan", "none", ""})
@@ -491,17 +559,73 @@ class RedditDatasetBuilder:
         # Clean text
         df["text_clean"] = df["text_raw"].apply(clean_reddit_text)
 
-        # Basic token filter
+        # Token counts
         df["n_tokens"] = df["text_clean"].apply(self._token_count)
-        df = df[df["n_tokens"] >= cfg.min_tokens].copy()
 
+        before = len(df)
+        df = df[df["n_tokens"] >= cfg.min_tokens].copy()
+        filter_stats["removed_min_tokens"] = int(before - len(df))
+
+        # Submission Score filtering
+        if cfg.min_submission_score is not None:
+            df = df[
+                ~df["is_submission"] | (df["score"].fillna(-999999) >= cfg.min_submission_score)
+            ].copy()
+            filter_stats["removed_submission_score"] = int(before - len(df))
+        # Comment Score filtering
+        comment_threshold = cfg.min_comment_score
+        if cfg.use_comment_score_percentile:
+            comment_scores = df.loc[~df["is_submission"], "score"].dropna()
+            if len(comment_scores) > 0:
+                q = float(comment_scores.quantile(cfg.comment_score_percentile))
+                comment_threshold = max(float(cfg.comment_score_floor), q)
+                if cfg.comment_score_cap is not None:
+                    comment_threshold = min(comment_threshold, float(cfg.comment_score_cap))
+        if comment_threshold is not None:
+            before = len(df)
+            df = df[
+                df["is_submission"] | (df["score"].fillna(-999999) >= comment_threshold)
+            ].copy()
+            filter_stats["removed_comment_score"] = int(before - len(df))
+            filter_stats["comment_score_threshold_used"] = float(comment_threshold)
+        else:
+            filter_stats["comment_score_threshold_used"] = np.nan
+        filter_stats["removed_comment_score"] = int(before - len(df))
         # Created time derived fields
         df["created_year"] = df["created_dt"].dt.year
         df["created_month"] = df["created_dt"].dt.to_period("M").astype(str)
 
-        # Bot/boilerplate filtering
-        df["is_bot"] = df["author"].apply(self._is_probable_bot) | df["text_raw"].apply(self._contains_bot_phrase)
+        # Bot / boilerplate filtering
+        df["is_bot"] = (
+        df["author"].apply(self._is_probable_bot) |
+        df["text_raw"].apply(self._contains_bot_phrase)
+    )
+
+        before = len(df)
         df = df[~df["is_bot"]].copy()
+        filter_stats["removed_bots"] = int(before - len(df))
+
+        # Normalized text used only for dedup
+        df["text_dedup"] = (
+            df["text_clean"]
+            .astype(str)
+            .str.lower()
+            .str.replace(r"\s+", " ", regex=True)
+            .str.strip()
+        )
+
+        # Generic low-information comment filtering
+        df["is_generic_comment"] = df.apply(
+            lambda r: self._is_generic_comment(
+                text=r.get("text_clean", ""),
+                n_tokens=int(r.get("n_tokens", 0)),
+                is_submission=bool(r.get("is_submission", False)),
+            ),
+            axis=1,
+        )
+        before = len(df)
+        df = df[~df["is_generic_comment"]].copy()
+        filter_stats["removed_generic_comments"] = int(before - len(df))
 
         # Dedup
         subset = list(cfg.dedup_subset) if cfg.dedup_subset else None
@@ -509,6 +633,7 @@ class RedditDatasetBuilder:
             df = df.drop_duplicates(subset=subset, keep=cfg.dedup_keep).copy()
         elif cfg.dedup_on:
             df = df.drop_duplicates(subset=[cfg.dedup_on], keep=cfg.dedup_keep).copy()
+        filter_stats["removed_dedup"] = int(before - len(df))
 
         # doc_id (stable-ish)
         df["doc_id"] = df.apply(
@@ -523,6 +648,7 @@ class RedditDatasetBuilder:
             "doc_id", "is_submission", "subreddit", "source_tag",
             "created_dt", "created_year", "created_month",
             "author", "author_deleted", "score",
+            "is_bot", "is_generic_comment",
             "link", "url", "title", "selftext",
             "text_raw", "text_clean", "n_tokens",
         ]
@@ -530,9 +656,20 @@ class RedditDatasetBuilder:
             if col not in df.columns:
                 df[col] = np.nan
         df = df[cols].reset_index(drop=True)
-
+        filter_stats["output_rows"] = int(len(df))
+        print(
+                f"[{subreddit}] filter stats | "
+                f"input={filter_stats['input_rows']:,} | "
+                f"min_tokens={filter_stats['removed_min_tokens']:,} | "
+                f"sub_score={filter_stats['removed_submission_score']:,} | "
+                f"com_score={filter_stats['removed_comment_score']:,} | "
+                f"(thr={filter_stats.get('comment_score_threshold_used', np.nan)}) | "
+                f"bots={filter_stats['removed_bots']:,} | "
+                f"generic={filter_stats['removed_generic_comments']:,} | "
+                f"dedup={filter_stats['removed_dedup']:,} | "
+                f"output={filter_stats['output_rows']:,}"
+            )
         return df
-
 
 # -----------------------------
 # Embedding cache + BERTopic
@@ -619,12 +756,14 @@ class RedditBERTopicPipeline:
         missing_idx = []
 
         if self._cache is not None:
-            for i, t in enumerate(texts):
+            for i, t in tqdm(enumerate(texts), total=len(texts), desc="Checking embedding cache", unit="doc"):
                 cached = self._cache.load(t)
                 if cached is None:
                     missing_idx.append(i)
                 else:
                     embs[i] = cached
+            n_cached = len(texts) - len(missing_idx)
+            print(f"  Cache hits: {n_cached:,}/{len(texts):,} — encoding {len(missing_idx):,} new documents")
         else:
             missing_idx = list(range(len(texts)))
 
@@ -704,6 +843,24 @@ class RedditBERTopicPipeline:
         self._topic_model = topic_model
         return topic_model
 
+    # ---- bulk embedding save/load (for two-step workflows)
+    def save_embeddings(self, embeddings: np.ndarray, path: str | Path) -> Path:
+        """Save a full embeddings array to disk as a single .npy file."""
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        np.save(p, embeddings.astype(np.float32), allow_pickle=False)
+        print(f"Saved embeddings {embeddings.shape} -> {p}")
+        return p
+
+    def load_embeddings(self, path: str | Path) -> np.ndarray:
+        """Load a previously saved embeddings array from disk."""
+        p = Path(path)
+        if not p.exists():
+            raise FileNotFoundError(f"Embeddings file not found: {p}")
+        embeddings = np.load(p)
+        print(f"Loaded embeddings {embeddings.shape} <- {p}")
+        return embeddings
+
     # ---- fit/transform
     def fit_transform(
         self,
@@ -712,9 +869,15 @@ class RedditBERTopicPipeline:
     ):
         if self._topic_model is None:
             self.build_topic_model()
+        
         if embeddings is None:
+            print(f"Encoding {len(docs):,} documents...")
             embeddings = self.encode_texts(docs)
+        
+        print(f"Fitting BERTopic model on {len(docs):,} documents...")
         topics, probs = self._topic_model.fit_transform(docs, embeddings)
+        n_topics = len(set(topics)) - (1 if -1 in topics else 0)
+        print(f"Model fitting complete. Topics found: {n_topics}")
         return topics, probs, embeddings
 
     # ---- BERTopic features you weren’t using yet

@@ -78,7 +78,8 @@ class BERTopicConfig:
     enable_probabilities: Optional[bool] = None
 
     # Dataset cleaning / filtering
-    min_tokens: int = 8
+    min_tokens_submission: int = 6
+    min_tokens_comment: int = 12
     drop_automoderator: bool = True
     drop_probable_bots: bool = True
     # Match common bot-style account names (e.g., remindmebot, x_bot).
@@ -92,7 +93,7 @@ class BERTopicConfig:
     )
     # Generic / low-value text filtering
     drop_generic_comments: bool = True
-    generic_comment_max_tokens: int = 12
+    generic_comment_max_tokens: int = 16
     generic_comment_exact_phrases: Tuple[str, ...] = (
         "lol", "lmao", "lmfao", "same", "this", "agreed", "true", "yep", "yeah",
         "thanks", "thank you", "good point", "exactly", "for sure", "interesting",
@@ -120,8 +121,11 @@ class BERTopicConfig:
     # Deduplication policy
     dedup_subset: Tuple[str, ...] = ("is_submission", "text_clean")
     dedup_on: Optional[str] = None
-    dedup_keep: str = "first"
 
+    dedup_keep: str = "first"
+    # Year range filtering (None = no filter)
+    start_year: Optional[int] = 2014
+    end_year: Optional[int] = 2023
 # -----------------------------
 # Utilities
 # -----------------------------
@@ -423,6 +427,9 @@ class RedditDatasetBuilder:
     def __init__(self, cfg: BERTopicConfig):
         self.cfg = cfg
         self._bot_author_re = re.compile(cfg.bot_author_regex, flags=re.IGNORECASE)
+        self._generic_exact_phrases = {p.lower() for p in cfg.generic_comment_exact_phrases}
+        self._generic_contains_phrases = tuple(p.lower() for p in cfg.generic_comment_contains_phrases)
+        self._quick_reaction_tokens = {"", "lol", "ok", "okay", "yep", "yeah", "nah", "nope"}
 
     def _is_probable_bot(self, author: str) -> bool:
         if author is None:
@@ -457,17 +464,17 @@ class RedditDatasetBuilder:
 
         # very short exact reactions
         if n_tokens <= cfg.generic_comment_max_tokens:
-            if norm in set(cfg.generic_comment_exact_phrases):
+            if norm in self._generic_exact_phrases:
                 return True
 
         # boilerplate / generic patterns
-        for phrase in cfg.generic_comment_contains_phrases:
+        for phrase in self._generic_contains_phrases:
             if phrase in norm and n_tokens <= max(cfg.generic_comment_max_tokens, 20):
                 return True
 
         # punctuation-only / near-empty reactions
         stripped = re.sub(r"[^\w\s]", "", norm).strip()
-        if n_tokens <= 5 and stripped in {"", "lol", "ok", "okay", "yep", "yeah", "nah", "nope"}:
+        if n_tokens <= 5 and stripped in self._quick_reaction_tokens:
             return True
 
         return False
@@ -548,6 +555,7 @@ class RedditDatasetBuilder:
             "removed_min_tokens": 0,
             "removed_submission_score": 0,
             "removed_comment_score": 0,
+            "removed_year_range": 0,
             "removed_bots": 0,
             "removed_generic_comments": 0,
             "removed_dedup": 0,
@@ -560,14 +568,18 @@ class RedditDatasetBuilder:
         df["text_clean"] = df["text_raw"].apply(clean_reddit_text)
 
         # Token counts
-        df["n_tokens"] = df["text_clean"].apply(self._token_count)
+        df["n_tokens"] = df["text_clean"].str.split().str.len().fillna(0).astype(int)
 
         before = len(df)
-        df = df[df["n_tokens"] >= cfg.min_tokens].copy()
+        # Apply different min_tokens thresholds for submissions vs comments
+        mask_submissions = df["is_submission"] & (df["n_tokens"] < cfg.min_tokens_submission)
+        mask_comments = ~df["is_submission"] & (df["n_tokens"] < cfg.min_tokens_comment)
+        df = df[~(mask_submissions | mask_comments)].copy()
         filter_stats["removed_min_tokens"] = int(before - len(df))
 
         # Submission Score filtering
         if cfg.min_submission_score is not None:
+            before = len(df)
             df = df[
                 ~df["is_submission"] | (df["score"].fillna(-999999) >= cfg.min_submission_score)
             ].copy()
@@ -590,10 +602,22 @@ class RedditDatasetBuilder:
             filter_stats["comment_score_threshold_used"] = float(comment_threshold)
         else:
             filter_stats["comment_score_threshold_used"] = np.nan
-        filter_stats["removed_comment_score"] = int(before - len(df))
+
         # Created time derived fields
         df["created_year"] = df["created_dt"].dt.year
-        df["created_month"] = df["created_dt"].dt.to_period("M").astype(str)
+        df["created_month"] = df["created_dt"].dt.to_period("M").astype(str)                    
+        # Year range filtering
+        if cfg.start_year is not None or cfg.end_year is not None:
+            before = len(df)
+            year_mask = pd.Series([True] * len(df), index=df.index)
+            if cfg.start_year is not None:
+                year_mask = year_mask & (df["created_year"] >= cfg.start_year)
+            if cfg.end_year is not None:
+                year_mask = year_mask & (df["created_year"] <= cfg.end_year)
+            df = df[year_mask].copy()
+            filter_stats["removed_year_range"] = int(before - len(df))
+        else:
+            filter_stats["removed_year_range"] = 0
 
         # Bot / boilerplate filtering
         df["is_bot"] = (
@@ -615,19 +639,19 @@ class RedditDatasetBuilder:
         )
 
         # Generic low-information comment filtering
-        df["is_generic_comment"] = df.apply(
-            lambda r: self._is_generic_comment(
-                text=r.get("text_clean", ""),
-                n_tokens=int(r.get("n_tokens", 0)),
-                is_submission=bool(r.get("is_submission", False)),
-            ),
-            axis=1,
-        )
+        texts = df["text_clean"].fillna("").astype(str).tolist()
+        token_counts = df["n_tokens"].fillna(0).astype(int).tolist()
+        submission_flags = df["is_submission"].fillna(False).astype(bool).tolist()
+        df["is_generic_comment"] = [
+            self._is_generic_comment(text=t, n_tokens=n, is_submission=s)
+            for t, n, s in zip(texts, token_counts, submission_flags)
+        ]
         before = len(df)
         df = df[~df["is_generic_comment"]].copy()
         filter_stats["removed_generic_comments"] = int(before - len(df))
 
         # Dedup
+        before = len(df)
         subset = list(cfg.dedup_subset) if cfg.dedup_subset else None
         if subset:
             df = df.drop_duplicates(subset=subset, keep=cfg.dedup_keep).copy()
@@ -636,12 +660,15 @@ class RedditDatasetBuilder:
         filter_stats["removed_dedup"] = int(before - len(df))
 
         # doc_id (stable-ish)
-        df["doc_id"] = df.apply(
-            lambda r: _hash_text(
-                f"{r.get('source_tag','')}|{r.get('subreddit','')}|{int(bool(r.get('is_submission')))}|{r.get('created_dt','')}|{r.get('author','')}|{r.get('text_clean','')}"
-            ),
-            axis=1,
+        doc_id_input = (
+            df["source_tag"].fillna("").astype(str)
+            + "|" + df["subreddit"].fillna("").astype(str)
+            + "|" + df["is_submission"].fillna(False).astype(int).astype(str)
+            + "|" + df["created_dt"].fillna("").astype(str)
+            + "|" + df["author"].fillna("").astype(str)
+            + "|" + df["text_clean"].fillna("").astype(str)
         )
+        df["doc_id"] = doc_id_input.map(_hash_text)
 
         # Select + order
         cols = [
@@ -667,6 +694,7 @@ class RedditDatasetBuilder:
                 f"bots={filter_stats['removed_bots']:,} | "
                 f"generic={filter_stats['removed_generic_comments']:,} | "
                 f"dedup={filter_stats['removed_dedup']:,} | "
+                f"year_range={filter_stats.get('removed_year_range', 0):,} | "
                 f"output={filter_stats['output_rows']:,}"
             )
         return df
@@ -796,29 +824,44 @@ class RedditBERTopicPipeline:
 
         # Lazy imports so dataset building doesn't require topic deps
         from bertopic import BERTopic
-        import umap
-        import hdbscan
         from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance
+
+        try:
+            import importlib
+            UMAP = importlib.import_module("cuml.manifold").UMAP
+            HDBSCAN = importlib.import_module("cuml.cluster").HDBSCAN
+            backend_name = "cuml"
+        except Exception as exc:
+            import importlib
+            UMAP = importlib.import_module("umap").UMAP
+            HDBSCAN = importlib.import_module("hdbscan").HDBSCAN
+            backend_name = "cpu"
+            if cfg.verbose:
+                print(f"cuML unavailable ({exc}); falling back to umap-learn + hdbscan.")
+
+        if cfg.verbose:
+            print(f"Dimensionality reduction and clustering backend: {backend_name}")
 
         # Reproducibility
         np.random.seed(cfg.random_state)
 
-        umap_model = umap.UMAP(
+        umap_model = UMAP(
             n_neighbors=cfg.umap_n_neighbors,
             n_components=cfg.umap_n_components,
             min_dist=cfg.umap_min_dist,
-            metric="cosine",
+            metric=cfg.umap_metric,
             random_state=cfg.random_state,
         )
-        hdbscan_model = hdbscan.HDBSCAN(
+
+        hdbscan_model = HDBSCAN(
             min_cluster_size=cfg.hdbscan_min_cluster_size,
-            metric="euclidean",
+            min_samples=cfg.hdbscan_min_samples,
+            metric=cfg.hdbscan_metric,
             prediction_data=True,
         )
 
         vectorizer_model = self.build_vectorizer()
 
-        # Better labels: combine KeyBERTInspired + MMR to reduce redundant ngrams
         representation_model = {
             "KeyBERT": KeyBERTInspired(),
             "MMR": MaximalMarginalRelevance(diversity=0.3),

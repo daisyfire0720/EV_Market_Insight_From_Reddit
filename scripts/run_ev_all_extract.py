@@ -273,7 +273,8 @@ def main() -> None:
         canonical_parts.append(canonical_df)
 
     all_docs_df = pd.concat(canonical_parts, ignore_index=True)
-    all_docs_df, sanity_stats = apply_document_sanity_checks(all_docs_df, min_tokens=cfg.min_tokens)
+    sanity_min_tokens = min(cfg.min_tokens_submission, cfg.min_tokens_comment)
+    all_docs_df, sanity_stats = apply_document_sanity_checks(all_docs_df, min_tokens=sanity_min_tokens)
     if all_docs_df.empty:
         raise ValueError("No valid documents remain after sanity checks. Adjust filters or inspect source CSV files.")
 

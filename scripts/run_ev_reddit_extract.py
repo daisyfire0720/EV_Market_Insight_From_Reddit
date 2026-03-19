@@ -165,7 +165,6 @@ def main() -> None:
     if not comments_path.is_absolute():
         comments_path = PROJECT_ROOT / comments_path
 
-    submissions_df = pd.read_csv(submissions_path)
     data_type = args.data_type
     if data_type == "submissions":
         submissions_df = pd.read_csv(submissions_path)
@@ -184,7 +183,8 @@ def main() -> None:
         source_tag=args.source_tag,
     )
 
-    canonical_df, sanity_stats = apply_document_sanity_checks(canonical_df, min_tokens=cfg.min_tokens)
+    sanity_min_tokens = min(cfg.min_tokens_submission, cfg.min_tokens_comment)
+    canonical_df, sanity_stats = apply_document_sanity_checks(canonical_df, min_tokens=sanity_min_tokens)
     if canonical_df.empty:
         raise ValueError("No valid documents remain after sanity checks. Adjust filters or inspect source CSV files.")
 

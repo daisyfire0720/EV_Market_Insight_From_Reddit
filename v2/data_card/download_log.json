@@ -1,0 +1,516 @@
+{
+  "source": "Arctic Shift API",
+  "api_base": "https://arctic-shift.photon-reddit.com",
+  "api_docs": "https://github.com/ArthurHeitmann/arctic_shift/blob/master/api/README.md",
+  "retrieved_at_utc": "2026-10-16T17:05:52.798121+00:00",
+  "range_start": "2015-01-01",
+  "range_end_exclusive": "2026-10-17",
+  "latest_observed_created_utc": 1791558845,
+  "core_subreddits": [
+    "electricvehicles",
+    "teslamotors",
+    "BoltEV",
+    "Rivian",
+    "Ioniq5",
+    "KiaEV6",
+    "evcharging"
+  ],
+  "general_subreddits": [
+    "cars",
+    "Autos",
+    "carbuying"
+  ],
+  "general_keywords": [
+    "tesla",
+    "rivian",
+    "ioniq",
+    "electric vehicle",
+    "electric car"
+  ],
+  "general_keyword_field": {
+    "cars": "query",
+    "Autos": "query",
+    "carbuying": "query"
+  },
+  "unit": "reddit submission (post). Comments were probed, not censused.",
+  "comment_probe": {
+    "ok": true,
+    "n_returned": 2,
+    "example_id": "l6jy6sb"
+  },
+  "count_rows": 994,
+  "count_timeouts": 21,
+  "downloaded_posts_deduped": 7214,
+  "downloaded_posts_by_subreddit": {
+    "Autos": 33,
+    "BoltEV": 1125,
+    "Ioniq5": 750,
+    "KiaEV6": 714,
+    "Rivian": 877,
+    "carbuying": 9,
+    "cars": 228,
+    "electricvehicles": 1415,
+    "evcharging": 623,
+    "teslamotors": 1440
+  },
+  "public_sample_rows": 167,
+  "network_requests": 1721,
+  "cache_hits": 0,
+  "failures": [
+    {
+      "subreddit": "cars",
+      "keyword": "electric car",
+      "field": "query",
+      "window": [
+        "2015-01-11",
+        "2015-01-18"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-01-11&before=2015-01-18&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=electric+car&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "cars",
+      "keyword": "electric vehicle",
+      "field": "query",
+      "window": [
+        "2015-04-10",
+        "2015-04-17"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-04-10&before=2015-04-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "cars",
+      "keyword": "rivian",
+      "field": "query",
+      "window": [
+        "2015-07-27",
+        "2015-08-03"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-07-27&before=2015-08-03&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=rivian&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "cars",
+      "error": "stopped keyword sampling after 3 timeouts"
+    },
+    {
+      "subreddit": "Autos",
+      "keyword": "tesla",
+      "field": "query",
+      "window": [
+        "2015-01-29",
+        "2015-02-05"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-01-29&before=2015-02-05&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "Autos",
+      "keyword": "ioniq",
+      "field": "query",
+      "window": [
+        "2015-05-05",
+        "2015-05-12"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-05-05&before=2015-05-12&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=ioniq&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "Autos",
+      "keyword": "rivian",
+      "field": "query",
+      "window": [
+        "2015-07-26",
+        "2015-08-02"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-07-26&before=2015-08-02&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=rivian&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "Autos",
+      "error": "stopped keyword sampling after 3 timeouts"
+    },
+    {
+      "subreddit": "carbuying",
+      "keyword": "rivian",
+      "field": "query",
+      "window": [
+        "2015-05-25",
+        "2015-06-01"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-05-25&before=2015-06-01&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=rivian&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "carbuying",
+      "keyword": "tesla",
+      "field": "query",
+      "window": [
+        "2015-07-11",
+        "2015-07-18"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-07-11&before=2015-07-18&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "carbuying",
+      "keyword": "ioniq",
+      "field": "query",
+      "window": [
+        "2015-10-19",
+        "2015-10-26"
+      ],
+      "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2015-10-19&before=2015-10-26&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=12&query=ioniq&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+    },
+    {
+      "subreddit": "carbuying",
+      "error": "stopped keyword sampling after 3 timeouts"
+    }
+  ],
+  "sampling": {
+    "core_counts": "aggregate created_utc frequency=month, one calendar month per request",
+    "core_text": "one deterministic 7-day window per subreddit-quarter, limit 25, plus a fixed week around each coded event, limit 40",
+    "mainstream_text": "same windows, separate keyword queries, limit 15, de-duplicated by id",
+    "not_a_simple_random_sample": true
+  },
+  "score_note": "Arctic Shift documents that score and num_comments stay at 0 or 1 until the post is about 36 hours old.",
+  "count_timeouts_after_retry": 0,
+  "mainstream_fill": {
+    "keywords": [
+      "tesla",
+      "electric vehicle"
+    ],
+    "new_rows_before_dedupe": 235,
+    "failures": [
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "2018H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-02-10&before=2018-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2018H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-02-10&before=2018-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2018H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-08-10&before=2018-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2019H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-02-10&before=2019-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2019H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-08-10&before=2019-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2021H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2021-02-10&before=2021-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "2023H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-08-10&before=2023-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2023H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-08-10&before=2023-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "2024H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-02-10&before=2024-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2024H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-08-10&before=2024-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2025H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-02-10&before=2025-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "2025H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-08-10&before=2025-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2025H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-08-10&before=2025-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "2026H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2026-08-10&before=2026-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "2026H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2026-08-10&before=2026-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "ira_2022",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2022-08-14&before=2022-08-21&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "tesla_price_cut_2023",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-01-12&before=2023-01-19&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "nacs_ford",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-05-24&before=2023-05-31&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "credit_law_2025",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-07-03&before=2025-07-10&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "electric vehicle",
+        "stratum": "credit_law_2025",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-07-03&before=2025-07-10&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "cars",
+        "keyword": "tesla",
+        "stratum": "credit_deadline_2025",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-09-28&before=2025-10-05&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=cars (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "2018H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-02-10&before=2018-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2018H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-08-10&before=2018-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2019H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-08-10&before=2019-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2020H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2020-02-10&before=2020-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "2020H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2020-08-10&before=2020-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "2021H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2021-02-10&before=2021-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "2022H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2022-02-10&before=2022-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2023H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-02-10&before=2023-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2023H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-08-10&before=2023-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2024H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-02-10&before=2024-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "2024H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-02-10&before=2024-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2025H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-02-10&before=2025-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "2026H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2026-02-10&before=2026-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "nacs_ford",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-05-24&before=2023-05-31&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "electric vehicle",
+        "stratum": "nacs_gm",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-06-07&before=2023-06-14&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "Autos",
+        "keyword": "tesla",
+        "stratum": "credit_deadline_2025",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-09-28&before=2025-10-05&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=Autos (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2018H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-02-10&before=2018-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2018H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2018-08-10&before=2018-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2019H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-02-10&before=2019-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2019H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-02-10&before=2019-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2019H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2019-08-10&before=2019-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2021H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2021-02-10&before=2021-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2021H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2021-08-10&before=2021-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2022H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2022-02-10&before=2022-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2022H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2022-08-10&before=2022-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2023H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-08-10&before=2023-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2023H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-08-10&before=2023-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2024H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-02-10&before=2024-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2024H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2024-08-10&before=2024-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2025H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-02-10&before=2025-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "2025H2",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-08-10&before=2025-08-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "2026H1",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2026-02-10&before=2026-02-17&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "ira_2022",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2022-08-14&before=2022-08-21&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "tesla",
+        "stratum": "tesla_price_cut_2023",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2023-01-12&before=2023-01-19&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=tesla&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      },
+      {
+        "subreddit": "carbuying",
+        "keyword": "electric vehicle",
+        "stratum": "credit_law_2025",
+        "error": "Arctic Shift request failed: https://arctic-shift.photon-reddit.com/api/posts/search?after=2025-07-03&before=2025-07-10&fields=id%2Ccreated_utc%2Cauthor%2Ctitle%2Cselftext%2Cscore%2Cnum_comments%2Csubreddit%2Curl%2Clink_flair_text&limit=15&query=electric+vehicle&sort=asc&subreddit=carbuying (HTTP 422: 'Timeout. Maybe slow down a bit')"
+      }
+    ]
+  }
+}

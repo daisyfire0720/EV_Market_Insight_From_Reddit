@@ -1,0 +1,13 @@
+mode,stage,n,share
+boundary,Unclear,3361,0.5049579326923077
+boundary,Consideration,1667,0.25045072115384615
+boundary,Evaluation,492,0.07391826923076923
+boundary,Purchase,458,0.06881009615384616
+boundary,Ownership,343,0.05153245192307692
+boundary,Awareness,335,0.05033052884615385
+substring,Consideration,2868,0.4308894230769231
+substring,Unclear,2411,0.3622295673076923
+substring,Purchase,408,0.06129807692307692
+substring,Awareness,367,0.05513822115384615
+substring,Evaluation,346,0.05198317307692308
+substring,Ownership,256,0.038461538461538464

@@ -116,6 +116,7 @@ def annotate_frame(
     barrier_threshold: float = 0.5,
     checkpoint_path: Path | None = None,
     progress_every: int = 50,
+    batch_size: int = 8,
 ) -> NliOutput:
     if frame.empty:
         return NliOutput(pd.DataFrame(), model_name, None)
@@ -132,15 +133,20 @@ def annotate_frame(
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
             handle = checkpoint_path.open("a", encoding="utf-8")
         try:
-            for i, (doc_id, text) in enumerate(pending, start=1):
-                row = _score_one(clf, doc_id, text, model_name, barrier_threshold)
-                done[str(doc_id)] = row
+            done_n = 0
+            step = max(1, int(batch_size))
+            for start in range(0, len(pending), step):
+                chunk = pending[start : start + step]
+                rows = _score_batch(clf, chunk, model_name, barrier_threshold)
+                for row in rows:
+                    done[str(row["id"])] = row
+                    if handle is not None:
+                        handle.write(json.dumps(_jsonable(row)) + "\n")
+                done_n += len(rows)
                 if handle is not None:
-                    handle.write(json.dumps(_jsonable(row)) + "\n")
-                    if i % 20 == 0:
-                        handle.flush()
-                if progress_every and (i % progress_every == 0 or i == len(pending)):
-                    print(f"  NLI {i}/{len(pending)}", flush=True)
+                    handle.flush()
+                if progress_every and (done_n % progress_every < step or done_n == len(pending)):
+                    print(f"  NLI {done_n}/{len(pending)}", flush=True)
         finally:
             if handle is not None:
                 handle.close()
@@ -163,10 +169,61 @@ def _jsonable(row: dict) -> dict:
     return out
 
 
+def _as_result_list(result, n: int) -> list:
+    """The pipeline returns a dict for one string and a list for a batch."""
+    if n == 1 and isinstance(result, dict):
+        return [result]
+    return list(result)
+
+
+def _score_batch(clf, pairs: list[tuple], model_name: str, barrier_threshold: float) -> list[dict]:
+    snippets = [text if len(text) <= 1200 else text[:1200] for _, text in pairs]
+    barriers = _as_result_list(
+        clf(snippets, candidate_labels=list(BARRIER_LABELS), hypothesis_template=BARRIER_HYPOTHESIS, multi_label=True),
+        len(snippets),
+    )
+    stages = _as_result_list(
+        clf(snippets, candidate_labels=list(STAGE_LABELS), hypothesis_template=STAGE_HYPOTHESIS, multi_label=False),
+        len(snippets),
+    )
+    stances = _as_result_list(
+        clf(snippets, candidate_labels=list(STANCE_LABELS), hypothesis_template=STANCE_HYPOTHESIS, multi_label=False),
+        len(snippets),
+    )
+    model = getattr(clf, "model", None)
+    config = getattr(model, "config", None)
+    revision = getattr(config, "_commit_hash", None) if config is not None else None
+    rows = []
+    for (doc_id, text), barrier_result, stage_result, stance_result in zip(pairs, barriers, stages, stances):
+        rows.append(
+            _row_from_scores(
+                doc_id,
+                text,
+                model_name,
+                barrier_threshold,
+                {label: float(score) for label, score in zip(barrier_result["labels"], barrier_result["scores"])},
+                {label: float(score) for label, score in zip(stage_result["labels"], stage_result["scores"])},
+                {label: float(score) for label, score in zip(stance_result["labels"], stance_result["scores"])},
+                revision,
+            )
+        )
+    return rows
+
+
 def _score_one(clf, doc_id, text: str, model_name: str, barrier_threshold: float) -> dict:
-    barriers = _one(clf, text, BARRIER_LABELS, BARRIER_HYPOTHESIS, multi_label=True)
-    stage = _one(clf, text, STAGE_LABELS, STAGE_HYPOTHESIS, multi_label=False)
-    stance = _one(clf, text, STANCE_LABELS, STANCE_HYPOTHESIS, multi_label=False)
+    return _score_batch(clf, [(doc_id, text)], model_name, barrier_threshold)[0]
+
+
+def _row_from_scores(
+    doc_id,
+    text: str,
+    model_name: str,
+    barrier_threshold: float,
+    barriers: dict[str, float],
+    stage: dict[str, float],
+    stance: dict[str, float],
+    revision,
+) -> dict:
     row = {"id": doc_id, "nli_model": model_name}
     for label, score in barriers.items():
         key = "barrier_" + label.replace(" ", "_")
@@ -183,8 +240,6 @@ def _score_one(clf, doc_id, text: str, model_name: str, barrier_threshold: float
     decision = decide_dealer(text, row["barrier_dealer_or_buying_friction"], barrier_threshold)
     row["barrier_dealer_or_buying_friction_on"] = decision.on
     row["dealer_rule"] = decision.reason
-    model = getattr(clf, "model", None)
-    config = getattr(model, "config", None)
-    if config is not None:
-        row["nli_revision"] = getattr(config, "_commit_hash", None)
+    if revision is not None:
+        row["nli_revision"] = revision
     return row

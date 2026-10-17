@@ -247,7 +247,7 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
         "",
         "Labels in this file are not human-coded. Barrier, stage, and stance shares are model output. Volume ratios are descriptive, not effects.",
         "",
-        "The paper's question is locked. It asks how the barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit on 30 September 2025, and whether enthusiast subreddits and shopper subreddits (r/cars, r/Autos, r/carbuying) move together. The hypotheses are in `v2/paper/introduction.md`. Nothing in this file is a test of those hypotheses.",
+        "The paper's question is locked. It asks how the barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit on 30 September 2025, and whether enthusiast subreddits and shopper subreddits (r/cars, r/Autos, r/carbuying) move together. The hypotheses are in `v2/paper/introduction.md`. The Framing A section, when it is present, is a first look at model labels. It is not a validated test.",
         "",
         f"Run time (UTC): `{manifest['ran_at_utc']}`.",
         "",
@@ -298,8 +298,9 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
             lines.append(
                 f"Dump extract kept in `dump_keyword_counts.csv`: **{dump_total}** posts ("
                 + ", ".join(f"r/{sub} {by_sub[sub]}" for sub in sorted(by_sub))
-                + "). This is a count, not a coded barrier result. The NLI table below was not fit on these rows. "
-                "The year-by-year comparison with the API aggregate is `dump_vs_api_counts.csv`."
+                + "). This is a count of posts, not a barrier result. "
+                "The year-by-year comparison with the API aggregate is `dump_vs_api_counts.csv`. "
+                "Barrier shares for these shopper posts, set next to the enthusiast text sample, are in the Framing A section when that run has been written."
             )
             lines.append("")
     else:
@@ -389,6 +390,9 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
         ]
     )
     (out / "FINDINGS.md").write_text("\n".join(lines))
+    from ev_v2.framing import upsert_framing_findings
+
+    upsert_framing_findings(out / "FINDINGS.md", out)
 
 
 def main() -> None:

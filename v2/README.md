@@ -56,6 +56,12 @@ python v2/run_analysis.py
 
 Tables and figures land in `v2/outputs/`. An annotation sheet lands in `v2/annotation/`.
 
+Framing A labels the enthusiast text sample and the shopper dump together, then writes event-window contrasts and an interrupted series. The labels are not human-validated.
+
+```bash
+python v2/run_framing.py
+```
+
 ## Tests
 
 ```bash

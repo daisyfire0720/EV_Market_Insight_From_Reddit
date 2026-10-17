@@ -23,45 +23,33 @@ Gilardi, Alizadeh, and Kubli (2023) is the citation for using an LLM as an annot
 
 A second gap is the clock. The Ruan corpora stop in December 2020. The policy dates that now organize US EV buying are later: the Inflation Reduction Act (Pub. L. 117-169, 16 August 2022), Tesla's price cuts reported on 13 January 2023, Ford's charging agreement of 25 May 2023 and GM's NACS announcement of 8 June 2023, and the end of the federal clean-vehicle credit for vehicles acquired after 30 September 2025 (Pub. L. 119-21, 4 July 2025; 26 U.S.C. § 30D; IRS, <https://www.irs.gov/clean-vehicle-tax-credits>).
 
-## 2. Three framings
+## 2. The paper
 
-### Framing A. Barriers, and how talk about them moves when policy and prices move
+Framing A is the paper. Daisy locked it in on 17 October 2026. The draft introduction and the hypotheses are in `v2/paper/introduction.md`. Two earlier alternatives are an appendix at the end of this memo. They are not competing papers.
 
-**Question.** What do people on Reddit treat as standing in the way of buying or living with an EV, and how does that mix of barriers, together with stance, change around the policy and price dates above?
+**Question.** How do the EV purchase barriers people discuss on Reddit — price, charging, battery, range, incentives, dealer friction, and environment — shift around the policy and market shocks in section 6, and do enthusiast subreddits and mainstream car-shopper subreddits move together?
+
+The shocks are the Inflation Reduction Act (16 August 2022), Tesla's US price cuts reported on 13 January 2023, Ford's and GM's moves onto Tesla's charging connector (25 May and 8 June 2023), and the end of the federal clean-vehicle credit for vehicles acquired after 30 September 2025.
+
+The enthusiast subreddits are r/electricvehicles, r/teslamotors, r/BoltEV, r/Rivian, r/Ioniq5, r/KiaEV6, and r/evcharging. The shopper subreddits are r/cars, r/Autos, and r/carbuying. A subreddit name is not a journey stage. Owner versus shopper language is a contrast inside this paper, using the document-level stage code, not a separate paper.
 
 Research questions:
 
-1. Which barriers are common in EV subreddits from 2015 through the latest archived month, and which rise or fall?
-2. At the coded event months, does submission volume, and the share of posts touching incentives, price, or charging, differ from the prior three months and from the same months a year earlier?
-3. Do general EV forums, brand communities, and mainstream car subreddits emphasize different barriers?
+1. Which of the seven barriers are common from 2015 through September 2026, in enthusiast subreddits and in the shopper subreddits, and which rise or fall?
+2. At the coded event months, does the share of posts touching incentives, price, or charging differ from the prior three months and from the same months a year earlier? Submission volume is reported beside those shares. It is not itself a barrier result.
+3. Do the shopper subreddits put more of their barrier talk on price and dealer friction, and less on the ownership stage, than the enthusiast subreddits?
 
-**What would be new.** Document-level barrier and stance labels through 2026, tied to dates Ruan and Lv could not observe, with the human-validation design in section 5. Ashby, Weir, and Fussey already combine BERTopic and an LLM, but on tweets, about charging only, and the published abstract describes manual review of the theme list rather than a double-coded test of document labels. Yu et al. do that test, on charging-station reviews and a different question.
+**What would be new.** Document-level barrier, stage, and stance labels through 2026, tied to dates Ruan and Lv could not observe, with the human-validation design in section 5. The shopper subreddits are in the design, not only brand communities. Ashby, Weir, and Fussey already combine BERTopic and an LLM, but on tweets, about charging only, and the published abstract describes manual review of the theme list rather than a double-coded test of document labels. Yu et al. do that test, on charging-station reviews and a different question. The zero-shot model, and the comparison with VADER, LDA, and the keyword stage rule, are the methods that make the barrier claims believable. They are not a separate contribution standing in for the human labels.
 
-**Risk.** Volume changes are not effects of the policy. Several of these dates sit on a rising market. The paper has to say "discussion moved" and show a year-ago comparison, not "the IRA caused" anything.
-
-### Framing B. Owners and people still deciding
-
-**Question.** Does the language of people who already have an EV differ from the language of people shopping for a car, and does that gap shrink after the incentives change?
-
-**What would be new.** Ruan and Lv compare subreddits, including communities far from the market (they discuss r/conspiracy and r/The_Donald). They do not separate brand-owner communities from r/cars, r/Autos, and r/carbuying, which is where non-adopters talk. That contrast is the part of Daisy's corpus most worth keeping.
-
-**Risk.** A subreddit is a weak proxy. r/teslamotors contains shoppers; r/cars contains owners. The contrast is only credible if journey stage is a document label that humans have checked. Keyword stage rules are not that label. The pilot in `v2/` shows why: substring matching treats `ev` inside `every`, and `vs` inside `evs`, as evidence of the Consideration stage.
-
-### Framing C. Is an LLM a reliable instrument here, relative to the tools the earlier papers used?
-
-**Question.** On a double-coded Reddit sample, how does a zero-shot model compare with VADER, with LDA, and with a keyword stage rule, using the same codebook?
-
-**What would be new.** A transport-domain reliability table. Gilardi et al. justify trying the model. Yu et al. show what the table has to contain (two annotators, kappa, accuracy against the humans). Neither paper is about Reddit adoption talk.
-
-**Risk.** This framing cannot be finished without the human labels. It is a methods section, or a second paper, not a substitute for them.
-
-## 3. Recommendation
-
-Write Framing A for Transportation Research Part D. Use Framing B as a section inside it, with journey stage measured at the post, not inferred from the subreddit name. Use Framing C as the methods section that makes A publishable. The keyword funnel stays only as a baseline the human labels can beat. It should not be a result about the market.
-
-If the double-coded kappa on barriers is too low to support a substantive claim, the same materials support a shorter methods paper and the TR-D submission should wait. That is a decision to make after the annotation, not before.
+**Risk.** Volume changes are not effects of the policy. Several of these dates sit on a rising market. The paper has to say "discussion moved" and show a year-ago comparison, not "the IRA caused" anything. If the double-coded kappa on barriers is too low to support a substantive claim, the same materials support a shorter methods paper and the Transportation Research Part D submission should wait. That decision comes after the annotation.
 
 The market-funnel workbook can stay in the repository as an exploratory tool. It is not the contribution.
+
+## 3. What the methods section has to carry
+
+The language-model labels are the instrument. Section 5 is the validation plan: two annotators, 800 posts, Cohen's kappa per field, then macro-F1 of the model against the adjudicated gold. VADER is the sentiment baseline Ruan and Lv reported. LDA is a descriptive topic baseline. The keyword stage rule, both the old substring version and the word-boundary version, is there so the paper can show the false matches. None of those three is the barrier measure.
+
+The dealer-friction label is on when the model score clears 0.5 or a markup, fee, or inventory lexicon matches, and it is held off for ordinary service and for a charger that merely sits at a dealer. That rule was checked on 18 invented sentences (`v2/fixtures/dealer_sentences.csv`). It has not been checked on corpus posts by a second person.
 
 ## 4. Draft codebook
 
@@ -153,15 +141,28 @@ For each window the pilot reports the mean monthly submission count against the 
 
 The downloader uses the Arctic Shift API (`https://arctic-shift.photon-reddit.com`), whose maintainer documents the endpoints and states that there is no uptime guarantee. Core subreddits are counted in full, one month at a time. Mainstream subreddits have a keyword count census and a partial text pull. Details, including what the text pull did not finish, are in the data card.
 
-The pull on 16 October 2026 returned a count for every core subreddit-month from January 2015 through October 2026. October 2026 is partial. Complete months sum to 603,435 submissions. A later pass counted keyword submissions in r/cars, r/Autos, and r/carbuying from January 2015 through September 2026: 16,993 posts, and every requested month returned a count. The text file is not that census. It has the earlier core sample plus r/cars posts matching `tesla` for 26 months in 2015–2017. The local merged file has 8,866 submissions. Those figures are computed in the data card.
+The pull on 16 October 2026 returned a count for every core subreddit-month from January 2015 through October 2026. October 2026 is partial. Complete months sum to 603,435 submissions. A later pass counted keyword submissions in r/cars, r/Autos, and r/carbuying from January 2015 through September 2026: 16,993 posts, and every requested month returned a count. That 16,993 is an API aggregate, not a text file. Shopper text is extracted from the Academic Torrents zstd dumps by `v2/extract_from_dumps.py`. The dump filter is a word-boundary match, so its count is not required to equal 16,993. The data card records both. The local API text file used for the pilot labels has 8,866 submissions and is still mostly the earlier core sample plus early r/cars posts about Tesla.
 
 Usernames are kept only in the gitignored local file, so the bot filter can run. The committed excerpt and the annotation sheet do not contain usernames. The pull does not attempt to identify anyone. Short excerpts in the annotation file are for coding, not for republication in the paper.
 
-## 8. Decisions Daisy needs to make
+## 8. Decisions still open
 
-1. Confirm Framing A, with B and C inside it, or swap the lead question.
-2. Name the second annotator.
-3. Keep one ownership stage, or adopt Ryan's onboarding split. The taxonomy PDF is not in the repo.
-4. Whether a paid API key, or a GPU, will be available for a full-corpus generative model. This round uses a small open MNLI model on CPU because neither was available.
-5. Whether comments should be pulled. The original papers are mostly comments. This round censuses submissions only. Comment volume is much larger.
-6. Whether the score filter from the original pipeline (submission score at least 2, comment score above a percentile) should be a sensitivity check. It is not applied by default here, because it keeps upvoted text and the claim is about public discussion.
+Framing A is locked. The shopper-text route is the dumps, not another pass at the search API.
+
+1. Name the second annotator. Daisy is one. Whether Ryan is the other coder is open. The second coder should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated.
+2. Keep one ownership stage, or adopt Ryan's onboarding split. The taxonomy PDF is not in the repo. Until then, ownership stays one code, with an optional onboarding flag.
+3. Whether a paid API key, or a GPU, will be available for a full-corpus generative model. The pilot uses a small open MNLI model on CPU because neither was available.
+4. Whether comments should be pulled. The original papers are mostly comments. This design censuses submissions. The per-subreddit comments files exist in the same torrent and are much larger (r/cars comments alone are about 2.16 GB compressed).
+5. Whether the score filter from the original pipeline (submission score at least 2, comment score above a percentile) should be a sensitivity check. It is not applied by default, because it keeps upvoted text and the claim is about public discussion.
+
+## Appendix. Framings that are not the paper
+
+These two were the alternatives considered before Framing A was locked. They stay here so a reader of the memo can see what was set aside. They are not written up in `v2/paper/`.
+
+### Owner language versus shopper language, as its own paper
+
+The contrast is real, and it is inside Framing A as research question 3. It is not the lead question. A subreddit is a weak proxy: r/teslamotors contains shoppers, and r/cars contains owners. The contrast is only credible if journey stage is a document label that humans have checked. The pilot shows why a keyword stage rule is not that label. Substring matching treats `ev` inside `every`, and `vs` inside `evs`, as evidence of the Consideration stage.
+
+### A methods paper on the language model alone
+
+On a double-coded sample, a zero-shot model can be compared with VADER, LDA, and the keyword stage rule. That comparison is the methods section of Framing A. It cannot be finished without the human labels, and it is not a substitute for the barrier question. If barrier kappa is too low, this is the shorter paper to write instead, as section 2 already says.

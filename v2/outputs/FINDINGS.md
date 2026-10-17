@@ -2,6 +2,8 @@
 
 Labels in this file are not human-coded. Barrier, stage, and stance shares are model output. Volume ratios are descriptive, not effects.
 
+The paper's question is locked. It asks how the barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit on 30 September 2025, and whether enthusiast subreddits and shopper subreddits (r/cars, r/Autos, r/carbuying) move together. The hypotheses are in `v2/paper/introduction.md`. Nothing in this file is a test of those hypotheses.
+
 Run time (UTC): `2026-10-17T04:57:44.217791+00:00`.
 
 ## Core submission census
@@ -66,7 +68,13 @@ EV-keyword submissions in r/cars, r/Autos, and r/carbuying. The query and the fa
 | r/cars | 2025 | 643 | 12 | 0 | 0 |
 | r/cars | 2026 | 305 | 9 | 0 | 0 |
 
-Those counts are archive aggregates. The text file is not that census. The search pass in this round finished r/cars for the keyword tesla from January 2015 through April 2017, except July 2015 and June 2016, which were deferred after rate limits. Later months and the other keywords were not requested. The data card has the exact coverage note.
+Those counts are archive aggregates from the API (16,993 in total). They are not a text file.
+
+## Shopper text from the dumps (counts only)
+
+Unvalidated as a statement about barriers. This is a count of posts the extractor kept, not a coded result. On 17 October 2026 the per-subreddit submission files (infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`) were streamed in full: 1,077,267 lines, 0 bad JSON lines. The word-boundary filter kept **13,976** posts dated 2015-01-01 through 2025-12-28: r/cars 12,210, r/Autos 1,428, r/carbuying 338. The files end in 2025, so they do not contain the 485 API posts from January–September 2026. Against the API aggregate of 16,993 (2015 through September 2026), the dump total is lower in every subreddit, and the gap is wider in later years of r/cars (102 posts in 2015, 328 in 2022). The API search matches tokens the word-boundary rule skips, including `ioniq` inside `ioniq5`. The two columns were not forced together. Year table: `v2/data_card/dump_vs_api_counts.csv`. The NLI labels further down were not rerun on these 13,976 posts.
+
+The earlier search pass finished r/cars for the keyword tesla from January 2015 through April 2017, except July 2015 and June 2016, which were deferred after rate limits. That API text pull is not the dump extract.
 
 ## Event windows
 

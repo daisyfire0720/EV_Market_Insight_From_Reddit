@@ -247,6 +247,8 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
         "",
         "Labels in this file are not human-coded. Barrier, stage, and stance shares are model output. Volume ratios are descriptive, not effects.",
         "",
+        "The paper's question is locked. It asks how the barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit on 30 September 2025, and whether enthusiast subreddits and shopper subreddits (r/cars, r/Autos, r/carbuying) move together. The hypotheses are in `v2/paper/introduction.md`. Nothing in this file is a test of those hypotheses.",
+        "",
         f"Run time (UTC): `{manifest['ran_at_utc']}`.",
         "",
         "## Core submission census",
@@ -275,12 +277,31 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
             )
         lines.append("")
         lines.append(
-            "Those counts are archive aggregates. The text file is not that census. "
-            "The search pass in this round finished r/cars for the keyword tesla from January 2015 through April 2017, "
-            "except July 2015 and June 2016, which were deferred after rate limits. "
-            "Later months and the other keywords were not requested. The data card has the exact coverage note."
+            "Those counts are archive aggregates from the API. They are not a text file. "
+            "Shopper text is extracted from the zstd dumps by `v2/extract_from_dumps.py`, with a word-boundary keyword filter "
+            "that is not the same matcher as the aggregate. "
+            "The earlier search pass finished r/cars for the keyword tesla from January 2015 through April 2017, "
+            "except July 2015 and June 2016, which were deferred after rate limits. That API text pull is not the dump extract."
         )
         lines.append("")
+        dump_counts_path = ROOT / "data_card" / "dump_keyword_counts.csv"
+        if dump_counts_path.exists():
+            dump_counts = pd.read_csv(dump_counts_path)
+            dump_total = int(pd.to_numeric(dump_counts["n_posts"], errors="coerce").fillna(0).sum())
+            by_sub = (
+                dump_counts.assign(n_posts=pd.to_numeric(dump_counts["n_posts"], errors="coerce").fillna(0))
+                .groupby("subreddit")["n_posts"]
+                .sum()
+                .astype(int)
+                .to_dict()
+            )
+            lines.append(
+                f"Dump extract kept in `dump_keyword_counts.csv`: **{dump_total}** posts ("
+                + ", ".join(f"r/{sub} {by_sub[sub]}" for sub in sorted(by_sub))
+                + "). This is a count, not a coded barrier result. The NLI table below was not fit on these rows. "
+                "The year-by-year comparison with the API aggregate is `dump_vs_api_counts.csv`."
+            )
+            lines.append("")
     else:
         lines.append("The mainstream keyword census file is not in this run.")
         lines.append("")

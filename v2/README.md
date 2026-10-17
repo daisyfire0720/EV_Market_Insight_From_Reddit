@@ -40,7 +40,13 @@ Keyword posts from r/cars, r/Autos, and r/carbuying, January 2015 through Septem
 python v2/download_reddit.py --mainstream
 ```
 
-That command checkpoints each window, retries a fast HTTP 422 using the rate-limit reset, and splits a slow timeout down to one day (counts) or six hours (text). Add `--retry-failed` to reopen failed windows. `--mainstream-census` and `--mainstream-text` run the two passes separately.
+That command checkpoints each window, retries a fast HTTP 422 using the rate-limit reset, and splits a slow timeout down to one day (counts) or six hours (text). Add `--retry-failed` to reopen failed windows. `--mainstream-census` and `--mainstream-text` run the two passes separately. The search API does not finish shopper text at a usable rate. Full shopper text is streamed from local `.zst` dumps:
+
+```bash
+python v2/extract_from_dumps.py /path/to/Autos_submissions.zst /path/to/carbuying_submissions.zst /path/to/cars_submissions.zst
+```
+
+The infohash, file lengths, and licensing notes are in `v2/data_card/DATA_CARD.md`.
 
 ## Analyze
 
@@ -58,6 +64,7 @@ cd v2 && pytest
 
 ## Read first
 
-- `v2/research_design.md` — framing, codebook, validation plan
+- `v2/research_design.md` — Framing A, codebook, validation plan
+- `v2/paper/introduction.md` — introduction, research questions, hypotheses
 - `v2/paper/outline.md` — Transportation Research Part D skeleton
 - `v2/data_card/DATA_CARD.md` — what was actually downloaded

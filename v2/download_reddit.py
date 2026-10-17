@@ -55,6 +55,7 @@ from ev_v2.mainstream import (  # noqa: E402
     upsert_census_section,
     yearly_table,
 )
+from ev_v2.dumps import upsert_dump_section  # noqa: E402
 from ev_v2.retry import Checkpoint, FetchError, classify_and_backoff  # noqa: E402
 
 USER_AGENT = "ev-reddit-research/0.2 (academic sample; Arctic Shift API)"
@@ -439,7 +440,7 @@ def write_data_card(counts: pd.DataFrame, log: dict) -> None:
         "- Requested range: {} inclusive through {} exclusive.".format(log["range_start"], log["range_end_exclusive"]),
         "- Unit: Reddit submissions. A one-week comment probe is recorded in `download_log.json`. Comments are not part of the census.",
         "",
-        "Pushshift, which the original project and Ruan and Lv (2022) used, no longer provides a current dump. Reddit's official API needs OAuth credentials that are not available here. Academic Torrents distributes historical Reddit dumps, which are the wrong tool for a selective, up-to-date pull.",
+        "Pushshift, which the original project and Ruan and Lv (2022) used, no longer provides a current dump. Reddit's official API needs OAuth credentials that are not available here. Counts come from the Arctic Shift API. Full shopper text is read from the Academic Torrents zstd dumps by `v2/extract_from_dumps.py`, because the search API does not serve that text at a usable rate. The dump section below records the torrents, the file lengths, and the licensing notes.",
         "",
         "## Filters",
         "",
@@ -525,7 +526,15 @@ def write_data_card(counts: pd.DataFrame, log: dict) -> None:
             "",
         ]
     )
-    (CARD_DIR / "DATA_CARD.md").write_text("\n".join(lines))
+    card_path = CARD_DIR / "DATA_CARD.md"
+    card_path.write_text("\n".join(lines))
+    # Re-attach the dump notes. write_data_card replaces the file, and the
+    # census upsert that follows keeps whatever sits outside its markers.
+    upsert_dump_section(
+        card_path,
+        counts_path=CARD_DIR / "dump_keyword_counts.csv",
+        compare_path=CARD_DIR / "dump_vs_api_counts.csv",
+    )
 
 
 def retry_timeouts(client: ArcticClient) -> None:

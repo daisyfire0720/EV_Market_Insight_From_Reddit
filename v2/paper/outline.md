@@ -1,10 +1,10 @@
 # Electric-vehicle talk on Reddit, 2015–2026
 
-Working title only. The lead question is not locked. Three framings are still open in `v2/research_design.md` (barriers around policy and price dates, owner versus shopper language, and whether an LLM is a reliable instrument next to VADER and LDA). This skeleton is the shared measurement section. Daisy has not chosen the framing. Transportation Research Part D shape. Placeholders in braces are filled only from `v2/outputs/` after a run. They are not targets.
+Working title. The lead question is locked. The paper asks how the purchase barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit for vehicles acquired after 30 September 2025. Enthusiast subreddits are compared with mainstream car-shopper subreddits (r/cars, r/Autos, r/carbuying). The language model and its human validation are the methods. The drafted introduction and hypotheses are `introduction.md`. Transportation Research Part D shape. Placeholders in braces are filled only from `v2/outputs/` after a run. They are not targets.
 
 ## Abstract
 
-Public discussion is one of the few records of how buyers talk about electric vehicles between surveys. Earlier Reddit work measured topics and dictionary sentiment through 2020. This paper measures adoption barriers, purchase-journey stage, and stance at the level of the post, checks those labels against two human annotators, and describes how submission volume and label mix sit around four later shocks: the Inflation Reduction Act (16 August 2022), Tesla's price cuts reported on 13 January 2023, the Ford and GM moves onto Tesla's charging connector (25 May and 8 June 2023), and the end of the US clean-vehicle credit for vehicles acquired after 30 September 2025. The corpus is submissions from dedicated EV communities, counted month by month in the Arctic Shift archive, plus a keyword sample from r/cars, r/Autos, and r/carbuying. {One sentence on the human kappa, once it exists.} {One sentence on which barriers dominate, and whether incentive talk rises in the credit windows, once the validated labels exist.} The pilot reported here is the measurement harness and the volume series. It is not yet the validated result.
+Public discussion is one of the few records of how buyers talk about electric vehicles between surveys. Earlier Reddit work measured topics and dictionary sentiment through 2020. This paper measures adoption barriers, purchase-journey stage, and stance at the level of the post, checks those labels against two human annotators, and describes how the barrier mix sits around four later shocks: the Inflation Reduction Act (16 August 2022), Tesla's price cuts reported on 13 January 2023, the Ford and GM moves onto Tesla's charging connector (25 May and 8 June 2023), and the end of the US clean-vehicle credit for vehicles acquired after 30 September 2025. The corpus is submissions from dedicated EV communities, counted month by month in the Arctic Shift archive, plus keyword-matched submissions from r/cars, r/Autos, and r/carbuying. {One sentence on the human kappa, once it exists.} {One sentence on which barriers dominate, and whether incentive talk rises in the credit windows, once the validated labels exist.} The pilot reported here is the measurement harness and the volume series. It is not yet the validated result.
 
 ## 1. Introduction
 
@@ -12,7 +12,7 @@ Electric-vehicle policy assumes that price, charging, and information are what k
 
 Reddit is a public record of that language. Ruan and Lv (2022) showed that it is large enough to recover topics and a sentiment trend, using 3,437,917 posts from 2011 through 2020, a 20-topic LDA model, and VADER. Ruan and Lv (2023) showed the Reddit pattern is not identical to Twitter. Ashby, Weir, and Fussey (2025) showed that a topic model plus a language model can organize charging talk on Twitter, with manual review of the themes. None of those papers measures, at the post and with a double-coded check, the barrier a writer is raising, the stage of the purchase they are in, and whether they are for or against the technology, through the policy dates that now define the US market.
 
-Whether the paper leads with barriers, with who is speaking, or with the reliability of the instrument is an open choice. The language model is a candidate instrument, not yet a validated one. None of the comparisons around the policy dates are causal estimates.
+The paper leads with those barriers, and with whether shopper subreddits and enthusiast subreddits move together. The language model is the instrument that assigns the barriers. It is not yet validated. Owner-versus-shopper language is a contrast inside the paper, using the stage label on each post, not a separate study. None of the comparisons around the policy dates are causal estimates. The hypotheses are written out in `introduction.md`.
 
 ### Contributions
 
@@ -34,10 +34,11 @@ Three clusters, kept short.
 
 Source, range, subreddits, and filters: `v2/data_card/DATA_CARD.md`. Repeat in the paper only the figures that card computes.
 
-- Archive: Arctic Shift, because Pushshift no longer updates and the official Reddit API requires credentials this project does not have.
+- Counts: Arctic Shift, because Pushshift no longer updates and the official Reddit API requires credentials this project does not have.
+- Shopper text: the per-subreddit zstd dumps (infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`, through the end of 2025), streamed by `v2/extract_from_dumps.py`. January–September 2026 shopper text is only in the monthly `RS_*.zst` files, which were not downloaded here. The data card has the lengths, the checksum notes, and the empty license field.
 - Unit: submissions. Comments are a documented next pull. Say so. Ruan and Lv's mass is mostly comments, so the comparison of levels is not like-for-like.
 - Core census: r/electricvehicles, r/teslamotors, r/BoltEV, r/Rivian, r/Ioniq5, r/KiaEV6, r/evcharging, monthly, 2015 through the latest complete month. The in-progress month is reported separately.
-- Mainstream sample: r/cars, r/Autos, r/carbuying, keyword-filtered. Not a census. The keyword list omits bare `ev`.
+- Mainstream posts: r/cars, r/Autos, r/carbuying, keyword-filtered. The API count of 16,993 is not the dump count. The dump filter is a word-boundary match and will not be retuned to force the two totals together. The keyword list omits bare `ev`.
 - Text sample design: deterministic 7-day window per subreddit-quarter, plus a fixed week around each event. State that this is a cluster sample.
 - Cleaning: deleted bodies removed; bot accounts removed with a token rule that does not drop surnames containing "bot" or names starting with "auto". Counts of removals: {from `run_manifest.json`}.
 - Ethics: public posts, hashed usernames in the released excerpt, no attempt to identify users.
@@ -98,7 +99,7 @@ August 2022 is only 8% above the prior three months. The 1.57 ratio against Augu
 
 ### 5.3 Keyword counts outside the EV subreddits
 
-The 17 October 2026 aggregate counted 16,993 submissions in r/cars (14,800), r/Autos (1,684), and r/carbuying (509) from January 2015 through September 2026. Every requested month returned a count. 2026 in that table is January–September. The text file is not this census. It contains r/cars posts matching `tesla` for 26 months from January 2015 through April 2017 (July 2015 and June 2016 deferred), plus the earlier thin sample from r/Autos and r/carbuying. Year counts: `data_card/mainstream_yearly_counts.csv`.
+The 17 October 2026 aggregate counted 16,993 submissions in r/cars (14,800), r/Autos (1,684), and r/carbuying (509) from January 2015 through September 2026. Every requested month returned a count. 2026 in that table is January–September. That figure is an API count. The same day's dump extract, from the per-subreddit submissions files through the end of 2025, kept 13,976 posts (r/cars 12,210, r/Autos 1,428, r/carbuying 338) after the word-boundary filter. The torrent has no 2026 posts. The API rows for January–September 2026 are 485 of the 16,993 (r/cars 305, r/Autos 38, r/carbuying 142). The year-by-year comparison is `data_card/dump_vs_api_counts.csv`. The two filters are not the same matcher, and the dump column was not adjusted to equal the API column. The earlier API text pull is not this extract.
 
 ### 5.4 Sentiment in the text sample
 
@@ -136,7 +137,7 @@ Delete any bullet the tables do not support.
 
 - Submissions, not comments. The earlier Reddit papers are mostly comments.
 - The text file is a designed sample of weeks, not a simple random sample of posts. Volume uses the census. Label shares use the sample.
-- Mainstream subreddits are keyword-filtered and, where the API timed out, incomplete. See the data card.
+- Mainstream subreddits are keyword-filtered. The API text pull is incomplete. The dump extract is the text source, and it still has to be read against the API count rather than substituted for it. See the data card. The per-subreddit torrent ends in December 2025.
 - Arctic Shift does not guarantee completeness. Very new posts have placeholder scores.
 - Zero-shot labels on a small CPU model are a lower bound on what a larger model might do, not an upper bound. The human comparison is the check either way.
 - Event ratios are descriptive. Other news happens in the same months.

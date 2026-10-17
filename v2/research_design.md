@@ -151,9 +151,9 @@ For each window the pilot reports the mean monthly submission count against the 
 
 ## 7. Data and ethics
 
-The downloader uses the Arctic Shift API (`https://arctic-shift.photon-reddit.com`), whose maintainer documents the endpoints and states that there is no uptime guarantee. Core subreddits are counted in full, one month at a time. Mainstream subreddits are keyword-filtered and are a sample, not a census, because full-text search on active subreddits times out. Details, including failures, are in the data card.
+The downloader uses the Arctic Shift API (`https://arctic-shift.photon-reddit.com`), whose maintainer documents the endpoints and states that there is no uptime guarantee. Core subreddits are counted in full, one month at a time. Mainstream subreddits have a keyword count census and a partial text pull. Details, including what the text pull did not finish, are in the data card.
 
-The pull on 16 October 2026 returned a count for every core subreddit-month from January 2015 through October 2026. October 2026 is partial. Complete months sum to 603,435 submissions. The text file has 7,214 submissions, of which 270 are from r/cars, r/Autos, and r/carbuying. Those three numbers are computed in the data card and `download_log.json`.
+The pull on 16 October 2026 returned a count for every core subreddit-month from January 2015 through October 2026. October 2026 is partial. Complete months sum to 603,435 submissions. A later pass counted keyword submissions in r/cars, r/Autos, and r/carbuying from January 2015 through September 2026: 16,993 posts, and every requested month returned a count. The text file is not that census. It has the earlier core sample plus r/cars posts matching `tesla` for 26 months in 2015–2017. The local merged file has 8,866 submissions. Those figures are computed in the data card.
 
 Usernames are kept only in the gitignored local file, so the bot filter can run. The committed excerpt and the annotation sheet do not contain usernames. The pull does not attempt to identify anyone. Short excerpts in the annotation file are for coding, not for republication in the paper.
 

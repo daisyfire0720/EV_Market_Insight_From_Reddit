@@ -34,6 +34,14 @@ Writes:
 
 The count step issues one calendar month per request. A year-long aggregate times out on the active subreddits.
 
+Keyword posts from r/cars, r/Autos, and r/carbuying, January 2015 through September 2026:
+
+```bash
+python v2/download_reddit.py --mainstream
+```
+
+That command checkpoints each window, retries a fast HTTP 422 using the rate-limit reset, and splits a slow timeout down to one day (counts) or six hours (text). Add `--retry-failed` to reopen failed windows. `--mainstream-census` and `--mainstream-text` run the two passes separately.
+
 ## Analyze
 
 ```bash

@@ -58,3 +58,60 @@ Request failures in the first pass: 12. The second mainstream pass recorded 56 f
 ## Ethics
 
 Posts on these subreddits are public. The committed excerpt hashes usernames and truncates body text. The local analysis file still has usernames so the bot filter can run; it is gitignored. This pull does not try to identify anyone. Arctic Shift states that it offers no uptime or performance guarantee.
+
+<!-- mainstream-census-start -->
+## Mainstream keyword census
+
+Submissions in r/cars, r/Autos, and r/carbuying whose title or selftext matches the combined query `tesla OR rivian OR ioniq OR "electric vehicle" OR "electric car"`. Range: 2015-01-01 inclusive through 2026-10-01 exclusive (through September 2026). This is a count of matching submissions, not a sum of separate keyword queries.
+
+Each month is one aggregate request. A fast HTTP 422 waits out `X-RateLimit-Reset` and retries. A slow HTTP 422 is a query timeout: the window is split down to one day. Failed windows are checkpointed and listed below.
+
+The text pull does not reuse this combined query. A search for it on r/cars, January 2015, returned HTTP 200 and zero posts on 16 October 2026, while the aggregate returned 71. Text is requested once per keyword (`tesla`, `rivian`, `ioniq`, `electric vehicle`, `electric car`), then de-duplicated by post id.
+
+Text is incomplete and is not the 16,993-post census. The combined OR query is not used for search: on 16 October 2026 it returned HTTP 200 and zero posts for r/cars in January 2015, while the aggregate returned 71. Search is one keyword at a time. This pass finished r/cars with keyword tesla for 26 months from 2015-01 through 2017-04 and wrote 1,667 posts before de-duplication. 2015-07 and 2016-06 were deferred after rate-limit responses and were not checkpointed. Months after 2017-04, the keywords rivian, ioniq, electric vehicle, and electric car, and full text for r/Autos and r/carbuying, were not requested. After de-duplication with the earlier sample, the local text file has 1,922 mainstream submissions (r/cars 1,880, r/Autos 33, r/carbuying 9). Resume with `python v2/download_reddit.py --mainstream-text`. A complete text file is what this API is not serving at a usable rate. The dump index, including Academic Torrents files through 2026-09, is https://github.com/ArthurHeitmann/arctic_shift/blob/master/download_links.md .
+
+Subreddit-months requested: 423. Failed months: 0. Partial months (a lower bound from the splits that returned): 0. Sum of returned counts, with failed months omitted: **16993**.
+
+| Subreddit | Year | Posts | Months ok | Partial | Failed |
+|---|---:|---:|---:|---:|---:|
+| r/Autos | 2015 | 118 | 12 | 0 | 0 |
+| r/Autos | 2016 | 169 | 12 | 0 | 0 |
+| r/Autos | 2017 | 136 | 12 | 0 | 0 |
+| r/Autos | 2018 | 152 | 12 | 0 | 0 |
+| r/Autos | 2019 | 248 | 12 | 0 | 0 |
+| r/Autos | 2020 | 187 | 12 | 0 | 0 |
+| r/Autos | 2021 | 190 | 12 | 0 | 0 |
+| r/Autos | 2022 | 163 | 12 | 0 | 0 |
+| r/Autos | 2023 | 115 | 12 | 0 | 0 |
+| r/Autos | 2024 | 80 | 12 | 0 | 0 |
+| r/Autos | 2025 | 88 | 12 | 0 | 0 |
+| r/Autos | 2026 | 38 | 9 | 0 | 0 |
+| r/carbuying | 2015 | 1 | 12 | 0 | 0 |
+| r/carbuying | 2016 | 0 | 12 | 0 | 0 |
+| r/carbuying | 2017 | 2 | 12 | 0 | 0 |
+| r/carbuying | 2018 | 4 | 12 | 0 | 0 |
+| r/carbuying | 2019 | 4 | 12 | 0 | 0 |
+| r/carbuying | 2020 | 22 | 12 | 0 | 0 |
+| r/carbuying | 2021 | 18 | 12 | 0 | 0 |
+| r/carbuying | 2022 | 22 | 12 | 0 | 0 |
+| r/carbuying | 2023 | 51 | 12 | 0 | 0 |
+| r/carbuying | 2024 | 84 | 12 | 0 | 0 |
+| r/carbuying | 2025 | 159 | 12 | 0 | 0 |
+| r/carbuying | 2026 | 142 | 9 | 0 | 0 |
+| r/cars | 2015 | 849 | 12 | 0 | 0 |
+| r/cars | 2016 | 1318 | 12 | 0 | 0 |
+| r/cars | 2017 | 1428 | 12 | 0 | 0 |
+| r/cars | 2018 | 1719 | 12 | 0 | 0 |
+| r/cars | 2019 | 1788 | 12 | 0 | 0 |
+| r/cars | 2020 | 1252 | 12 | 0 | 0 |
+| r/cars | 2021 | 1677 | 12 | 0 | 0 |
+| r/cars | 2022 | 1373 | 12 | 0 | 0 |
+| r/cars | 2023 | 1285 | 12 | 0 | 0 |
+| r/cars | 2024 | 1163 | 12 | 0 | 0 |
+| r/cars | 2025 | 643 | 12 | 0 | 0 |
+| r/cars | 2026 | 305 | 9 | 0 | 0 |
+
+Failed windows in the checkpoint: 0.
+
+Every requested mainstream month returned a count or a counted split. The text file can still be short of that census where search pages timed out; those windows are in the same failure list when the text pass has run.
+<!-- mainstream-census-end -->

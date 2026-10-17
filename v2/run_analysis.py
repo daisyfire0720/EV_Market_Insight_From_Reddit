@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -228,11 +229,157 @@ def plot_topics(prevalence: pd.DataFrame, path: Path) -> None:
     plt.close(fig)
 
 
+def _fmt(value, digits=3):
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ""
+    return f"{float(value):.{digits}f}"
+
+
+def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.DataFrame, events: pd.DataFrame, by_proxy: pd.DataFrame) -> None:
+    """Write FINDINGS.md from this run's frames. Numbers are not typed by hand."""
+    ok = counts[counts["count_status"].isin(["ok", "ok_empty"])].copy()
+    ok["n_posts"] = pd.to_numeric(ok["n_posts"], errors="coerce").fillna(0)
+    partial_month = manifest["partial_count_month_excluded_from_figure"]
+    complete = ok[ok["month"] < partial_month]
+    yearly = complete.assign(year=complete["month"].str.slice(0, 4)).groupby("year")["n_posts"].sum()
+    lines = [
+        "# Pilot findings (unvalidated)",
+        "",
+        "Labels in this file are not human-coded. Barrier, stage, and stance shares are model output. Volume ratios are descriptive, not effects.",
+        "",
+        f"Run time (UTC): `{manifest['ran_at_utc']}`.",
+        "",
+        "## Core submission census",
+        "",
+        f"Complete months through the month before `{partial_month}` sum to **{int(complete['n_posts'].sum())}** submissions in the seven core subreddits. `{partial_month}` is excluded from that sum when it is the in-progress month of the pull.",
+        "",
+        "| Year | Submissions |",
+        "|---|---:|",
+    ]
+    for year, n in yearly.items():
+        lines.append(f"| {year} | {int(n)} |")
+    mainstream_path = ROOT / "data_card" / "mainstream_yearly_counts.csv"
+    lines.extend(["", "## Mainstream keyword counts", ""])
+    if mainstream_path.exists():
+        mainstream = pd.read_csv(mainstream_path)
+        lines.append(
+            "EV-keyword submissions in r/cars, r/Autos, and r/carbuying. The query and the failure list are in the data card. A failed month is not a zero."
+        )
+        lines.append("")
+        lines.append("| Subreddit | Year | Posts | Months ok | Partial | Failed |")
+        lines.append("|---|---:|---:|---:|---:|---:|")
+        for _, row in mainstream.sort_values(["subreddit", "year"]).iterrows():
+            posts = "" if pd.isna(row["n_posts"]) else str(int(row["n_posts"]))
+            lines.append(
+                f"| r/{row['subreddit']} | {int(row['year'])} | {posts} | {int(row['months_ok'])} | {int(row['months_partial'])} | {int(row['months_failed'])} |"
+            )
+        lines.append("")
+        lines.append(
+            "Those counts are archive aggregates. The text file is not that census. "
+            "The search pass in this round finished r/cars for the keyword tesla from January 2015 through April 2017, "
+            "except July 2015 and June 2016, which were deferred after rate limits. "
+            "Later months and the other keywords were not requested. The data card has the exact coverage note."
+        )
+        lines.append("")
+    else:
+        lines.append("The mainstream keyword census file is not in this run.")
+        lines.append("")
+    lines.extend(["## Event windows", "", "Mean monthly submissions in the seven core subreddits.", ""])
+    lines.append("| Window | Mean | Versus prior 3 months | Versus a year earlier |")
+    lines.append("|---|---:|---:|---:|")
+    for _, row in events.iterrows():
+        lines.append(
+            f"| {row['event_id']} | {_fmt(row['mean_posts_event_months'], 1)} | {_fmt(row['ratio_vs_prior_3'], 3)} | {_fmt(row['ratio_vs_year_ago'], 3)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Text sample",
+            "",
+            f"Cleaned posts in this run: **{manifest['kept_rows']}** (input {manifest['input_rows']}, bots removed {manifest['removed_bot']}, short or empty {manifest['removed_short_or_empty']}).",
+            "",
+        ]
+    )
+    if not by_proxy.empty:
+        lines.append("| Community proxy | Posts | Mean VADER compound |")
+        lines.append("|---|---:|---:|")
+        for _, row in by_proxy.iterrows():
+            lines.append(f"| {row['community_proxy']} | {int(row['n'])} | {_fmt(row['vader_compound_mean'], 3)} |")
+        lines.append("")
+    sub_counts = kept.groupby("subreddit").size().sort_values(ascending=False)
+    lines.append("Posts by subreddit after cleaning: " + ", ".join(f"r/{sub} {int(n)}" for sub, n in sub_counts.items()) + ".")
+    lines.append("")
+    cons_sub = float((kept["stage_substring"] == "Consideration").mean()) if len(kept) else 0
+    cons_b = float((kept["stage_boundary"] == "Consideration").mean()) if len(kept) else 0
+    unclear = float((kept["stage_boundary"] == "Unclear").mean()) if len(kept) else 0
+    lines.extend(
+        [
+            "## Keyword stage rule",
+            "",
+            f"Substring matching assigned {cons_sub:.1%} of cleaned posts to Consideration. Word-boundary matching assigned {cons_b:.1%} to Consideration and {unclear:.1%} to Unclear.",
+            "",
+            "## Zero-shot labels (unvalidated)",
+            "",
+        ]
+    )
+    barrier_path = out / "nli_barrier_shares.csv"
+    if manifest.get("nli", {}).get("ran") and barrier_path.exists():
+        nli = manifest["nli"]
+        lines.append(
+            f"Model `{nli.get('model')}` revision `{nli.get('revision')}`, n={nli.get('n')}, threshold {nli.get('barrier_threshold')}. "
+            f"Dealer friction is on when the NLI score clears the threshold or the dealer-friction lexicon matches. Seconds this process spent inside the labeler: {nli.get('seconds')}. That clock includes posts already in the checkpoint, which return without a forward pass."
+        )
+        lines.append("")
+        lines.append("| Barrier | On | Share |")
+        lines.append("|---|---:|---:|")
+        barriers = pd.read_csv(barrier_path)
+        for _, row in barriers.iterrows():
+            lines.append(f"| {row['barrier']} | {int(row['n_on'])} | {_fmt(row['share'], 3)} |")
+        lines.append("")
+        for name, filename in (("Stage", "nli_stage_shares.csv"), ("Stance", "nli_stance_shares.csv")):
+            path = out / filename
+            if not path.exists():
+                continue
+            table = pd.read_csv(path)
+            lines.append(f"### {name}")
+            lines.append("")
+            lines.append("| Label | n | Share |")
+            lines.append("|---|---:|---:|")
+            for _, row in table.iterrows():
+                lines.append(f"| {row['label']} | {int(row['n'])} | {_fmt(row['share'], 3)} |")
+            lines.append("")
+        dealer_path = out / "nli_dealer_rule_counts.csv"
+        if dealer_path.exists():
+            lines.append("Dealer-rule reasons (why the dealer bit is on or off):")
+            lines.append("")
+            rules = pd.read_csv(dealer_path)
+            for _, row in rules.iterrows():
+                lines.append(f"- `{row['dealer_rule']}`: {int(row['n'])}")
+            lines.append("")
+    else:
+        lines.append("NLI did not finish in this run.")
+        lines.append("")
+    lines.extend(
+        [
+            "## What this does not show",
+            "",
+            "These labels have not been checked by a second coder. Event ratios are not effects. A mainstream count can be complete while the text pull for that month is still short. Arctic Shift does not guarantee that the archive is complete.",
+            "",
+        ]
+    )
+    (out / "FINDINGS.md").write_text("\n".join(lines))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--posts", type=Path, default=RAW_POSTS)
     parser.add_argument("--counts", type=Path, default=COUNTS)
-    parser.add_argument("--nli-max", type=int, default=400)
+    parser.add_argument(
+        "--nli-max",
+        type=int,
+        default=0,
+        help="0 labels every cleaned post. A positive integer draws a stratified subset.",
+    )
     parser.add_argument("--nli-model", default="MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33")
     parser.add_argument("--skip-nli", action="store_true")
     parser.add_argument("--seed", type=int, default=42)
@@ -335,12 +482,21 @@ def main() -> None:
         )
     pd.DataFrame(event_sent_rows).to_csv(OUT / "event_sample_sentiment.csv", index=False)
 
-    nli_meta = {"ran": False}
-    nli_frame = stratified_ids(kept, args.nli_max, args.seed)
+    nli_meta = {"ran": False, "validated": False}
+    if args.nli_max and args.nli_max > 0:
+        nli_frame = stratified_ids(kept, args.nli_max, args.seed)
+    else:
+        nli_frame = kept
     if not args.skip_nli and len(nli_frame):
         print(f"NLI on {len(nli_frame)} posts with {args.nli_model}", flush=True)
+        started = time.perf_counter()
         try:
-            nli = annotate_frame(nli_frame, model_name=args.nli_model)
+            nli = annotate_frame(
+                nli_frame,
+                model_name=args.nli_model,
+                checkpoint_path=ROOT / "data" / "raw" / "nli_scores.jsonl",
+            )
+            elapsed = time.perf_counter() - started
             nli.frame.to_csv(OUT / "nli_documents.csv", index=False)
             merged = nli_frame.merge(nli.frame, on="id", how="left")
             stance = merged["stance_label"].value_counts(dropna=False).rename_axis("label").reset_index(name="n")
@@ -352,29 +508,37 @@ def main() -> None:
             barrier_rows = []
             for label in BARRIER_LABELS:
                 col = "barrier_" + label.replace(" ", "_") + "_on"
-                barrier_rows.append({"barrier": label, "n_on": int(merged[col].sum()), "share": float(merged[col].mean()), "n": int(len(merged))})
-            barriers = pd.DataFrame(barrier_rows)
+                barrier_rows.append({"barrier": label, "n_on": int(merged[col].fillna(False).sum()), "share": float(merged[col].fillna(False).mean()), "n": int(len(merged))})
+            barriers = pd.DataFrame(barrier_rows).sort_values("share", ascending=False)
             barriers.to_csv(OUT / "nli_barrier_shares.csv", index=False)
+            if "dealer_rule" in merged.columns:
+                merged["dealer_rule"].value_counts(dropna=False).rename_axis("dealer_rule").reset_index(name="n").to_csv(
+                    OUT / "nli_dealer_rule_counts.csv", index=False
+                )
             by_group = (
                 merged.groupby("community_proxy")["stance_label"].value_counts(normalize=True).rename("share").reset_index()
             )
             by_group.to_csv(OUT / "nli_stance_by_community.csv", index=False)
             fig, ax = plt.subplots(figsize=(8, 4.5))
             ax.barh(barriers["barrier"], barriers["share"])
-            ax.set_xlabel(f"Share of NLI subset (n={len(merged)}) with score ≥ 0.5")
-            ax.set_title("Zero-shot barrier labels")
+            ax.set_xlabel(f"Share of labeled posts (n={len(merged)}) with the decision rule on")
+            ax.set_title("Zero-shot barrier labels (unvalidated)")
             fig.tight_layout()
             fig.savefig(OUT / "nli_barrier_shares.png", dpi=140)
             plt.close(fig)
             nli_meta = {
                 "ran": True,
+                "validated": False,
                 "model": nli.model_name,
                 "revision": nli.model_revision,
                 "n": int(len(merged)),
                 "barrier_threshold": 0.5,
+                "dealer_rule": "nli score >= 0.5 or dealer-friction lexicon",
+                "seconds": round(elapsed, 1),
+                "checkpoint": str(ROOT / "data" / "raw" / "nli_scores.jsonl"),
             }
         except Exception as exc:  # noqa: BLE001 - recorded, volume results still stand
-            nli_meta = {"ran": False, "error": f"{type(exc).__name__}: {exc}"}
+            nli_meta = {"ran": False, "validated": False, "error": f"{type(exc).__name__}: {exc}"}
             print("NLI failed:", nli_meta["error"], flush=True)
 
     # Annotation draw. Target 800 when the sample is large enough; otherwise all kept rows.
@@ -414,9 +578,10 @@ def main() -> None:
         "annotation_rows": int(len(sheet_out)),
         "funnel_consideration_share_substring": float((kept["stage_substring"] == "Consideration").mean()),
         "funnel_consideration_share_boundary": float((kept["stage_boundary"] == "Consideration").mean()),
-        "caveat": "Text results describe the downloaded sample, not the census. Volume ratios describe archive counts and are not causal.",
+        "caveat": "Text results describe the downloaded sample, not the census. Volume ratios describe archive counts and are not causal. NLI labels are unvalidated.",
     }
     (OUT / "run_manifest.json").write_text(json.dumps(manifest, indent=2))
+    write_findings(OUT, manifest, counts, kept, events, by_proxy)
     print(json.dumps(manifest, indent=2))
 
 

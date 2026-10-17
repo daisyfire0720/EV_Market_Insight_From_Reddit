@@ -45,6 +45,17 @@ from ev_v2.arctic import (  # noqa: E402
     POSTS_SEARCH,
     bucket_month,
 )
+from ev_v2.mainstream import (  # noqa: E402
+    MAINSTREAM_END,
+    MAINSTREAM_QUERY,
+    MAINSTREAM_START,
+    render_census_markdown,
+    run_census,
+    run_text,
+    upsert_census_section,
+    yearly_table,
+)
+from ev_v2.retry import Checkpoint, FetchError, classify_and_backoff  # noqa: E402
 
 USER_AGENT = "ev-reddit-research/0.2 (academic sample; Arctic Shift API)"
 RAW_DIR = ROOT / "data" / "raw"
@@ -73,18 +84,10 @@ def _today_utc() -> date:
     return datetime.now(timezone.utc).date()
 
 
-def _sleep_for(headers, attempt: int, status: int | None = None) -> None:
-    # 422 on this API is a query timeout, not a rate limit. The reset header
-    # is still sent, and sleeping for it turns every timeout into a ~40s wait.
-    if status == 429 and headers is not None:
-        raw = headers.get("X-RateLimit-Reset") or headers.get("x-ratelimit-reset")
-        if raw:
-            try:
-                time.sleep(min(float(raw) + 0.5, 90))
-                return
-            except ValueError:
-                pass
-    time.sleep(min(1.5 * (attempt + 1), 8))
+def _reset_header(headers) -> str | None:
+    if headers is None:
+        return None
+    return headers.get("X-RateLimit-Reset") or headers.get("x-ratelimit-reset")
 
 
 class ArcticClient:
@@ -113,12 +116,18 @@ class ArcticClient:
         if wait > 0:
             time.sleep(wait)
         last_error = "no response"
-        for attempt in range(3):
+        rate_tries = 0
+        timeout_tries = 0
+        other_tries = 0
+        while True:
             full = key
             req = urllib.request.Request(
                 full,
                 headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
             )
+            started = time.perf_counter()
+            headers = None
+            status = None
             try:
                 with urllib.request.urlopen(req, timeout=120) as resp:
                     payload = resp.read()
@@ -129,31 +138,60 @@ class ArcticClient:
                 headers = exc.headers
                 status = exc.code
             except Exception as exc:  # noqa: BLE001 - network errors are retried
+                elapsed = time.perf_counter() - started
                 last_error = f"{type(exc).__name__}: {exc}"
-                _sleep_for(None, attempt)
+                kind, delay = classify_and_backoff(
+                    other_tries, status=None, elapsed_s=elapsed, reset_header=None, error=last_error
+                )
+                other_tries += 1
+                if other_tries >= 3:
+                    raise FetchError(f"{key} ({last_error})", kind=kind, status=status)
+                time.sleep(delay)
                 continue
+            elapsed = time.perf_counter() - started
             self._last = time.time()
             self.n_network += 1
             try:
                 data = json.loads(payload.decode("utf-8"))
             except json.JSONDecodeError:
                 last_error = f"HTTP {status} non-json: {payload[:200]!r}"
-                _sleep_for(headers, attempt, status)
+                kind, delay = classify_and_backoff(
+                    other_tries, status=status, elapsed_s=elapsed, reset_header=_reset_header(headers), error=last_error
+                )
+                other_tries += 1
+                if other_tries >= 3:
+                    raise FetchError(f"{key} ({last_error})", kind="other", status=status)
+                time.sleep(delay)
                 continue
-            if status == 429 or (isinstance(data, dict) and data.get("error")):
-                last_error = f"HTTP {status}: {data.get('error') if isinstance(data, dict) else payload[:200]!r}"
-                print(f"  retry {attempt + 1} {last_error}", flush=True)
-                _sleep_for(headers, attempt, status)
-                continue
-            if not isinstance(data, dict):
-                last_error = f"unexpected payload type {type(data)}"
-                _sleep_for(headers, attempt, status)
+            error = data.get("error") if isinstance(data, dict) else None
+            if status == 429 or error or not isinstance(data, dict):
+                last_error = f"HTTP {status}: {error or payload[:200]!r}"
+                kind, delay = classify_and_backoff(
+                    max(rate_tries, timeout_tries, other_tries),
+                    status=status,
+                    elapsed_s=elapsed,
+                    reset_header=_reset_header(headers),
+                    error=str(error or last_error),
+                )
+                print(f"  retry {kind} {last_error}", flush=True)
+                if kind == "rate_limit":
+                    rate_tries += 1
+                    if rate_tries >= 6:
+                        raise FetchError(f"{key} ({last_error})", kind=kind, status=status)
+                elif kind == "timeout":
+                    timeout_tries += 1
+                    if timeout_tries >= 2:
+                        raise FetchError(f"{key} ({last_error})", kind=kind, status=status)
+                else:
+                    other_tries += 1
+                    if other_tries >= 3:
+                        raise FetchError(f"{key} ({last_error})", kind=kind, status=status)
+                time.sleep(delay)
                 continue
             self.cache[key] = data
             if self.n_network % 25 == 0:
                 self.save()
             return data
-        raise RuntimeError(f"Arctic Shift request failed: {key} ({last_error})")
 
 
 def _month_iter(start: date, end: date):
@@ -619,6 +657,78 @@ def fill_mainstream(client: ArcticClient) -> None:
     print(f"mainstream fill done, posts now {len(posts)}, failures {len(failures)}", flush=True)
 
 
+def _load_log() -> dict:
+    log_path = CARD_DIR / "download_log.json"
+    if log_path.exists():
+        return json.loads(log_path.read_text())
+    return {}
+
+
+def _write_mainstream_card(counts: pd.DataFrame, checkpoint: Checkpoint, text_note: str) -> None:
+    failures = checkpoint.failed_records()
+    (CARD_DIR / "mainstream_failed_windows.json").write_text(json.dumps(failures, indent=2))
+    yearly = yearly_table(counts)
+    yearly.to_csv(CARD_DIR / "mainstream_yearly_counts.csv", index=False)
+    section = render_census_markdown(counts, failures, text_note)
+    upsert_census_section(CARD_DIR / "DATA_CARD.md", section)
+    log = _load_log()
+    log["mainstream_keyword"] = {
+        "query": MAINSTREAM_QUERY,
+        "range_start": MAINSTREAM_START.isoformat(),
+        "range_end_exclusive": MAINSTREAM_END.isoformat(),
+        "months": int(len(counts)),
+        "failed_windows": len(failures),
+        "sum_returned_counts": None
+        if counts.empty
+        else int(pd.to_numeric(counts["n_posts"], errors="coerce").fillna(0).sum()),
+        "text_note": text_note,
+        "updated_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    (CARD_DIR / "download_log.json").write_text(json.dumps(log, indent=2))
+
+
+def pull_mainstream(client: ArcticClient, retry_failed: bool, do_census: bool, do_text: bool) -> None:
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    CARD_DIR.mkdir(parents=True, exist_ok=True)
+    checkpoint = Checkpoint(RAW_DIR / "mainstream_checkpoint.json")
+    counts_path = CARD_DIR / "mainstream_keyword_counts.csv"
+    if do_census:
+        counts = run_census(client, checkpoint, retry_failed=retry_failed)
+        counts.to_csv(counts_path, index=False)
+    elif counts_path.exists():
+        counts = pd.read_csv(counts_path)
+    else:
+        raise SystemExit("mainstream text needs mainstream_keyword_counts.csv; run the census first")
+    text_note = "Text pull has not been run in this process."
+    if do_text:
+        jsonl_path = RAW_DIR / "mainstream_posts.jsonl"
+        new_rows = run_text(client, checkpoint, counts, jsonl_path, retry_failed=retry_failed)
+        rows = []
+        if jsonl_path.exists():
+            for line in jsonl_path.read_text().splitlines():
+                if line.strip():
+                    rows.append(json.loads(line))
+        posts = _merge_posts(rows)
+        by_sub = {}
+        if not posts.empty:
+            mainstream = posts[posts["subreddit"].isin(GENERAL_SUBREDDITS)]
+            by_sub = mainstream.groupby("subreddit").size().astype(int).to_dict()
+        text_note = (
+            f"Keyword text rows appended this run before de-duplication: {new_rows}. "
+            f"De-duplicated submissions now in the local text file: {len(posts)}. "
+            f"Mainstream rows in that file by subreddit: {json.dumps(by_sub)}. "
+            "Search windows that still failed are in the failure list. A count month can be complete while its text window is not."
+        )
+        log = _load_log()
+        log["downloaded_posts_deduped"] = int(len(posts))
+        if not posts.empty:
+            log["downloaded_posts_by_subreddit"] = posts.groupby("subreddit").size().astype(int).to_dict()
+        log["public_sample_rows"] = int(len(pd.read_csv(SAMPLE_DIR / "posts_sample.csv")))
+        (CARD_DIR / "download_log.json").write_text(json.dumps(log, indent=2))
+    _write_mainstream_card(counts, checkpoint, text_note)
+    print(text_note, flush=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--end", default=None, help="Exclusive end date YYYY-MM-DD (default: tomorrow UTC)")
@@ -633,8 +743,28 @@ def main() -> None:
         action="store_true",
         help="Add a 2018-2026 keyword sample for r/cars, r/Autos, and r/carbuying. Does not abort a subreddit after early timeouts.",
     )
+    parser.add_argument(
+        "--mainstream",
+        action="store_true",
+        help="Census and download EV-keyword submissions from r/cars, r/Autos, and r/carbuying, 2015 through September 2026.",
+    )
+    parser.add_argument("--mainstream-census", action="store_true", help="Only the keyword count census.")
+    parser.add_argument("--mainstream-text", action="store_true", help="Only the keyword text pull. Requires the census CSV.")
+    parser.add_argument(
+        "--retry-failed",
+        action="store_true",
+        help="Re-request mainstream windows already marked failed or partial. Successful windows stay cached.",
+    )
     args = parser.parse_args()
     client = ArcticClient(CACHE_PATH, min_interval=args.min_interval)
+    if args.mainstream or args.mainstream_census or args.mainstream_text:
+        pull_mainstream(
+            client,
+            retry_failed=args.retry_failed,
+            do_census=args.mainstream or args.mainstream_census,
+            do_text=args.mainstream or args.mainstream_text,
+        )
+        return
     if args.retry_timeouts:
         retry_timeouts(client)
     if args.fill_mainstream:

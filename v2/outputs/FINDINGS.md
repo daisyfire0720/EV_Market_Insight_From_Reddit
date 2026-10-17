@@ -1,58 +1,143 @@
-# Pilot findings, 16 October 2026
+# Pilot findings (unvalidated)
 
-Numbers below are copied from `v2/data_card/` and the other files in `v2/outputs/`. Volume is a census of submissions. Text results are a designed sample. None of the labels have been checked by a human.
+Labels in this file are not human-coded. Barrier, stage, and stance shares are model output. Volume ratios are descriptive, not effects.
 
-## Data
+Run time (UTC): `2026-10-17T04:57:44.217791+00:00`.
 
-Arctic Shift returned a count for every core subreddit-month from January 2015 through October 2026. October 2026 is partial (the pull was on 16 October): 2,440 submissions. Complete months, January 2015 through September 2026, sum to **603,435** submissions.
+## Core submission census
+
+Complete months through the month before `2026-10` sum to **603435** submissions in the seven core subreddits. `2026-10` is excluded from that sum when it is the in-progress month of the pull.
 
 | Year | Submissions |
 |---|---:|
-| 2015 | 9,074 |
-| 2016 | 19,902 |
-| 2017 | 24,753 |
-| 2018 | 40,089 |
-| 2019 | 60,455 |
-| 2020 | 46,208 |
-| 2021 | 62,926 |
-| 2022 | 83,904 |
-| 2023 | 73,127 |
-| 2024 | 75,232 |
-| 2025 | 65,916 |
-| 2026, Jan–Sep | 41,849 |
+| 2015 | 9074 |
+| 2016 | 19902 |
+| 2017 | 24753 |
+| 2018 | 40089 |
+| 2019 | 60455 |
+| 2020 | 46208 |
+| 2021 | 62926 |
+| 2022 | 83904 |
+| 2023 | 73127 |
+| 2024 | 75232 |
+| 2025 | 65916 |
+| 2026 | 41849 |
 
-January–September was 57,104 in 2024 and 52,616 in 2025, against 41,849 in 2026. r/teslamotors was 82.3% of the seven-subreddit total in 2015 and 7.8% in January–September 2026. The later total is carried by r/Rivian, r/Ioniq5, r/KiaEV6, and r/electricvehicles. 2020 (46,208) is below 2019 (60,455). Inside 2020, January was 5,185 and April was 2,579.
+## Mainstream keyword counts
 
-The text file has 7,214 deduplicated submissions: 1,440 r/teslamotors, 1,415 r/electricvehicles, 1,125 r/BoltEV, 877 r/Rivian, 750 r/Ioniq5, 714 r/KiaEV6, 623 r/evcharging, 228 r/cars, 33 r/Autos, 9 r/carbuying. It is one deterministic week per quarter, plus a fixed week around each coded event, not a simple random sample. Cleaning kept 6,656 (22 bot rows removed, 536 under five tokens).
+EV-keyword submissions in r/cars, r/Autos, and r/carbuying. The query and the failure list are in the data card. A failed month is not a zero.
+
+| Subreddit | Year | Posts | Months ok | Partial | Failed |
+|---|---:|---:|---:|---:|---:|
+| r/Autos | 2015 | 118 | 12 | 0 | 0 |
+| r/Autos | 2016 | 169 | 12 | 0 | 0 |
+| r/Autos | 2017 | 136 | 12 | 0 | 0 |
+| r/Autos | 2018 | 152 | 12 | 0 | 0 |
+| r/Autos | 2019 | 248 | 12 | 0 | 0 |
+| r/Autos | 2020 | 187 | 12 | 0 | 0 |
+| r/Autos | 2021 | 190 | 12 | 0 | 0 |
+| r/Autos | 2022 | 163 | 12 | 0 | 0 |
+| r/Autos | 2023 | 115 | 12 | 0 | 0 |
+| r/Autos | 2024 | 80 | 12 | 0 | 0 |
+| r/Autos | 2025 | 88 | 12 | 0 | 0 |
+| r/Autos | 2026 | 38 | 9 | 0 | 0 |
+| r/carbuying | 2015 | 1 | 12 | 0 | 0 |
+| r/carbuying | 2016 | 0 | 12 | 0 | 0 |
+| r/carbuying | 2017 | 2 | 12 | 0 | 0 |
+| r/carbuying | 2018 | 4 | 12 | 0 | 0 |
+| r/carbuying | 2019 | 4 | 12 | 0 | 0 |
+| r/carbuying | 2020 | 22 | 12 | 0 | 0 |
+| r/carbuying | 2021 | 18 | 12 | 0 | 0 |
+| r/carbuying | 2022 | 22 | 12 | 0 | 0 |
+| r/carbuying | 2023 | 51 | 12 | 0 | 0 |
+| r/carbuying | 2024 | 84 | 12 | 0 | 0 |
+| r/carbuying | 2025 | 159 | 12 | 0 | 0 |
+| r/carbuying | 2026 | 142 | 9 | 0 | 0 |
+| r/cars | 2015 | 849 | 12 | 0 | 0 |
+| r/cars | 2016 | 1318 | 12 | 0 | 0 |
+| r/cars | 2017 | 1428 | 12 | 0 | 0 |
+| r/cars | 2018 | 1719 | 12 | 0 | 0 |
+| r/cars | 2019 | 1788 | 12 | 0 | 0 |
+| r/cars | 2020 | 1252 | 12 | 0 | 0 |
+| r/cars | 2021 | 1677 | 12 | 0 | 0 |
+| r/cars | 2022 | 1373 | 12 | 0 | 0 |
+| r/cars | 2023 | 1285 | 12 | 0 | 0 |
+| r/cars | 2024 | 1163 | 12 | 0 | 0 |
+| r/cars | 2025 | 643 | 12 | 0 | 0 |
+| r/cars | 2026 | 305 | 9 | 0 | 0 |
+
+Those counts are archive aggregates. The text file is not that census. The search pass in this round finished r/cars for the keyword tesla from January 2015 through April 2017, except July 2015 and June 2016, which were deferred after rate limits. Later months and the other keywords were not requested. The data card has the exact coverage note.
 
 ## Event windows
 
-Mean monthly submissions in the seven core subreddits. Ratios are descriptive.
+Mean monthly submissions in the seven core subreddits.
 
 | Window | Mean | Versus prior 3 months | Versus a year earlier |
 |---|---:|---:|---:|
-| August 2022 | 8,080 | 1.076 | 1.570 |
-| January 2023 | 6,154 | 0.987 | 0.929 |
-| May–June 2023 | 5,930.5 | 1.032 | 0.808 |
-| July 2025 | 5,567 | 0.991 | 0.903 |
-| September–October 2025 | 4,976.5 | 0.908 | 0.825 |
+| ira_2022 | 8080.0 | 1.076 | 1.570 |
+| tesla_price_cut_2023 | 6154.0 | 0.987 | 0.929 |
+| nacs_2023 | 5930.5 | 1.032 | 0.808 |
+| credit_law_2025 | 5567.0 | 0.991 | 0.903 |
+| credit_deadline_2025 | 4976.5 | 0.908 | 0.825 |
 
-August 2022 is close to the three months before it. The comparison with August 2021 is large because volume was still rising, not because the table isolates the Act. The price-cut month, the NACS months, the July 2025 enactment month, and the September–October 2025 deadline are flat or lower than both comparisons. In these communities, the end of the federal credit does not appear as a surge in how many posts were made.
+## Text sample
+
+Cleaned posts in this run: **8243** (input 8866, bots removed 23, short or empty 600).
+
+| Community proxy | Posts | Mean VADER compound |
+|---|---:|---:|
+| brand_community | 4469 | 0.196 |
+| general_ev_community | 1933 | 0.204 |
+| mainstream_car | 1841 | 0.071 |
+
+Posts by subreddit after cleaning: r/cars 1802, r/electricvehicles 1336, r/teslamotors 1209, r/BoltEV 1071, r/Rivian 803, r/Ioniq5 714, r/KiaEV6 672, r/evcharging 597, r/Autos 30, r/carbuying 9.
 
 ## Keyword stage rule
 
-Substring matching assigned 43.1% of the 6,656 posts to Consideration. Word-boundary matching assigned 25.0% to Consideration and 50.5% to Unclear. That gap is the bug in the existing funnel.
+Substring matching assigned 40.7% of cleaned posts to Consideration. Word-boundary matching assigned 23.7% to Consideration and 54.6% to Unclear.
 
-## Topics and sentiment
+## Zero-shot labels (unvalidated)
 
-LDA (8 topics, seed 42) gives every document a probability. The mean of the maximum is 0.629. The largest assigned topics are a Bolt / used-car cluster (1,207 documents) and a service / app / issue cluster (1,165). Mean VADER compound is 0.196 in brand communities and 0.204 in r/electricvehicles plus r/evcharging, and 0.089 in the 254 mainstream posts that survived cleaning.
+Model `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33` revision `262ae02f29173eec1c250f90804dc7edc677dcff`, n=8243, threshold 0.5. Dealer friction is on when the NLI score clears the threshold or the dealer-friction lexicon matches. Seconds this process spent inside the labeler: 550.1. That clock includes posts already in the checkpoint, which return without a forward pass.
 
-## Zero-shot labels
+| Barrier | On | Share |
+|---|---:|---:|
+| vehicle price or total cost | 1406 | 0.171 |
+| charging access | 1173 | 0.142 |
+| battery reliability | 812 | 0.099 |
+| driving range | 530 | 0.064 |
+| environmental impact | 487 | 0.059 |
+| dealer or buying friction | 235 | 0.029 |
+| purchase incentives or tax credits | 223 | 0.027 |
 
-On 400 stratified posts, `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33` (revision `262ae02f29173eec1c250f90804dc7edc677dcff`), threshold 0.5: charging access 20.5%, price or total cost 18.0%, battery reliability 11.5%, environment 8.3%, range 7.0%, incentives 4.0%, dealer friction 4.0%. Stage is mostly owning (43.3%) or unclear (27.3%). Stance is support 57.0%, mixed 26.3%, no stance 16.0%, opposition 0.75% (3 posts).
+### Stage
 
-Before the corpus run, five invented sentences were used to choose the hypothesis template. The model caught charging, range, an environmental objection, and a tax credit. It called a dealer-markup sentence a price post. The dealer share may be low because of that. No human has labeled the 400.
+| Label | n | Share |
+|---|---:|---:|
+| owning an electric vehicle | 3897 | 0.473 |
+| no clear purchase stage | 1961 | 0.238 |
+| comparing electric vehicle options | 1696 | 0.206 |
+| buying an electric vehicle | 362 | 0.044 |
+| learning about electric vehicles | 201 | 0.024 |
+| evaluating cost or fit before buying | 126 | 0.015 |
+
+### Stance
+
+| Label | n | Share |
+|---|---:|---:|
+| support for electric vehicles | 4954 | 0.601 |
+| mixed or uncertain view of electric vehicles | 1942 | 0.236 |
+| no stance on electric vehicles | 1223 | 0.148 |
+| opposition to electric vehicles | 124 | 0.015 |
+
+Dealer-rule reasons (why the dealer bit is on or off):
+
+- `off`: 7986
+- `nli`: 207
+- `suppressed_service_or_charging_location`: 22
+- `lexicon`: 16
+- `nli+lexicon`: 12
 
 ## What this does not show
 
-The mainstream keyword sample is too small, and too full of timeouts (56 on the second pass), to compare shoppers with owners. Comments were probed, not counted. Event ratios are not effects. The NLI shares are a first look at a small CPU model.
+These labels have not been checked by a second coder. Event ratios are not effects. A mainstream count can be complete while the text pull for that month is still short. Arctic Shift does not guarantee that the archive is complete.

@@ -1,6 +1,6 @@
-# How electric-vehicle talk on Reddit moved with prices and policy, 2015–2026
+# Electric-vehicle talk on Reddit, 2015–2026
 
-Working title. Transportation Research Part D shape. Placeholders in braces are filled only from `v2/outputs/` after a run. They are not targets.
+Working title only. The lead question is not locked. Three framings are still open in `v2/research_design.md` (barriers around policy and price dates, owner versus shopper language, and whether an LLM is a reliable instrument next to VADER and LDA). This skeleton is the shared measurement section. Daisy has not chosen the framing. Transportation Research Part D shape. Placeholders in braces are filled only from `v2/outputs/` after a run. They are not targets.
 
 ## Abstract
 
@@ -12,7 +12,7 @@ Electric-vehicle policy assumes that price, charging, and information are what k
 
 Reddit is a public record of that language. Ruan and Lv (2022) showed that it is large enough to recover topics and a sentiment trend, using 3,437,917 posts from 2011 through 2020, a 20-topic LDA model, and VADER. Ruan and Lv (2023) showed the Reddit pattern is not identical to Twitter. Ashby, Weir, and Fussey (2025) showed that a topic model plus a language model can organize charging talk on Twitter, with manual review of the themes. None of those papers measures, at the post and with a double-coded check, the barrier a writer is raising, the stage of the purchase they are in, and whether they are for or against the technology, through the policy dates that now define the US market.
 
-This paper does that. The language model is the instrument. The contribution is the measurement, the check on the measurement, and the description of how the measured mix sits around the dates. It is not a causal estimate of any statute.
+Whether the paper leads with barriers, with who is speaking, or with the reliability of the instrument is an open choice. The language model is a candidate instrument, not yet a validated one. None of the comparisons around the policy dates are causal estimates.
 
 ### Contributions
 
@@ -59,6 +59,7 @@ Point to section 4 of `v2/research_design.md`. Barriers are multi-label. Stage a
 - VADER (Hutto and Gilbert 2014, via the `vaderSentiment` package), the dictionary Ruan and Lv reported.
 - LDA with a probability for every document (sklearn, 8 topics in the pilot, seed 42). Eight topics is a pilot setting for a submission sample, not a claim that 8 is the right number for the census. Ruan and Lv used 20 on a corpus three orders of magnitude larger. Per-document maxima are stored. The original BERTopic configuration left those probabilities empty.
 - Zero-shot natural-language inference with `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33` on CPU, unless `run_manifest.json` records a different revision. No paid API. Barrier and stage hypotheses use "This text is about {}." Stance uses "This text expresses {}." Those templates were picked by running five invented codebook sentences, not by fitting the corpus. A smaller DistilBERT MNLI checkpoint did not separate the same sentences.
+- Dealer friction adds a lexicon on top of that score. A markup, doc fee, market adjustment, or dealer inventory wait is on even when the model scores the sentence as price. Ordinary service and a charger that merely sits at a dealer are left off when the lexicon does not match. The comparison is `outputs/dealer_rule_before_after.csv`, on invented sentences, not on the corpus.
 - Keyword stage baseline, word-boundary and substring, using the five stage lists already in the repository.
 
 ### 4.4 Event windows
@@ -95,27 +96,31 @@ From `outputs/event_volume.csv`. Ratios are mean monthly submissions in the wind
 
 August 2022 is only 8% above the prior three months. The 1.57 ratio against August 2021 sits on the multi-year rise and should not be read as the Act's effect. The 2023 and 2025 windows are flat or lower than both comparisons. In these seven subreddits, the credit deadline does not show up as a surge in how many posts were made.
 
-### 5.3 Sentiment in the text sample
+### 5.3 Keyword counts outside the EV subreddits
 
-6,656 posts remained after cleaning (7,214 downloaded; 22 bot rows; 536 shorter than five tokens). Mean VADER compound is about 0.20 in the brand communities (n = 4,469) and the general EV communities (n = 1,933), and 0.089 in the mainstream keyword sample (n = 254). Months with at least 15 sampled posts are in `outputs/sample_monthly_sentiment.png`. Event-week oversamples, which are not a random slice of those months, have means between 0.156 (January 2023, n = 309) and 0.267 (July 2025, n = 288).
+The 17 October 2026 aggregate counted 16,993 submissions in r/cars (14,800), r/Autos (1,684), and r/carbuying (509) from January 2015 through September 2026. Every requested month returned a count. 2026 in that table is January–September. The text file is not this census. It contains r/cars posts matching `tesla` for 26 months from January 2015 through April 2017 (July 2015 and June 2016 deferred), plus the earlier thin sample from r/Autos and r/carbuying. Year counts: `data_card/mainstream_yearly_counts.csv`.
 
-### 5.4 What the keyword rule was measuring
+### 5.4 Sentiment in the text sample
 
-On the same 6,656 posts, substring matching put 43.1% in Consideration. Word-boundary matching put 25.0% in Consideration and 50.5% in Unclear. The gap is the false friends (`ev` inside `every`, `vs` inside `evs`). Figure: `outputs/funnel_match_comparison.png`.
+The 17 October run cleaned 8,243 posts (8,866 downloaded; 23 bot rows; 600 shorter than five tokens). Mean VADER compound is 0.196 in the brand communities (n = 4,469), 0.204 in the general EV communities (n = 1,933), and 0.071 in the mainstream rows that survived cleaning (n = 1,841). The mainstream mean is mostly early r/cars posts about Tesla, not a sample of the 16,993.
 
-### 5.5 Topics
+### 5.5 What the keyword rule was measuring
 
-Eight-topic LDA, seed 42. Every document has a probability; the mean of the maximum is 0.629 and the minimum is 0.125. The two largest topics, by assigned documents, have top words `bolt, car, model, miles, used, euv, looking` (1,207 documents) and `service, issue, update, app, battery` (1,165). A third is `order, delivery, lease, dealer, price` (860). Words are in `outputs/lda_topics.csv`. These are not human-authored titles.
+On these 8,243 posts, substring matching put 40.7% in Consideration. Word-boundary matching put 23.7% in Consideration and 54.6% in Unclear. Figure: `outputs/funnel_match_comparison.png`.
 
-### 5.6 First look at the NLI labels
+### 5.6 Topics
 
-Model `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on a stratified 400-post subset. A label is "on" at score 0.5. Shares: charging access 0.205, price or total cost 0.180, battery reliability 0.115, environmental impact 0.0825, driving range 0.070, incentives 0.040, dealer or buying friction 0.040. Stage: owning 0.4325, no clear stage 0.2725, comparing 0.230, buying 0.035, learning 0.0275, evaluating 0.0025. Stance: support 0.570, mixed 0.2625, no stance 0.160, opposition 0.0075 (3 posts).
+Eight-topic LDA, seed 42, refit on the larger text file. Every document has a probability; the mean of the maximum is 0.629 and the minimum is 0.125. The largest assigned topic (1,655 documents) has top words `tesla, model, autopilot, musk`. Words are in `outputs/lda_topics.csv`. These are not human-authored titles.
 
-On five invented codebook sentences, before this run, the same model caught a charging complaint, a range comparison, an environmental objection, and a tax-credit sentence. It scored a dealer-markup sentence as price rather than dealer friction. The 0.040 dealer share may be low for that reason. These shares are not validated against humans.
+### 5.7 First look at the NLI labels
 
-### 5.7 Communities
+Unvalidated. Model `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on all 8,243 cleaned posts. Dealer friction uses the score or the lexicon. Shares: price or total cost 0.171, charging access 0.142, battery reliability 0.099, driving range 0.064, environmental impact 0.059, dealer or buying friction 0.029, incentives 0.027. Stage: owning 0.473, no clear stage 0.238, comparing 0.206. Stance: support 0.601, mixed 0.236, no stance 0.148, opposition 0.015 (124 posts).
 
-The mainstream file is thin: 228 posts from r/cars, 33 from r/Autos, 9 from r/carbuying, against 6,944 from the EV communities before cleaning. Keyword search on those subreddits timed out often (56 failures on the second pass). Do not compare a 254-post mainstream remainder to the brand communities as if both were censuses. The NLI subset's stance shares by community are in `outputs/nli_stance_by_community.csv` and inherit that imbalance.
+On 18 invented sentences the original dealer score matched the intended label 10 times. The lexicon rule matched 18 times. A reworded dealer label matched 11 times and was not adopted. On the 8,243 posts the lexicon turned 16 additional posts on and the service/charging guard turned 22 off (241 above 0.5 before the rule, 235 after). The corpus effect is small. The markup sentences are where the rule matters. None of this is human-validated.
+
+### 5.8 Communities
+
+Do not read the mainstream VADER mean or the NLI stance-by-community table as a shopper-versus-owner result. The text is early r/cars Tesla posts plus a few dozen posts from r/Autos and r/carbuying. The count census is the part that covers 2015–2026.
 
 ## 6. Policy reading
 

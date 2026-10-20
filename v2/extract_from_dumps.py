@@ -56,6 +56,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--start", type=_parse_date, default=MAINSTREAM_START)
     parser.add_argument("--end", type=_parse_date, default=MAINSTREAM_END, help="Exclusive end date")
     parser.add_argument("--no-card", action="store_true", help="Do not edit DATA_CARD.md")
+    parser.add_argument(
+        "--fast-subreddit-scan",
+        action="store_true",
+        help="Skip JSON parsing on lines that are not r/cars, r/Autos, or r/carbuying. For monthly RS files.",
+    )
     args = parser.parse_args(argv)
 
     missing = [str(path) for path in args.inputs if not path.is_file()]
@@ -63,7 +68,13 @@ def main(argv: list[str] | None = None) -> int:
         print("missing files:", ", ".join(missing), file=sys.stderr)
         return 2
 
-    stats = extract_paths(list(args.inputs), args.out, start=args.start, end=args.end)
+    stats = extract_paths(
+        list(args.inputs),
+        args.out,
+        start=args.start,
+        end=args.end,
+        fast_subreddit_scan=args.fast_subreddit_scan,
+    )
     counts = counts_frame(stats)
     args.counts.parent.mkdir(parents=True, exist_ok=True)
     counts.to_csv(args.counts, index=False)

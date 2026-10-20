@@ -373,9 +373,9 @@ def render_framing_markdown(out_dir) -> str:
     lines = [
         "## Framing A labels (unvalidated)",
         "",
-        "This section is model output. No human has coded these posts. A confidence interval here is uncertainty in the labeled sample under a simple independent-posts calculation. It is not an effect of the statute or the price cut, and it is too narrow for the enthusiast file, which is a sample of weeks rather than every submission.",
+        "This section is model output. No human has coded these posts. The intervals in the table below treat posts as independent, which is too narrow for a file built from sampled weeks. The week and month block intervals are in the round 5 section under this one. A difference here is not an effect of the statute or the price cut.",
         "",
-        "Enthusiast rows are the text sample from the seven EV subreddits. Shopper rows are the dump extract from r/cars, r/Autos, and r/carbuying. The shopper files stop at the end of 2025. A probable bot, or a post under five tokens, is dropped before labeling, which is why these counts are smaller than the 13,976-post extract and the raw enthusiast file.",
+        "Enthusiast rows are the text sample from the seven EV subreddits. Shopper rows are the dump extract from r/cars, r/Autos, and r/carbuying, including the January–September 2026 monthly files when that extract has been merged. A probable bot, or a post under five tokens, is dropped before labeling, which is why these counts are smaller than the raw extract.",
         "",
     ]
     overall_path = out_dir / "framing_overall_shares.csv"

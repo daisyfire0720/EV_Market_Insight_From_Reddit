@@ -245,13 +245,31 @@ def check_known_size(path: Path, stats: ExtractStats) -> None:
         )
 
 
+# Exact field spellings used in Pushshift / Arctic Shift submission dumps.
+# A line that contains none of these is not one of the three shopper subs.
+SHOPPER_SUBREDDIT_TOKENS = (
+    '"subreddit":"cars"',
+    '"subreddit":"Autos"',
+    '"subreddit":"carbuying"',
+    '"subreddit": "cars"',
+    '"subreddit": "Autos"',
+    '"subreddit": "carbuying"',
+)
+
+
 def extract_paths(
     paths: list[Path],
     out_csv: Path,
     start: date = MAINSTREAM_START,
     end: date = MAINSTREAM_END,
+    fast_subreddit_scan: bool = False,
 ) -> ExtractStats:
-    """Stream ``paths`` and write kept submissions to ``out_csv``."""
+    """Stream ``paths`` and write kept submissions to ``out_csv``.
+
+    ``fast_subreddit_scan`` skips JSON parsing for lines that do not contain
+    a shopper subreddit field. It is for the full-Reddit monthly files.
+    Per-subreddit files are already one community, so the flag stays off.
+    """
     stats = ExtractStats()
     seen: set[str] = set()
     out_csv.parent.mkdir(parents=True, exist_ok=True)
@@ -265,7 +283,15 @@ def extract_paths(
                 stripped = line.strip()
                 if not stripped:
                     continue
+                if fast_subreddit_scan and not any(token in stripped for token in SHOPPER_SUBREDDIT_TOKENS):
+                    stats.rows_scanned += 1
+                    stats.skipped_subreddit += 1
+                    if stats.rows_scanned % 2_000_000 == 0:
+                        print(f"  scanned {stats.rows_scanned} kept {stats.rows_kept}", flush=True)
+                    continue
                 stats.rows_scanned += 1
+                if stats.rows_scanned % 2_000_000 == 0:
+                    print(f"  scanned {stats.rows_scanned} kept {stats.rows_kept}", flush=True)
                 try:
                     obj = json.loads(stripped)
                 except json.JSONDecodeError:
@@ -358,8 +384,9 @@ def render_dump_markdown(counts_path: Path | None = None, compare_path: Path | N
             f"[download_links.md]({DUMP_INDEX}). "
             f"The 2026-09 torrent ({RS_2026_09_TORRENT}) lists `submissions/RS_2026-09.zst` at {RS_2026_09_BYTES:,} bytes. "
             "A 2025-12 page still up on 17 October 2026 lists `submissions/RS_2025-12.zst` at 18.24 GB. "
-            "Nine months of that size are not a practical download on a machine with about 250 GB free, and they were not downloaded here. "
-            "The same script streams an `RS_*.zst` file and filters to the three subreddits, so a local run can add 2026 without a second code path. "
+            "Keeping all nine submissions files plus their comments files does not fit in about 250 GB free. "
+            "One submissions file at a time does fit. The 19 October 2026 check, including peer speed and what was actually streamed, is in the round 5 feasibility section. "
+            "The same script streams an `RS_*.zst` file and filters to the three subreddits. "
             "Monthly torrents for January–September 2026:",
             "",
         ]

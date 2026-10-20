@@ -535,6 +535,9 @@ def write_data_card(counts: pd.DataFrame, log: dict) -> None:
         counts_path=CARD_DIR / "dump_keyword_counts.csv",
         compare_path=CARD_DIR / "dump_vs_api_counts.csv",
     )
+    from ev_v2.round5_report import upsert_round5_card
+
+    upsert_round5_card(card_path)
 
 
 def retry_timeouts(client: ArcticClient) -> None:

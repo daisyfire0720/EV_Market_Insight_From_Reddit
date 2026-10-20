@@ -108,6 +108,8 @@ A complaint about one broken charger is not `oppose` by itself. `oppose` require
 
 **Why 800.** The review's range was 500 to 1,000. Yu et al. used 3,188 for a binary sentiment task. Eight hundred is enough to estimate kappa on stage and stance and on each barrier, and small enough for two people to finish. If the lower bound of the confidence interval on barrier kappa is below 0.60, add 200 adjudicated posts before a substantive claim. That rule should be fixed before looking at the model scores.
 
+The draw in `v2/annotation/annotation_sheet.csv` is that 800, with the practice rows in `annotation_preview.csv` held out. Inside the 800, each audience is filled toward 40 positives on each barrier (incentives and dealer friction first), then 25 posts in each of the four event windows, then year-band cells. The codebook with the collapsible onboarding flag is `v2/annotation/CODEBOOK.md`. Model predictions are in `annotation_model_key.csv`, not on the sheet. `v2/score_agreement.py` computes Cohen's kappa, Krippendorff's alpha, model-versus-human precision/recall/F1, and a Rogan-Gladen prevalence correction once two coder files exist. No coder has filled the sheet.
+
 **Statistics.**
 
 - Stage and stance: Cohen's kappa, plus percent agreement. Report the marginal distribution, because a rare `oppose` class makes kappa hard to interpret.

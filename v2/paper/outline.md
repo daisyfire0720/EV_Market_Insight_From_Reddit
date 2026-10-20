@@ -1,5 +1,7 @@
 # Electric-vehicle talk on Reddit, 2015–2026
 
+The draft is `manuscript.md`. This outline is the skeleton. January–September 2026 shopper posts were extracted and labeled after this outline was written; ignore the sentence below that says those months were not downloaded.
+
 Working title. The lead question is locked. The paper asks how the purchase barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — shift around the Inflation Reduction Act (August 2022), Tesla's price cuts (January 2023), NACS adoption (May–June 2023), and the end of the federal clean-vehicle credit for vehicles acquired after 30 September 2025. Enthusiast subreddits are compared with mainstream car-shopper subreddits (r/cars, r/Autos, r/carbuying). The language model and its human validation are the methods. The drafted introduction and hypotheses are `introduction.md`. Transportation Research Part D shape. Placeholders in braces are filled only from `v2/outputs/` after a run. They are not targets.
 
 ## Abstract

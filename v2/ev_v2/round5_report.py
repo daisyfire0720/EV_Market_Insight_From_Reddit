@@ -29,7 +29,7 @@ def render_round5_markdown(out_dir) -> str:
     lines = [
         "## Round 5 checks (unvalidated)",
         "",
-        "The labels are still the small open model. No person has coded the annotation sheet. Intervals in this section resample the design: sampled weeks for the enthusiast file, and calendar months for shoppers. A window built from fewer months than the design asks for is flagged. None of these differences is an effect of the statute or the price cut.",
+        "The labels are still the small open model. No person has coded the annotation sheet. Intervals in this section resample the design: sampled weeks for the enthusiast file, and calendar months for shoppers. A window built from fewer months than the design asks for is flagged. None of these differences is an effect of the statute or the price cut. If the round 6 baseline fill is already in the label file, these tables are the filled file. The before-and-after comparison is in the round 6 section.",
         "",
     ]
     summary = out_dir / "annotation_sample_summary.csv"

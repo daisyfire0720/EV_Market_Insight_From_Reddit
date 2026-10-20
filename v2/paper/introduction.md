@@ -1,6 +1,6 @@
 # How purchase barriers move when EV policy and prices move
 
-Working title. Transportation Research Part D shape. This is the introduction and the research questions for Framing A, which is the paper. The skeleton around it is `outline.md`. Numbers below are the ones already computed in `v2/data_card/` and `v2/outputs/`. They are not targets. Barrier shares from the pilot are not evidence for the hypotheses.
+Working title. Transportation Research Part D shape. This is the introduction and the research questions for Framing A, which is the paper. The draft manuscript is `manuscript.md` (and `manuscript.tex`). The skeleton around it is `outline.md`. Numbers below are the ones already computed in `v2/data_card/` and `v2/outputs/`. They are not targets. Barrier shares from the pilot are not evidence for the hypotheses. Shopper text through September 2026 has since been labeled; sentences in `outline.md` that say those months were not downloaded are out of date.
 
 ## Introduction
 

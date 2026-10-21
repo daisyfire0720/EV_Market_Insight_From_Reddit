@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+"""Local instruction-model labels for stage, family, aspect, and stance.
+
+The small NLI model in ``ev_v2/annotate.py`` stays the baseline. This script
+is the open instruction model Daisy will run on her own GPU. It does not
+call a paid API. On a machine with no GPU, use ``--backend mock``.
+
+Each output row records the model name and version. A jsonl cache lets a
+stopped run resume. The prompt asks for JSON only.
+
+From ``v2/``::
+
+    python llm_label.py --backend mock --posts tests/fixtures/llm_posts.csv --out /tmp/llm_out.csv
+    python llm_label.py --backend ollama --model qwen2.5:7b-instruct --posts data/raw/label_posts.csv --out outputs/llm_labels.csv
+
+Windows steps are in ``RUN_ON_MY_GPU.md``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from ev_v2.taxonomy import (  # noqa: E402
+    ASPECTS,
+    FAMILIES,
+    STAGES,
+    STANCE_CODES,
+)
+
+PROMPT_VERSION = "funnel-v1"
+
+
+def codebook_prompt(title: str, body: str) -> str:
+    stages = "\n".join(f"- {code}: {label}" for code, label in STAGES)
+    families = "\n".join(f"- {code}: {label}" for code, label in FAMILIES)
+    aspects = "\n".join(f"- {code}: {label}" for code, label in ASPECTS)
+    stances = ", ".join(STANCE_CODES)
+    text = f"{title}\n{body}".strip()
+    if len(text) > 1500:
+        text = text[:1500]
+    return f"""You code one Reddit submission about electric vehicles.
+Assign the stage from where the writer is in the purchase journey, not from a keyword alone. Charging can be evaluation or onboarding depending on whether they already own the car.
+Assign every topic family that is a real subject of the post, and every finer aspect that is present.
+Stance is the writer's position on electric vehicles as a class, not on one broken charger.
+
+Stages (choose one, or unclear):
+{stages}
+- unclear: the post does not show a journey position
+
+Families (zero or more):
+{families}
+
+Aspects (zero or more):
+{aspects}
+
+Stance (choose one): {stances}
+
+Return one JSON object and nothing else, with keys stage, families, aspects, stance, evidence.
+evidence is at most 20 words copied from the submission. Use an empty string if you cannot quote it.
+
+Submission:
+{text}
+"""
+
+
+def prompt_hash() -> str:
+    sample = codebook_prompt("title", "body")
+    # Hash the instructions, not the post, so one codebook version shares a cache.
+    head = sample.split("Submission:", 1)[0]
+    return hashlib.sha256(f"{PROMPT_VERSION}|{head}".encode()).hexdigest()[:16]
+
+
+def parse_label(raw: str) -> dict:
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start < 0 or end <= start:
+        return {"ok": False, "error": "no_json"}
+    try:
+        payload = json.loads(raw[start : end + 1])
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "bad_json"}
+    if not isinstance(payload, dict):
+        return {"ok": False, "error": "not_object"}
+    families = payload.get("families") or []
+    aspects = payload.get("aspects") or []
+    if isinstance(families, str):
+        families = [families]
+    if isinstance(aspects, str):
+        aspects = [aspects]
+    evidence = str(payload.get("evidence") or "")
+    words = evidence.split()
+    if len(words) > 20:
+        evidence = " ".join(words[:20])
+    return {
+        "ok": True,
+        "stage": str(payload.get("stage") or "unclear"),
+        "families": [str(item) for item in families],
+        "aspects": [str(item) for item in aspects],
+        "stance": str(payload.get("stance") or "no_stance"),
+        "evidence": evidence,
+    }
+
+
+class MockBackend:
+    """Fixed JSON, so the pipeline can be tested with no model download."""
+
+    name = "mock"
+    version = "mock-0"
+
+    def complete(self, prompts: list[str]) -> list[str]:
+        body = {
+            "stage": "evaluation",
+            "families": ["charging_energy"],
+            "aspects": ["charging_access"],
+            "stance": "mixed",
+            "evidence": "mock evidence",
+        }
+        return [json.dumps(body) for _ in prompts]
+
+
+class OpenAICompatBackend:
+    """vLLM and Ollama both expose this chat-completions shape."""
+
+    def __init__(self, base_url: str, model: str, version: str | None = None):
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+        self.name = model
+        self.version = version or model
+
+    def complete(self, prompts: list[str]) -> list[str]:
+        outputs = []
+        for prompt in prompts:
+            body = json.dumps(
+                {
+                    "model": self.model,
+                    "temperature": 0,
+                    "messages": [{"role": "user", "content": prompt}],
+                }
+            ).encode()
+            req = urllib.request.Request(
+                self.base_url + "/chat/completions",
+                data=body,
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=180) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+            outputs.append(payload["choices"][0]["message"]["content"])
+        return outputs
+
+
+class TransformersBackend:
+    """4-bit Hugging Face generate. Imports torch only when this backend is used."""
+
+    def __init__(self, model: str, four_bit: bool = True):
+        self.model_name = model
+        self.four_bit = four_bit
+        self.name = model
+        self._pipe = None
+        self.version = model
+
+    def _load(self):
+        if self._pipe is not None:
+            return
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        kwargs = {"device_map": "auto"}
+        if self.four_bit:
+            from transformers import BitsAndBytesConfig
+
+            kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
+        self.version = getattr(model.config, "_commit_hash", None) or self.model_name
+        self._tokenizer = tokenizer
+        self._model = model
+        self._torch = torch
+        self._pipe = True
+
+    def complete(self, prompts: list[str]) -> list[str]:
+        self._load()
+        outputs = []
+        for prompt in prompts:
+            tokens = self._tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
+            tokens = {key: value.to(self._model.device) for key, value in tokens.items()}
+            with self._torch.no_grad():
+                generated = self._model.generate(**tokens, max_new_tokens=200, do_sample=False)
+            new_tokens = generated[0][tokens["input_ids"].shape[1] :]
+            outputs.append(self._tokenizer.decode(new_tokens, skip_special_tokens=True))
+        return outputs
+
+
+def _load_cache(path: Path) -> dict[tuple[str, str, str], dict]:
+    done: dict[tuple[str, str, str], dict] = {}
+    if not path.exists():
+        return done
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        done[(str(row["id"]), str(row["model_name"]), str(row["prompt_hash"]))] = row
+    return done
+
+
+def label_posts(frame, backend, cache_path: Path, batch_size: int = 4) -> "object":
+    import pandas as pd
+
+    digest = prompt_hash()
+    cache = _load_cache(cache_path)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    pending = []
+    for row in frame.itertuples(index=False):
+        doc_id = str(row.id)
+        key = (doc_id, backend.name, digest)
+        if key in cache:
+            continue
+        title = str(getattr(row, "title", "") or "")
+        body = str(getattr(row, "selftext", "") or getattr(row, "text", "") or "")
+        pending.append((doc_id, codebook_prompt(title, body)))
+    handle = cache_path.open("a", encoding="utf-8")
+    try:
+        for start in range(0, len(pending), batch_size):
+            chunk = pending[start : start + batch_size]
+            raws = backend.complete([prompt for _, prompt in chunk])
+            for (doc_id, _), raw in zip(chunk, raws):
+                parsed = parse_label(raw)
+                stored = {
+                    "id": doc_id,
+                    "model_name": backend.name,
+                    "model_version": backend.version,
+                    "prompt_hash": digest,
+                    "prompt_version": PROMPT_VERSION,
+                    "stage": parsed.get("stage", ""),
+                    "families": "|".join(parsed.get("families") or []),
+                    "aspects": "|".join(parsed.get("aspects") or []),
+                    "stance": parsed.get("stance", ""),
+                    "evidence": parsed.get("evidence", ""),
+                    "ok": bool(parsed.get("ok")),
+                    "validated": False,
+                }
+                cache[(doc_id, backend.name, digest)] = stored
+                handle.write(json.dumps(stored) + "\n")
+            handle.flush()
+            print(f"  labeled {min(start + batch_size, len(pending))}/{len(pending)}", flush=True)
+    finally:
+        handle.close()
+    rows = []
+    for row in frame.itertuples(index=False):
+        key = (str(row.id), backend.name, digest)
+        if key in cache:
+            rows.append(cache[key])
+    return pd.DataFrame(rows)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Local instruction-model labels.")
+    parser.add_argument("--backend", choices=("mock", "ollama", "vllm", "transformers"), default="mock")
+    parser.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
+    parser.add_argument("--base-url", default="")
+    parser.add_argument("--posts", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--cache", type=Path, default=None)
+    parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--four-bit", action="store_true", default=True)
+    parser.add_argument("--no-four-bit", action="store_true")
+    args = parser.parse_args(argv)
+    import pandas as pd
+
+    posts = pd.read_csv(args.posts)
+    if args.backend == "mock":
+        backend = MockBackend()
+    elif args.backend in {"ollama", "vllm"}:
+        base = args.base_url or ("http://127.0.0.1:11434/v1" if args.backend == "ollama" else "http://127.0.0.1:8000/v1")
+        backend = OpenAICompatBackend(base, args.model)
+    else:
+        backend = TransformersBackend(args.model, four_bit=not args.no_four_bit)
+    cache = args.cache or args.out.with_suffix(".jsonl")
+    labeled = label_posts(posts, backend, cache, batch_size=max(1, args.batch_size))
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    labeled.to_csv(args.out, index=False)
+    print(f"wrote {args.out} rows={len(labeled)} model={backend.name} version={backend.version}", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

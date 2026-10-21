@@ -1,0 +1,13 @@
+audience,stage,k,n,share,validated
+enthusiast,ownership,3504,9044,0.3874391862007961,False
+enthusiast,unclear,2839,9044,0.31390977443609025,False
+enthusiast,consideration,1874,9044,0.2072091994692614,False
+enthusiast,purchase,418,9044,0.046218487394957986,False
+enthusiast,awareness,231,9044,0.025541795665634675,False
+enthusiast,evaluation,178,9044,0.01968155683325962,False
+shopper,ownership,8670,13783,0.6290357687005732,False
+shopper,consideration,3365,13783,0.2441413335268084,False
+shopper,purchase,784,13783,0.056881665820213305,False
+shopper,unclear,592,13783,0.042951461945875354,False
+shopper,awareness,325,13783,0.02357977218312414,False
+shopper,evaluation,47,13783,0.0034099978234056446,False

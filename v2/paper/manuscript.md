@@ -2,6 +2,8 @@
 
 **Draft for Transportation Research Part D. All model results in this file are preliminary. No human has coded the annotation sheet. Do not cite the shares as findings.**
 
+Round 7 supersedes the stage section below. The locked taxonomy is the 6-stage funnel and the 8 topic families in `v2/docs/reference_taxonomy_6stage_8family.pdf`. Onboarding is its own stage. The codebook is `v2/annotation/CODEBOOK.md`. The corpus instrument is the local instruction model in `v2/llm_label.py`, not only the small NLI baseline. Discontinuity and author-transition numbers are in `v2/outputs/FINDINGS.md` and are unvalidated scaffolds.
+
 ## Title options
 
 1. Purchase barriers in public electric-vehicle discussion: Reddit submissions around the Inflation Reduction Act, Tesla's price cuts, NACS, and the 2025 credit deadline.
@@ -175,9 +177,9 @@ English-language Reddit is not the US household population. The enthusiast file 
 
 These are unanswered. The draft does not pick them.
 
-1. **Second annotator.** The sheet is built for two coders. Nobody has been named, and nobody should be contacted from this repository.
-2. **Stage taxonomy.** One ownership stage, or Ryan's onboarding split. The taxonomy PDF is not in the repository. The sheet's onboarding column can be collapsed either way.
-3. **Model size.** The labels in this draft are the small open CPU model. A paid API or a GPU is not used.
+1. **Second annotator.** A labmate will code the sheet. The name is not written here. Nobody was contacted from this repository.
+2. **Stage taxonomy.** Settled. Six stages, onboarding separate from long-term ownership. See the taxonomy note.
+3. **Model.** An open instruction model on Daisy's RTX 4070. The recommended first checkpoint is Qwen2.5-7B-Instruct in 4-bit. Llama-3.1-8B-Instruct and Qwen2.5-14B-Instruct are the alternatives. No paid API. The small NLI model stays the baseline.
 4. **Comments.** Submissions only. A comments pull is a later decision. The cars comments file in the per-subreddit torrent is about 2.2 GB compressed and was not downloaded.
 5. **Upvote filter.** No score threshold is applied. A sensitivity with score at least 2 has not been run.
 

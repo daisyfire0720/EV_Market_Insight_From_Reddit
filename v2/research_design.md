@@ -100,7 +100,7 @@ A complaint about one broken charger is not `oppose` by itself. `oppose` require
 
 ## 5. Validation plan
 
-**Who.** Two annotators, working independently after a shared practice round. Daisy is one. The second should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated. Whether Ryan is that second coder is Daisy's decision. This round did not recruit anyone.
+**Who.** Two annotators. Daisy is one. The second is a labmate, who will code soon. This project did not contact or recruit anyone. The second coder should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated.
 
 **Practice.** The 25-row `v2/annotation/annotation_preview.csv` is for discussion. It is excluded from kappa. The codebook is revised once, then frozen.
 
@@ -108,7 +108,7 @@ A complaint about one broken charger is not `oppose` by itself. `oppose` require
 
 **Why 800.** The review's range was 500 to 1,000. Yu et al. used 3,188 for a binary sentiment task. Eight hundred is enough to estimate kappa on stage and stance and on each barrier, and small enough for two people to finish. If the lower bound of the confidence interval on barrier kappa is below 0.60, add 200 adjudicated posts before a substantive claim. That rule should be fixed before looking at the model scores.
 
-The draw in `v2/annotation/annotation_sheet.csv` is that 800, with the practice rows in `annotation_preview.csv` held out. Inside the 800, each audience is filled toward 40 positives on each barrier (incentives and dealer friction first), then 25 posts in each of the four event windows, then year-band cells. The codebook with the collapsible onboarding flag is `v2/annotation/CODEBOOK.md`. Model predictions are in `annotation_model_key.csv`, not on the sheet. `v2/score_agreement.py` computes Cohen's kappa, Krippendorff's alpha, model-versus-human precision/recall/F1, and a Rogan-Gladen prevalence correction once two coder files exist. No coder has filled the sheet.
+The draw in `v2/annotation/annotation_sheet.csv` is that 800, with the practice rows in `annotation_preview.csv` held out. Round 7 redrew it for the 6-stage funnel and the 8 topic families. Fifty rows are flagged `calibration=yes` and are excluded from kappa. The codebook is `v2/annotation/CODEBOOK.md`. The taxonomy note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. Model predictions are in `annotation_model_key.csv`, not on the sheet. `v2/score_agreement.py` computes Cohen's kappa, Krippendorff's alpha, model-versus-human precision/recall/F1, and a Rogan-Gladen prevalence correction once two coder files exist. It leaves the calibration rows out of the main table. No coder has filled the sheet.
 
 **Statistics.**
 
@@ -147,15 +147,29 @@ The pull on 16 October 2026 returned a count for every core subreddit-month from
 
 Usernames are kept only in the gitignored local file, so the bot filter can run. The committed excerpt and the annotation sheet do not contain usernames. The pull does not attempt to identify anyone. Short excerpts in the annotation file are for coding, not for republication in the paper.
 
-## 8. Decisions still open
+## 8. Decisions
 
-Framing A is locked. The shopper-text route is the dumps, not another pass at the search API.
+Framing A is locked, and the paper is built on the funnel. The shopper-text route is the dumps. Submissions only, until a later decision. The stage system is the 6-stage funnel in `v2/docs/reference_taxonomy_6stage_8family.pdf`, with onboarding kept separate from long-term ownership. Each post gets one stage, one or more of the eight topic families, the seven barrier aspects, and a stance. The instrument for the corpus is an open instruction model run on Daisy's own GPU (`v2/llm_label.py`, `v2/RUN_ON_MY_GPU.md`). The small NLI model stays as the baseline. No paid API.
 
-1. Name the second annotator. Daisy is one. Whether Ryan is the other coder is open. The second coder should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated.
-2. Keep one ownership stage, or adopt Ryan's onboarding split. The taxonomy PDF is not in the repo. Until then, ownership stays one code, with an optional onboarding flag.
-3. Whether a paid API key, or a GPU, will be available for a full-corpus generative model. The pilot uses a small open MNLI model on CPU because neither was available.
-4. Whether comments should be pulled. The original papers are mostly comments. This design censuses submissions. The per-subreddit comments files exist in the same torrent and are much larger (r/cars comments alone are about 2.16 GB compressed).
-5. Whether the score filter from the original pipeline (submission score at least 2, comment score above a percentile) should be a sensitivity check. It is not applied by default, because it keeps upvoted text and the claim is about public discussion.
+Still open:
+
+1. The labmate's name is not written in the repo. They will code `v2/annotation/annotation_sheet.csv`. Nobody was contacted from this project.
+2. Which checkpoint to run first. The note recommends Qwen2.5-7B-Instruct in 4-bit on the 16 GB card. Llama-3.1-8B-Instruct and Qwen2.5-14B-Instruct are alternatives. 14B may not fit.
+3. Whether comments should be pulled. The original papers are mostly comments. This design censuses submissions. The per-subreddit comments files exist in the same torrent and are much larger (r/cars comments alone are about 2.16 GB compressed).
+4. Whether a score filter (submission score at least 2) should be a sensitivity check. It is not applied by default.
+
+The discontinuity and the author-transition counts in round 7 are scaffolds on the small-model labels. They are replaced when the instruction-model labels, and then the human labels, exist.
+
+## 9. Discontinuity and stage transitions
+
+Four cutoffs, local linear in time, bandwidth chosen from 30, 60, 90, and 180 days, a 7-day donut, and placebos 180 days away:
+
+- IRA signing, 16 August 2022, outcome incentives.
+- IRA credit rules for vehicles placed in service after 31 December 2022, cutoff 1 January 2023, outcome incentives. Source: Pub. L. 117-169 and 26 U.S.C. § 30D, the same statute already cited for the August 2022 enactment. This cutoff is twelve days before the Tesla price-cut date, so the two fits are not separate experiments.
+- Tesla price cuts, 13 January 2023, outcome price.
+- Credit end, 30 September 2025, outcome incentives.
+
+Stage transitions use authors with at least two posts. The small model cannot split onboarding from long-term ownership, so the ladder stops at one ownership rung. Repeat-author coverage is the feasibility number. A week sample is a hard place to see the same person twice.
 
 ## Appendix. Framings that are not the paper
 

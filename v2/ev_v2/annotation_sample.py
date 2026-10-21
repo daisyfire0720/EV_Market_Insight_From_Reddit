@@ -45,11 +45,22 @@ EVENT_MONTHS = {
 
 YEAR_BANDS = ("2015-2017", "2018-2020", "2021-2023", "2024-latest")
 
+# The coder sheet uses the 6-stage funnel. Onboarding is a stage, not a side flag.
+# calibration is filled in by the draw (yes or blank). Every code column stays empty.
 SHEET_COLUMNS = [
     "id",
     "subreddit",
     "title",
     "text_excerpt",
+    "calibration",
+    "purchase_selection",
+    "charging_energy",
+    "battery_range",
+    "cost_incentives",
+    "dealer_access",
+    "reliability_service",
+    "policy_market",
+    "transition_narratives",
     "charging_access",
     "range",
     "price_tco",
@@ -59,7 +70,6 @@ SHEET_COLUMNS = [
     "environment",
     "none",
     "stage",
-    "onboarding",
     "stance",
     "annotator",
     "notes",
@@ -70,6 +80,9 @@ POSITIVE_FLOOR = 40
 EVENT_QUOTA = 25
 CELL_QUOTA = 50
 SEED = 20261019
+CALIBRATION_N = 50
+STAGE_FLOOR = 20
+FAMILY_FLOOR = 15
 
 
 def year_band(month: str) -> str:
@@ -219,7 +232,136 @@ def sample_composition(draw: pd.DataFrame, labels: pd.DataFrame) -> pd.DataFrame
     return pd.DataFrame(rows)
 
 
-def blank_sheet(labels: pd.DataFrame, draw: pd.DataFrame, text_by_id: dict[str, dict] | None = None) -> pd.DataFrame:
+def draw_funnel_sample(
+    frame: pd.DataFrame,
+    *,
+    target: int = TARGET_N,
+    stage_floor: int = STAGE_FLOOR,
+    family_floor: int = FAMILY_FLOOR,
+    positive_floor: int = 15,
+    event_quota: int = 15,
+    seed: int = SEED,
+    exclude_ids: set[str] | None = None,
+) -> pd.DataFrame:
+    """Draw posts so each audience covers the stages and families we can see.
+
+    ``frame`` needs ``sampling_stage`` and boolean columns named by family code.
+    Those columns are sampling aids from the small model and a lexicon. They
+    are not written on the coder sheet.
+    """
+    from ev_v2.taxonomy import FAMILY_CODES, STAGE_CODES
+
+    work = frame.copy()
+    work["id"] = work["id"].astype(str)
+    if exclude_ids:
+        work = work[~work["id"].isin({str(item) for item in exclude_ids})]
+    work = work.drop_duplicates("id", keep="first")
+    rng = np.random.default_rng(seed)
+    rows: list[dict] = []
+    selected: set[str] = set()
+    stage_order = [code for code in ("evaluation", "awareness", "onboarding", "purchase", "long_term_ownership", "consideration", "ownership_unsplit", "unclear") if code in set(work["sampling_stage"])]
+    # STAGE_CODES includes unclear; the rare journey stages are requested first.
+    for code in STAGE_CODES:
+        if code not in stage_order and code in set(work["sampling_stage"]):
+            stage_order.append(code)
+
+    def take(pool: pd.DataFrame, k: int, layer: str, detail: str) -> None:
+        if k <= 0 or pool.empty:
+            return
+        rest = pool[~pool["id"].isin(selected)]
+        if rest.empty:
+            return
+        k = min(int(k), int(len(rest)))
+        chosen = rest.sample(n=k, random_state=int(rng.integers(0, 2**31 - 1)))
+        for doc_id in chosen["id"].tolist():
+            selected.add(str(doc_id))
+            rows.append({"id": str(doc_id), "layer": layer, "detail": detail})
+
+    def n_selected(pool: pd.DataFrame) -> int:
+        if pool.empty or not selected:
+            return 0
+        return int(pool["id"].isin(selected).sum())
+
+    for audience in AUDIENCES:
+        group = work[work["audience"] == audience]
+        for stage in stage_order:
+            pool = group[group["sampling_stage"] == stage]
+            take(pool, stage_floor - n_selected(pool), "stage", f"{audience}|{stage}")
+        for family in FAMILY_CODES:
+            if family not in group.columns:
+                continue
+            pool = group[group[family].fillna(False).astype(bool)]
+            take(pool, family_floor - n_selected(pool), "family", f"{audience}|{family}")
+        for code in BARRIER_DRAW_ORDER:
+            if code not in group.columns:
+                continue
+            pool = group[group[code].fillna(False).astype(bool)]
+            take(pool, positive_floor - n_selected(pool), "barrier", f"{audience}|{code}")
+        for event_id, months in EVENT_MONTHS.items():
+            pool = group[group["month"].isin(months)]
+            n_already = int(pool["id"].isin(selected).sum()) if len(pool) else 0
+            take(pool, event_quota - n_already, "event", f"{audience}|{event_id}")
+    guard = 0
+    while len(rows) < target and guard < target * 4:
+        guard += 1
+        progressed = False
+        for audience in AUDIENCES:
+            if len(rows) >= target:
+                break
+            rest = work[(work["audience"] == audience) & (~work["id"].isin(selected))]
+            if rest.empty:
+                continue
+            take(rest, 1, "fill", audience)
+            progressed = True
+        if not progressed:
+            break
+    if len(rows) > target:
+        rank = {"stage": 0, "family": 1, "barrier": 2, "event": 3, "fill": 4}
+        protected = [row for row in rows if row["layer"] in {"stage", "family", "barrier"}]
+        spare = [row for row in rows if row["layer"] not in {"stage", "family", "barrier"}]
+        spare_sorted = sorted(spare, key=lambda row: rank.get(row["layer"], 9))
+        room = max(0, target - len(protected))
+        rows = protected + spare_sorted[:room]
+        if len(rows) > target:
+            # Still over: drop family rows after the stage rows.
+            stage_rows = [row for row in rows if row["layer"] == "stage"]
+            rest = [row for row in rows if row["layer"] != "stage"]
+            room = max(0, target - len(stage_rows))
+            rows = stage_rows + rest[:room]
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return pd.DataFrame(columns=["id", "layer", "detail"])
+    return out.drop_duplicates("id", keep="first").reset_index(drop=True)
+
+
+def calibration_ids(draw: pd.DataFrame, frame: pd.DataFrame, n: int = CALIBRATION_N, seed: int = SEED) -> set[str]:
+    """Flag a subset of the draw, spread across audiences and sampling stages."""
+    if draw.empty or n <= 0:
+        return set()
+    merged = draw.merge(frame[["id", "audience", "sampling_stage"]], on="id", how="left")
+    rng = np.random.default_rng(seed + 1)
+    picked: list[str] = []
+    # One from each audience-stage cell first, then fill at random.
+    cells = merged.groupby(["audience", "sampling_stage"], dropna=False)
+    for _, block in cells:
+        if len(picked) >= n:
+            break
+        choice = block.sample(n=1, random_state=int(rng.integers(0, 2**31 - 1)))
+        picked.append(str(choice.iloc[0]["id"]))
+    rest = merged[~merged["id"].astype(str).isin(picked)]
+    need = n - len(picked)
+    if need > 0 and len(rest):
+        extra = rest.sample(n=min(need, len(rest)), random_state=int(rng.integers(0, 2**31 - 1)))
+        picked.extend(extra["id"].astype(str).tolist())
+    return set(picked[:n])
+
+
+def blank_sheet(
+    labels: pd.DataFrame,
+    draw: pd.DataFrame,
+    text_by_id: dict[str, dict] | None = None,
+    calibration: set[str] | None = None,
+) -> pd.DataFrame:
     """Coder sheet. Code columns are empty. Text is title plus excerpt when the fetch has it."""
     text_by_id = text_by_id or {}
     meta = labels.drop_duplicates("id").set_index("id")
@@ -232,12 +374,22 @@ def blank_sheet(labels: pd.DataFrame, draw: pd.DataFrame, text_by_id: dict[str, 
         subreddit = ""
         if info is not None:
             subreddit = str(info["subreddit"])
+        flagged = "yes" if calibration and str(doc_id) in calibration else ""
         rows.append(
             {
                 "id": doc_id,
                 "subreddit": subreddit,
                 "title": title,
                 "text_excerpt": excerpt,
+                "calibration": flagged,
+                "purchase_selection": "",
+                "charging_energy": "",
+                "battery_range": "",
+                "cost_incentives": "",
+                "dealer_access": "",
+                "reliability_service": "",
+                "policy_market": "",
+                "transition_narratives": "",
                 "charging_access": "",
                 "range": "",
                 "price_tco": "",
@@ -247,7 +399,6 @@ def blank_sheet(labels: pd.DataFrame, draw: pd.DataFrame, text_by_id: dict[str, 
                 "environment": "",
                 "none": "",
                 "stage": "",
-                "onboarding": "",
                 "stance": "",
                 "annotator": "",
                 "notes": "",

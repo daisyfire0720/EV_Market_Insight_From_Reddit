@@ -413,3 +413,139 @@ No enthusiast event, prior-three, or year-ago window is missing a designed month
 
 The manuscript draft that uses these tables is `v2/paper/manuscript.md`. Every share in it is preliminary until the annotation sheet is coded.
 <!-- round6-end -->
+
+<!-- round7-start -->
+## Round 7 funnel, discontinuity, and transitions (unvalidated)
+
+Daisy locked the 6-stage funnel, with onboarding kept separate from long-term ownership, and the 8 topic families. The note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. The codebook for the labmate is `v2/annotation/CODEBOOK.md`. The blank sheet is `v2/annotation/annotation_sheet.csv`. The small NLI model is still the only label on the corpus. It has one ownership class, so it cannot yet measure onboarding against long-term ownership. Shares below are that model's labels, or a sampling lexicon used only to build the sheet. They are not human codes and they are not effects.
+
+The sheet has 800 posts (382 enthusiast, 418 shopper). 800 have an excerpt. 50 are flagged `calibration=yes` and are excluded from kappa. Code cells are empty.
+
+Sampling coverage inside the sheet (not codes). A stage or family the small model cannot see is absent here even if the coder will still use it:
+
+| Audience | Stratum | Kind | Posts |
+|---|---|---|---:|
+| enthusiast | ownership_unsplit | stage | 105 |
+| enthusiast | unclear | stage | 88 |
+| enthusiast | consideration | stage | 70 |
+| enthusiast | purchase | stage | 29 |
+| enthusiast | onboarding | stage | 24 |
+| enthusiast | evaluation | stage | 23 |
+| enthusiast | long_term_ownership | stage | 22 |
+| enthusiast | awareness | stage | 21 |
+| enthusiast | purchase_selection | family | 75 |
+| enthusiast | charging_energy | family | 70 |
+| enthusiast | battery_range | family | 64 |
+| enthusiast | cost_incentives | family | 93 |
+| enthusiast | dealer_access | family | 25 |
+| enthusiast | reliability_service | family | 25 |
+| enthusiast | policy_market | family | 49 |
+| enthusiast | transition_narratives | family | 16 |
+| shopper | ownership_unsplit | stage | 177 |
+| shopper | consideration | stage | 86 |
+| shopper | purchase | stage | 32 |
+| shopper | unclear | stage | 32 |
+| shopper | awareness | stage | 29 |
+| shopper | onboarding | stage | 21 |
+| shopper | long_term_ownership | stage | 21 |
+| shopper | evaluation | stage | 20 |
+| shopper | purchase_selection | family | 92 |
+| shopper | charging_energy | family | 21 |
+| shopper | battery_range | family | 48 |
+| shopper | cost_incentives | family | 112 |
+| shopper | dealer_access | family | 27 |
+| shopper | reliability_service | family | 19 |
+| shopper | policy_market | family | 38 |
+| shopper | transition_narratives | family | 23 |
+
+### Small-model stage shares
+
+Ownership is one class. Onboarding is not identified.
+
+| Audience | Stage | Share | n |
+|---|---|---:|---:|
+| enthusiast | ownership | 0.387 | 9044 |
+| enthusiast | unclear | 0.314 | 9044 |
+| enthusiast | consideration | 0.207 | 9044 |
+| enthusiast | purchase | 0.046 | 9044 |
+| enthusiast | awareness | 0.026 | 9044 |
+| enthusiast | evaluation | 0.020 | 9044 |
+| shopper | ownership | 0.629 | 13783 |
+| shopper | consideration | 0.244 | 13783 |
+| shopper | purchase | 0.057 | 13783 |
+| shopper | unclear | 0.043 | 13783 |
+| shopper | awareness | 0.024 | 13783 |
+| shopper | evaluation | 0.003 | 13783 |
+
+### Repeat-author coverage
+
+Deleted authors are dropped. The hash is not a name.
+
+| Audience | Posts with a hash | Authors | Repeat authors | Share of posts from repeat authors | Max posts |
+|---|---:|---:|---:|---:|---:|
+| all | 19781 | 13903 | 2392 | 0.418 | 91 |
+| enthusiast | 8489 | 6681 | 957 | 0.326 | 79 |
+| shopper | 11292 | 7432 | 1404 | 0.466 | 91 |
+
+The median author has 1.0 post in this file, and the busiest hash has 91 posts. The repeat-post share is a minority of accounts, not a panel of buyers.
+
+### Stage transitions across the cutoffs
+
+A pair is two successive posts by the same author, the first in the 180 days before the cutoff and the second in the 180 days after. Forward means the later post is further down the small-model ladder. Ownership is one rung.
+
+| Cutoff | Fit | Pairs | Forward | Rate |
+|---|---|---:|---:|---:|
+| ira_signing_2022 | main | 116 | 21 | 0.181 |
+| ira_signing_2022 | placebo_-180d | 65 | 10 | 0.154 |
+| ira_signing_2022 | placebo_+180d | 91 | 18 | 0.198 |
+| ira_credit_rules_2023 | main | 115 | 20 | 0.174 |
+| ira_credit_rules_2023 | placebo_-180d | 110 | 15 | 0.136 |
+| ira_credit_rules_2023 | placebo_+180d | 62 | 11 | 0.177 |
+| tesla_price_cut_2023 | main | 105 | 17 | 0.162 |
+| tesla_price_cut_2023 | placebo_-180d | 103 | 16 | 0.155 |
+| tesla_price_cut_2023 | placebo_+180d | 53 | 9 | 0.170 |
+| credit_end_2025 | main | 39 | 5 | 0.128 |
+| credit_end_2025 | placebo_-180d | 33 | 5 | 0.152 |
+| credit_end_2025 | placebo_+180d | 31 | 6 | 0.194 |
+
+### Regression discontinuity in time
+
+Local linear jump in the daily share, triangular kernel, bandwidth chosen by even/odd day cross-validation on 30, 60, 90, and 180 days. The donut drops 7 days on each side. Placebos move the cutoff by 180 days. A thin fit has fewer than 30 posts or 5 days on a side.
+
+| Cutoff | Audience | Outcome | Fit | Bandwidth | Jump | Posts left | Posts right | Thin |
+|---|---|---|---|---:|---:|---:|---:|---|
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | main | 180 | 0.012 | 1228 | 1215 | False |
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | donut | 180 | 0.030 | 1021 | 1199 | False |
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | placebo_-180d | 180 | 0.044 | 340 | 1240 | False |
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | placebo_+180d | 180 | -0.043 | 1228 | 821 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | main | 180 | 0.050 | 1231 | 1033 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | donut | 180 | 0.052 | 1215 | 1023 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | placebo_-180d | 180 | 0.039 | 976 | 1245 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | placebo_+180d | 180 | 0.011 | 1047 | 326 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | main | 60 | -0.078 | 923 | 148 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | donut | 60 | -0.393 | 762 | 104 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | placebo_-180d | 60 | 0.041 | 828 | 322 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | placebo_+180d | 60 | -0.264 | 558 | 141 | False |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | main | 60 | 0.009 | 353 | 148 | False |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | donut | 60 | 0.021 | 142 | 137 | False |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | placebo_-180d | 60 | 0.238 | 48 | 142 | True |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | placebo_+180d | 60 | 0.014 | 70 | 116 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | main | 60 | -0.049 | 193 | 162 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | donut | 60 | 0.004 | 170 | 141 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | placebo_-180d | 60 | -0.004 | 236 | 215 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | placebo_+180d | 60 | -0.084 | 237 | 184 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | main | 180 | 0.017 | 532 | 598 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | donut | 180 | 0.023 | 513 | 569 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | placebo_-180d | 180 | 0.001 | 583 | 531 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | placebo_+180d | 180 | -0.035 | 595 | 530 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | main | 90 | 0.131 | 277 | 297 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | donut | 90 | 0.051 | 246 | 256 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | placebo_-180d | 90 | 0.101 | 255 | 259 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | placebo_+180d | 90 | -0.068 | 274 | 239 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | main | 180 | -0.056 | 290 | 280 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | donut | 180 | -0.094 | 280 | 266 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | placebo_-180d | 180 | -0.005 | 625 | 288 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | placebo_+180d | 180 | -0.012 | 282 | 272 | False |
+
+GPU instructions for the instruction model are `v2/RUN_ON_MY_GPU.md`. That run has not been done on this machine. The 800-post sheet is what the labmate codes.
+<!-- round7-end -->

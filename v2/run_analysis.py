@@ -399,6 +399,9 @@ def write_findings(out: Path, manifest: dict, counts: pd.DataFrame, kept: pd.Dat
     from ev_v2.round6_report import upsert_round6_findings
 
     upsert_round6_findings(out / "FINDINGS.md", out)
+    from ev_v2.round7_report import upsert_round7_findings
+
+    upsert_round7_findings(out / "FINDINGS.md", out)
 
 
 def main() -> None:

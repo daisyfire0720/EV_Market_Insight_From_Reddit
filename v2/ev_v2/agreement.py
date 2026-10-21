@@ -32,6 +32,8 @@ STAGE_CODES = (
     "consideration",
     "evaluation",
     "purchase",
+    "onboarding",
+    "long_term_ownership",
     "ownership",
     "unclear",
 )
@@ -236,13 +238,23 @@ def score_coders(
     right = coder_b.copy()
     left["id"] = left["id"].astype(str)
     right["id"] = right["id"].astype(str)
-    both = left.merge(right, on="id", suffixes=("__a", "__b"), how="inner")
+    calibration_ids: set[str] = set()
+    for sheet in (left, right):
+        if "calibration" not in sheet.columns:
+            continue
+        flagged = sheet["calibration"].astype(str).str.strip().str.lower().isin({"yes", "1", "true", "y"})
+        calibration_ids.update(sheet.loc[flagged, "id"].astype(str))
+    both_all = left.merge(right, on="id", suffixes=("__a", "__b"), how="inner")
+    both = both_all[~both_all["id"].isin(calibration_ids)].copy()
+    calibration_both = both_all[both_all["id"].isin(calibration_ids)].copy()
     agreement_rows = []
     model_rows = []
     prevalence_rows = []
     rng = np.random.default_rng(seed)
 
-    fields: list[tuple[str, object]] = [(code, parse_binary) for code in BARRIER_CODES]
+    from ev_v2.taxonomy import FAMILY_CODES
+
+    fields: list[tuple[str, object]] = [(code, parse_binary) for code in list(BARRIER_CODES) + list(FAMILY_CODES)]
     fields.append(("stage", lambda value: parse_nominal(value, STAGE_CODES)))
     fields.append(("onboarding", lambda value: parse_nominal(value, ONBOARDING_CODES)))
     fields.append(("stance", lambda value: parse_nominal(value, STANCE_CODES)))
@@ -301,12 +313,47 @@ def score_coders(
             n_boot,
         )
 
+    calibration_rows = _agreement_rows(calibration_both, fields, rng, n_boot) if len(calibration_both) else []
     return {
         "agreement": pd.DataFrame(agreement_rows),
+        "calibration_agreement": pd.DataFrame(calibration_rows),
         "model_vs_human": pd.DataFrame(model_rows),
         "prevalence": pd.DataFrame(prevalence_rows),
-        "n_joined": pd.DataFrame([{"n_joined": int(len(both))}]),
+        "n_joined": pd.DataFrame(
+            [{"n_joined": int(len(both)), "n_calibration_excluded": int(len(calibration_ids)), "n_calibration_joined": int(len(calibration_both))}]
+        ),
     }
+
+
+def _agreement_rows(both: pd.DataFrame, fields: list, rng: np.random.Generator, n_boot: int) -> list[dict]:
+    rows = []
+    if both.empty:
+        return rows
+    for column, parser in fields:
+        if f"{column}__a" not in both.columns or f"{column}__b" not in both.columns:
+            continue
+        a_vals, b_vals, blank_mismatch = _paired(both, column, parser)
+        kappa = cohen_kappa(a_vals, b_vals)
+        raw_pairs = [(parser(a), parser(b)) for a, b in zip(both[f"{column}__a"], both[f"{column}__b"])]
+        alpha_missing = krippendorff_alpha_nominal(raw_pairs)
+        n_disagree = sum(x != y for x, y in zip(a_vals, b_vals))
+        boot = _bootstrap_kappa(a_vals, b_vals, rng, n_boot) if a_vals else (float("nan"), float("nan"))
+        rows.append(
+            {
+                "field": column,
+                "n_both_coded": kappa["n"],
+                "n_disagree": n_disagree,
+                "n_blank_mismatch": blank_mismatch,
+                "percent_agreement": kappa["agreement"],
+                "cohen_kappa": kappa["kappa"],
+                "kappa_lo": boot[0],
+                "kappa_hi": boot[1],
+                "krippendorff_alpha": alpha_missing["alpha"],
+                "alpha_n": alpha_missing["n"],
+                "alpha_skipped": alpha_missing["n_skipped"],
+            }
+        )
+    return rows
 
 
 def _bootstrap_kappa(left: list, right: list, rng: np.random.Generator, n_boot: int) -> tuple[float, float]:

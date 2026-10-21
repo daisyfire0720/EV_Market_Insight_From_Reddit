@@ -155,8 +155,43 @@ def choose_bandwidth(daily: pd.DataFrame, grid: tuple[int, ...] = BANDWIDTHS) ->
     return best_h
 
 
-def rdit_table(frame: pd.DataFrame, audience: str | None = None) -> pd.DataFrame:
-    """One row per cutoff, for the main fit, the donut, and the placebos."""
+def _week_interval(work: pd.DataFrame, outcome: str, cutoff: date, bandwidth: int, donut: int, n_boot: int, seed: int) -> tuple[float, float]:
+    """Percentile interval for one jump. Weeks are resampled; the bandwidth is not re-chosen."""
+    posts = work.dropna(subset=["created_day"]).copy()
+    if posts.empty or n_boot <= 0:
+        return float("nan"), float("nan")
+    posts["day"] = posts["created_day"].map(lambda item: (item - cutoff).days)
+    posts["y"] = posts[outcome].fillna(False).astype(bool).astype(int)
+    posts = posts[(posts["day"] >= -bandwidth) & (posts["day"] <= bandwidth) & (posts["day"].abs() > donut)]
+    if posts.empty:
+        return float("nan"), float("nan")
+    posts["week"] = (posts["day"] // 7).astype(int)
+    weeks = posts["week"].unique()
+    if len(weeks) < 4:
+        return float("nan"), float("nan")
+    grouped = {int(week): block for week, block in posts.groupby("week")}
+    rng = np.random.default_rng(seed)
+    draws = []
+    for _ in range(n_boot):
+        take = rng.choice(weeks, size=len(weeks), replace=True)
+        sample = pd.concat([grouped[int(week)] for week in take], ignore_index=True)
+        daily = sample.groupby("day")["y"].agg(k="sum", n="size").reset_index()
+        daily["y"] = daily["k"] / daily["n"]
+        fit = _jump(daily["day"].to_numpy(), daily["y"].to_numpy(), daily["n"].to_numpy(dtype=float), bandwidth, donut)
+        if np.isfinite(fit["tau"]):
+            draws.append(fit["tau"])
+    if len(draws) < max(20, n_boot // 5):
+        return float("nan"), float("nan")
+    return float(np.quantile(draws, 0.025)), float(np.quantile(draws, 0.975))
+
+
+def rdit_table(frame: pd.DataFrame, audience: str | None = None, n_boot: int = 0, seed: int = 20261021) -> pd.DataFrame:
+    """One row per cutoff, for the main fit, the bandwidth grid, the donut, and the placebos.
+
+    ``n_boot`` resamples week clusters for the main fit and the donut only.
+    Zero leaves the interval empty. The bandwidth chosen on the original
+    sample is held fixed inside the resample.
+    """
     work = frame.copy()
     if audience is not None and "audience" in work.columns:
         work = work[work["audience"] == audience]
@@ -178,17 +213,48 @@ def rdit_table(frame: pd.DataFrame, audience: str | None = None) -> pd.DataFrame
                 fit = {"tau": float("nan"), "left_level": float("nan"), "right_level": float("nan"), "n_left": 0, "n_right": 0, "days_left": 0, "days_right": 0, "thin": True}
             else:
                 fit = _jump(used["day"].to_numpy(), used["y"].to_numpy(), used["n"].to_numpy(dtype=float), bandwidth, donut)
+            lo, hi = (float("nan"), float("nan"))
+            if n_boot > 0 and kind in {"main", "donut"} and not fit["thin"]:
+                lo, hi = _week_interval(
+                    work,
+                    outcome,
+                    cutoff,
+                    bandwidth,
+                    donut,
+                    n_boot,
+                    seed + cutoff.toordinal() + (0 if kind == "main" else 17),
+                )
             rows.append(
                 {
                     "cutoff_id": spec["cutoff_id"],
-                    "cutoff": spec["cutoff"].isoformat(),
+                    "cutoff": cutoff.isoformat(),
                     "audience": audience or "all",
                     "outcome": spec["outcome_label"],
                     "fit": kind,
                     "bandwidth_days": bandwidth,
                     "donut_days": donut,
+                    "tau_lo": lo,
+                    "tau_hi": hi,
                     "validated": False,
                     **fit,
                 }
             )
+        if not daily.empty:
+            for alt in BANDWIDTHS:
+                alt_fit = _jump(daily["day"].to_numpy(), daily["y"].to_numpy(), daily["n"].to_numpy(dtype=float), alt, 0)
+                rows.append(
+                    {
+                        "cutoff_id": spec["cutoff_id"],
+                        "cutoff": spec["cutoff"].isoformat(),
+                        "audience": audience or "all",
+                        "outcome": spec["outcome_label"],
+                        "fit": f"bandwidth_{alt}",
+                        "bandwidth_days": alt,
+                        "donut_days": 0,
+                        "tau_lo": float("nan"),
+                        "tau_hi": float("nan"),
+                        "validated": False,
+                        **alt_fit,
+                    }
+                )
     return pd.DataFrame(rows)

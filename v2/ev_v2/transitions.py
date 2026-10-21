@@ -71,15 +71,20 @@ def _coverage_row(name: str, block: pd.DataFrame) -> dict:
     }
 
 
-def consecutive_pairs(frame: pd.DataFrame) -> pd.DataFrame:
-    """One row per pair of successive posts by the same author."""
+def consecutive_pairs(frame: pd.DataFrame, order_map: dict[str, int] | None = None) -> pd.DataFrame:
+    """One row per pair of successive posts by the same author.
+
+    The default ladder is the small model, with ownership unsplit. Pass the
+    six-stage order for instruction-model labels.
+    """
+    ladder = order_map or MAPPED_ORDER
     work = frame.copy()
     work["author_hash"] = work["author_hash"].fillna("").astype(str)
     work = work[work["author_hash"] != ""]
     work["created_utc"] = pd.to_numeric(work["created_utc"], errors="coerce")
     work = work.dropna(subset=["created_utc"])
     work["stage"] = work["stage_label"].map(map_stage) if "stage" not in work.columns else work["stage"]
-    work["rung"] = work["stage"].map(lambda value: MAPPED_ORDER.get(str(value), np.nan))
+    work["rung"] = work["stage"].map(lambda value: ladder.get(str(value), np.nan))
     work = work.sort_values(["author_hash", "created_utc", "id"] if "id" in work.columns else ["author_hash", "created_utc"])
     rows = []
     for author, block in work.groupby("author_hash", sort=False):

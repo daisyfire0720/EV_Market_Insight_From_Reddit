@@ -1,44 +1,47 @@
-# Purchase barriers in electric-vehicle talk on Reddit, 2015–2026
+# Stage and topic in electric-vehicle talk on Reddit, 2015–2026
 
-**Draft for Transportation Research Part D. All model results in this file are preliminary. No human has coded the annotation sheet. Do not cite the shares as findings.**
-
-Round 7 supersedes the stage section below. The locked taxonomy is the 6-stage funnel and the 8 topic families in `v2/docs/reference_taxonomy_6stage_8family.pdf`. Onboarding is its own stage. The codebook is `v2/annotation/CODEBOOK.md`. The corpus instrument is the local instruction model in `v2/llm_label.py`, not only the small NLI baseline. Discontinuity and author-transition numbers are in `v2/outputs/FINDINGS.md` and are unvalidated scaffolds.
+**Draft for Transportation Research Part D. Every number in the baseline section is unvalidated output from the small zero-shot model. No human has coded the annotation sheet. The instruction-model results section is a placeholder. Do not cite either as a finding about buyers.**
 
 ## Title options
 
-1. Purchase barriers in public electric-vehicle discussion: Reddit submissions around the Inflation Reduction Act, Tesla's price cuts, NACS, and the 2025 credit deadline.
-2. Enthusiast and shopper talk about electric-vehicle barriers on Reddit, 2015–2026.
-3. Document-level barrier labels for electric-vehicle discussion on Reddit around four US market shocks.
+1. Where the barrier sits in the purchase: stage and topic in electric-vehicle talk on Reddit, 2015–2026.
+2. Enthusiast and shopper submissions around four US electric-vehicle shocks: a six-stage funnel.
+3. Document-level stage, topic family, and barrier labels for electric-vehicle discussion on Reddit.
 
 Working title used below: option 1.
 
 ## Abstract
 
-Surveys of electric-vehicle intenders record price, range, and charging as barriers, but they miss the months in which a credit, a price cut, or a charging-standard announcement lands, and they miss the wording people use when nobody is asking. This paper measures seven purchase barriers, purchase-journey stage, and stance on Reddit submissions from 2015 through September 2026. The enthusiast file is a week sample of seven electric-vehicle subreddits drawn from the Arctic Shift archive. The shopper file is keyword-matched submissions from r/cars, r/Autos, and r/carbuying, read from Academic Torrents dumps. A small open zero-shot model assigns the labels on CPU. Two annotators are planned for an 800-post sheet; that sheet is still blank, so every share below is unvalidated.
+Surveys of people who say they might buy an electric vehicle record price, range, and charging as barriers. They miss the month a credit or a price cut arrives, and they miss the wording used when nobody is asking. This paper reads Reddit submissions from 2015 through September 2026. Each submission gets one stage in a six-stage purchase funnel, one or more of eight topic families, a finer barrier aspect when one is present, and a stance. The stage is the writer's place in the journey, not a keyword. Enthusiast posts are a week sample of seven electric-vehicle subreddits. Shopper posts are keyword-matched submissions from r/cars, r/Autos, and r/carbuying. The corpus is labeled by an open instruction model of about 7 to 8 billion parameters, run locally. A smaller zero-shot model is the baseline, not the instrument. Two annotators code 800 posts, including a 50-post calibration subset that is left out of kappa. That sheet is still blank, so this draft has no validated result.
 
-On the current unvalidated labels the enthusiast file has 9044 posts and the shopper file has 13783. Charging and battery are more common in the enthusiast file. Price is close in the two files. The shopper file is not a file of people who are about to buy: most of those posts are labeled as ownership or support, which is what the keyword filter returns. Around the four shocks, some event-minus-baseline differences exclude zero under a design-aware bootstrap and some do not. An interrupted series that resamples months agrees with fewer of them. None of those differences is an effect of the statute or the price cut.
+On the small-model baseline the enthusiast file has 9044 posts and the shopper file has 13783. That model has one ownership class, so it cannot separate onboarding from long-term ownership. The discontinuity and the author-transition counts in section 7 are the same baseline. They are not effects. Section 8 is empty until the local model has been run.
 
-## 1. Introduction and contribution
+## 1. Introduction and research questions
 
-Electric-vehicle policy treats price, charging, and information as what keeps households out. Those claims are usually tested with surveys of people who say they might buy. A survey misses the language used when the writer was not recruited, and it misses the particular month a credit or a price cut arrives.
+Electric-vehicle policy treats price, charging, and information as what keeps households out. Those claims are usually tested with surveys of people who already say they might buy. A survey misses the language used when the writer was not recruited, and it misses the particular day a credit rule or a price cut arrives.
 
-Reddit is a public record of that language. Ruan and Lv (2022) recovered topics and a sentiment trend from 3,437,917 Reddit posts (mostly comments) from January 2011 through December 2020. Ruan and Lv (2023) showed that the Reddit pattern over that decade is not the Twitter pattern. Ashby, Weir, and Fussey (2025) organized charging talk on just under 100,000 tweets. Yu et al. (2025) showed what a document-level check looks like, on charging-station reviews rather than on Reddit. None of those papers measures, at the post and with a double-coded check, the barrier a writer is raising, the stage of the purchase, and the stance, through the dates that now organize US electric-vehicle buying. Those dates are the Inflation Reduction Act (Pub. L. 117-169, 16 August 2022), Tesla's US price cuts reported on 13 January 2023, Ford's charging agreement of 25 May 2023 and GM's announcement of 8 June 2023, and the end of the federal clean-vehicle credit for vehicles acquired after 30 September 2025 (Pub. L. 119-21, 4 July 2025; 26 U.S.C. § 30D).
+Reddit is a public record of that language. Ruan and Lv (2022) recovered topics and a sentiment trend from 3,437,917 Reddit posts, mostly comments, from January 2011 through December 2020. Ruan and Lv (2023) showed that the Reddit pattern over that decade is not the Twitter pattern. Ashby, Weir, and Fussey (2025) organized charging talk on just under 100,000 tweets. Yu et al. (2025) showed what a document-level check looks like, on charging-station reviews rather than on Reddit. None of those papers measures, at the post and with a double-coded check, where the writer is in the purchase and what the post is about, through the dates that now organize US electric-vehicle buying.
 
-The question is how the barriers people discuss — price, charging, battery, range, incentives, dealer friction, and environment — sit around those four shocks, and whether enthusiast subreddits and shopper subreddits move together. Owner versus shopper is a contrast inside the paper, using the stage label on the post, not the name of the subreddit. Volume ratios are descriptive. They are not effects.
+The paper is built on a funnel. A post can be about charging at two different moments: while the writer is still deciding, and in the first week of ownership. Collapsing those into one topic, or into one ownership stage, hides the policy question. The taxonomy in `v2/docs/reference_taxonomy_6stage_8family.pdf` keeps six stages, with onboarding separate from long-term ownership, and eight topic families. The seven barriers already used in this project stay as the finer aspects.
 
-Three contributions, once the human labels exist:
+The communities are part of the question, and a subreddit is not a person. Posts in r/electricvehicles, r/teslamotors, r/BoltEV, r/Rivian, r/Ioniq5, r/KiaEV6, and r/evcharging are the enthusiast file. Posts in r/cars, r/Autos, and r/carbuying that mention an electric vehicle are the shopper file. Owners post in r/cars, and shoppers post in r/teslamotors. The stage label, not the subreddit name, is what places a post in the funnel.
 
-1. A document-level codebook of adoption barriers, journey stage, and stance, with two-annotator agreement reported the way Yu et al. (2025) report it.
-2. A comparison of that instrument with VADER and LDA, the tools in Ruan and Lv (2022), and with the keyword stage rule already in this repository.
-3. A description of barrier shares around the 2022–2025 dates, in enthusiast communities and in r/cars, r/Autos, and r/carbuying, with uncertainty that follows the sample design.
+Four research questions:
 
-The hypotheses are written in `v2/paper/introduction.md`. They are not tested in this draft.
+1. How do topic-family and barrier shares differ across the six stages, and do those stage-by-family patterns differ between the enthusiast file and the shopper file?
+2. At each of four cutoffs, does the share of posts about the pre-specified barrier jump: the Inflation Reduction Act on 16 August 2022 (incentives), the credit rules for vehicles placed in service after 31 December 2022 (incentives, cutoff 1 January 2023), Tesla's US price cuts on 13 January 2023 (price), and the end of the federal clean-vehicle credit on 30 September 2025 (incentives)?
+3. Among authors who post more than once, how often does the next post sit further down the funnel, and is that rate higher for pairs that cross one of the four cutoffs?
+4. After two people code the 800-post sheet, do the local instruction model and the small baseline model agree with the agreed human labels well enough to support the first three questions?
+
+Volume is reported next to the shares. A change in how many posts were made is not a change in what the posts were about. A jump at a cutoff is not, by itself, an effect of the statute or the price cut. Hausman and Rapson (2018) are the reason to say so: a regression discontinuity in time is closer to an event study than to a cross-sectional discontinuity, because other news can land on the same day and because the bandwidth does not shrink in the way a cross-sectional design assumes.
+
+The hypotheses that match those questions are in `v2/paper/introduction.md`. They are not tested in this draft.
 
 ## 2. Related work
 
 ### 2.1 Surveys of adoption barriers
 
-Price, range, charging access, and information are the usual survey list. The survey papers Daisy already cites belong here. [CITATION NEEDED]
+Price, range, charging access, and information are the usual survey list. The survey papers already in use for this project belong here. [CITATION NEEDED]
 
 ### 2.2 Social media as a record of electric-vehicle opinion
 
@@ -50,43 +53,92 @@ Gilardi, Alizadeh, and Kubli (2023) report that zero-shot ChatGPT beat crowd wor
 
 Cohen's kappa, Krippendorff's alpha, and the Rogan-Gladen prevalence correction are the agreement statistics the scoring script computes. The bibliographic entries for those three methods were not opened in this project. [CITATION NEEDED]
 
+### 2.4 Discontinuity in time
+
+Hausman and Rapson (2018), *Annual Review of Resource Economics* 10:533–552, https://doi.org/10.1146/annurev-resource-121517-033306, set out how a regression discontinuity in time differs from a cross-sectional discontinuity: estimation often uses observations far from the cutoff, serial correlation can bias the jump, and a test for sorting around the cutoff is often beside the point. This paper uses that framing. It does not add a second methods citation that has not been opened. The cross-sectional bandwidth literature is [CITATION NEEDED].
+
 ## 3. Data
 
-Counts of enthusiast submissions come from the Arctic Shift API (`https://arctic-shift.photon-reddit.com`). Pushshift no longer updates, and the official Reddit API needs credentials this project does not have. Complete months from January 2015 through September 2026 contain 603,435 submissions in r/electricvehicles, r/teslamotors, r/BoltEV, r/Rivian, r/Ioniq5, r/KiaEV6, and r/evcharging. October 2026 was partial on 16 October 2026 (2,440 submissions). Year totals are in `v2/outputs/FINDINGS.md`.
+Counts of enthusiast submissions come from the Arctic Shift API (`https://arctic-shift.photon-reddit.com`). Pushshift no longer updates, and the official Reddit API needs credentials this project does not have. Complete months from January 2015 through September 2026 contain 603,435 submissions in the seven enthusiast subreddits. October 2026 was partial on 16 October 2026 (2,440 submissions).
 
 The enthusiast text file is not that census. It is one deterministic 7-day window per subreddit-quarter, limit 25, plus a fixed week around each coded event, limit 40. The window rule is in `v2/download_reddit.py`. Round 6 added three further 7-day windows, limit 40, inside four baseline months that the week sample had left thin: August 2021, June 2022, December 2022, and September 2024. The cap on that fill was 3360 posts and 90 minutes of labeling; it appended 2642 posts in 17.55 minutes.
 
-Shopper text is not from the search API. It is streamed from Academic Torrents zstd dumps (Watchful1, 2026, subreddit submissions 2005-06 to 2025-12, infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`). The keyword filter is a word-boundary match for tesla, rivian, ioniq, "electric vehicle", and "electric car". Bare `ev` is excluded. The extract through December 2025 kept 13,976 posts. January–September 2026 was streamed one monthly submissions file at a time from the Academic Torrents monthly dumps; 421 keyword posts were kept and 413 survived cleaning. The API aggregate for the same three subreddits and the same keywords, January 2015 through September 2026, is 16,993. The two matchers are different, and the dump filter was not retuned to force the totals together. Comments were not downloaded.
+Shopper text is streamed from Academic Torrents zstd dumps (Watchful1, 2026, subreddit submissions 2005-06 to 2025-12, infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`). The keyword filter is a word-boundary match for tesla, rivian, ioniq, "electric vehicle", and "electric car". Bare `ev` is excluded. The extract through December 2025 kept 13,976 posts. January–September 2026 kept 421 keyword posts, of which 413 survived cleaning. The API aggregate for the same three subreddits and the same keywords, January 2015 through September 2026, is 16,993. The two matchers are different, and the dump filter was not retuned to force the totals together. Comments were not downloaded. Submissions only is a locked decision.
 
 After cleaning, the labeled analysis file has 9044 enthusiast posts and 13783 shopper posts. A probable bot, or a post under five tokens, is dropped before labeling. Usernames are not in the committed label file. The annotation sheet redacts `u/` mentions. Full post text stays in gitignored `v2/data/raw/`.
 
 The license field on the Academic Torrents item is empty. A takedown thread exists. The paper can report counts and the measurement method. It should not republish the dumps.
 
-## 4. Methods
+## 4. Measurement
 
-### 4.1 Labeling pipeline
+### 4.1 The local instruction model, and the small model as baseline
 
-The model is `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on CPU. No paid API is used. Barriers and stage use the template "This text is about {}.". Stance uses "This text expresses {}". Those templates were chosen on invented codebook sentences, not by fitting the corpus. A barrier is on when its score is at least 0.5. Dealer friction is also on when a small lexicon matches a markup, a documentation fee, a market adjustment, or a dealer inventory wait, and it is turned off when the model fires on ordinary service or on a charger that merely sits at a dealer and the lexicon did not match. The lexicon comparison is on invented sentences (`v2/fixtures/dealer_sentences.csv`).
+The instrument for the corpus is an open instruction model in the 7 to 8 billion parameter class, run on a local RTX 4070 with 16 GB of memory. The recommended first checkpoint is Qwen2.5-7B-Instruct in 4-bit. Llama-3.1-8B-Instruct is the alternative that also fits. No paid API is used. The prompt is the codebook: one stage, one or more families, the finer aspects, a stance, and a short quote from the post. The output is JSON. Each row stores the model name, the model version, and a hash of the prompt, so a later paper can compare the small model with the larger one without mixing the files. The runner is `v2/llm_label.py`. The steps for the desktop are `v2/RUN_ON_MY_GPU.md`. A 100-post smoke file is `v2/sample/smoke_100.csv`.
+
+The small model stays as the baseline and is the only model that has labeled the 22,827 posts so far. It is `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on CPU. Barriers and stage use the template "This text is about {}.". Stance uses "This text expresses {}". A barrier is on when its score is at least 0.5. Dealer friction is also on when a small lexicon matches a markup, a documentation fee, a market adjustment, or a dealer inventory wait, and it is turned off when the model fires on ordinary service or on a charger that merely sits at a dealer and the lexicon did not match. That lexicon check is on invented sentences (`v2/fixtures/dealer_sentences.csv`). The small model has one ownership class. It does not emit the eight families. It is not replaced, and it is not the result.
 
 ### 4.2 Taxonomy
 
-The codebook is `v2/annotation/CODEBOOK.md`. Barriers are multi-label: charging access, driving range, vehicle price or total cost, purchase incentives or tax credits, battery reliability, dealer or buying friction, environmental impact, plus an explicit none. Stage is single-label: learning, comparing, evaluating cost or fit, buying, owning, or no clear stage. Stance is support, opposition, mixed, or no stance. Whether ownership is one code or is split into onboarding versus long-term ownership is an open decision. The sheet has an optional onboarding column so either choice can be scored without redrawing the sample.
+The codebook is `v2/annotation/CODEBOOK.md`. Stage is one code: awareness, consideration, evaluation, purchase, onboarding, long-term ownership, or unclear. Onboarding is the first period of ownership (setup, the app, the first week). Long-term ownership is later use (degradation, warranty, service, resale, regret). Charging can be either, depending on whether the writer already has the car. Families are multi-label: purchase and vehicle selection; charging and energy access; battery, range, and real-world performance; cost, incentives, and financial feasibility; dealer, purchase process, and market access; reliability, service, and ownership experience; policy, regulation, and market environment; and ICE, hybrid, and EV transition narratives. Aspects are the seven barriers: charging access, driving range, price or total cost, purchase incentives or tax credits, battery reliability, dealer or buying friction, and environmental impact, plus an explicit none. Stance is support, oppose, mixed, or no stance. A complaint about one broken charger is not opposition by itself.
 
-### 4.3 Event windows
+### 4.3 Annotation and validation
 
-The event month is August 2022 for the Inflation Reduction Act, January 2023 for the Tesla price cuts, May and June 2023 together for NACS, and September and October 2025 for the credit deadline. July 2025, the month the statute was signed, is in the volume table and is not a fifth interruption. For each event the pre-specified barrier is incentives (IRA and the credit deadline), price (Tesla), or charging (NACS). The other barriers are reported beside it. Each contrast is the event-window share minus the prior three months, and minus the same months a year earlier.
+The sheet is `v2/annotation/annotation_sheet.csv`: 800 posts (382 enthusiast, 418 shopper), excerpts of at most 500 characters, code cells empty. The draw covers all six stages and all eight families in each audience, with rare cells filled first. A short lexicon was used only to place some of the small model's ownership posts into the onboarding pool and some into the long-term pool, so both stages appear on the sheet. That lexicon is not a code, and it is not printed on the sheet. Fifty rows are flagged `calibration=yes`. The two annotators code those first, compare them, and freeze the codebook. The 50 are excluded from kappa. The practice rows in `annotation_preview.csv` are also excluded. Model predictions are in `annotation_model_key.csv`, not on the sheet. Daisy is one annotator. The second is a labmate. This project did not contact anyone.
 
-### 4.4 Interrupted time series and the bootstrap
+`v2/score_agreement.py` reads the two finished sheets. It writes Cohen's kappa and Krippendorff's alpha for each aspect, each family, stage, and stance, with a bootstrap interval for kappa. It scores a model only against items both coders marked and agreed on, and it leaves disagreements out of that gold set. It writes precision, recall, and F1, and a Rogan-Gladen correction of the prevalence. Blanks are missing, not a third category. The calibration rows are written to their own table and left out of the main one. The script was run on synthetic labels only. It does not invent a coder.
 
-The interrupted series is a weighted least-squares level shift on monthly shares, twelve months before the first event month and six months after, dropping months with fewer than five posts. Calendar time is used, so a missing month is not renumbered into the next one. HC1 intervals treat months as independent. The design-aware interval resamples the months in that window and refits. A month drawn twice keeps both copies.
+The rule already fixed is: if the lower bound of the confidence interval on the aspect kappas is below 0.60, add 200 adjudicated posts before a substantive claim, and if it is still too low, hold the Transportation Research Part D submission. The same comparison is then run for the small model and for the local instruction model. `v2/run_after_llm.py` does that second step when both coder files are passed in. Until those files exist, model-versus-human accuracy is not a number in this paper.
 
-The event-window interval resamples clusters, not posts. Enthusiast clusters are the sampled week: the event week if the post falls in one, otherwise the quarterly window, otherwise a fill week from the round 6 pull, otherwise the subreddit-month. Shopper clusters are the calendar month when both sides have at least two months, and the subreddit-month otherwise. Two thousand resamples, seed 20261019. The point estimate does not change. A window built from fewer months than the design asks for is flagged.
+## 5. Discontinuity in time
 
-## 5. Preliminary results
+### 5.1 Estimand
 
-**These numbers are model output. They will move when human labels replace them, and some of them already moved when the thin baseline months were filled. They are not a result about buyers.**
+For a cutoff date c and a pre-specified aspect, let Y_i be 1 when post i is labeled with that aspect and 0 otherwise. Let X_i be the post's calendar day minus c, in days. The estimand is the jump in the conditional mean at the cutoff:
 
-### 5.1 Barrier shares
+tau = limit as x approaches 0 from the right of E[Y | X = x] minus the limit as x approaches 0 from the left of E[Y | X = x].
+
+Posts are aggregated to the day. Day t has n_t posts and share Y-bar_t. A local linear regression is fit separately on each side of the cutoff, with a triangular kernel K(x) = max(0, 1 - |x| / h), and with weight n_t K(x). tau-hat is the right-hand intercept minus the left-hand intercept. The outcome is incentives at the two credit cutoffs and price at the Tesla cutoff. The other aspects are not the pre-specified outcomes.
+
+The 1 January 2023 cutoff is twelve days before 13 January 2023. The two fits are not separate experiments. Hausman and Rapson (2018) are also the reason not to read tau as the effect of the statute: another announcement can fall on the same day, and the enthusiast file is a week sample, so many days are empty.
+
+### 5.2 Bandwidth, donut, and placebos
+
+The bandwidth h is chosen from the grid 30, 60, 90, and 180 days by even/odd day cross-validation. Even days are used to fit the two boundary levels. Odd days are predicted from those levels, without a slope. The bandwidth with the lowest weighted squared error is the main one. The other three bandwidths are reported as a robustness grid and are not re-labeled as the main result.
+
+The donut refits the chosen bandwidth after dropping posts with |X| at most 7 days. A thin fit has fewer than 30 posts or fewer than 5 distinct days on either side. A thin fit is reported and not interpreted.
+
+Placebo cutoffs use the same outcome and the same chosen bandwidth, moved by 180 days earlier and 180 days later. A placebo that is as large as the main jump is a reason to doubt the main jump. It is not a second finding.
+
+### 5.3 Inference
+
+The interval is a percentile interval from a week-cluster bootstrap. Weeks inside the bandwidth are resampled with replacement, the daily shares are rebuilt, and the local linear jump is refit at the bandwidth chosen on the original sample. The bandwidth is not re-chosen inside each draw, so the interval is for that bandwidth. The main fit and the donut are resampled. The placebo and the bandwidth grid are point estimates. `v2/run_after_llm.py` writes the interval when it is pointed at a label file. The small-model table in section 7 is the point estimate only. An interval was not attached to that baseline table.
+
+## 6. Stage transitions
+
+Authors are hashed. Deleted accounts are dropped. The hash is not a name. Posts by the same hash are ordered by time. A pair is two successive posts. On the six-stage ladder the rungs are awareness, consideration, evaluation, purchase, onboarding, and long-term ownership, in that order. Unclear is not on the ladder. A pair is a forward move when both posts sit on the ladder and the later rung is higher. The rate is the share of pairs that move forward.
+
+For a cutoff c, the shock rate uses pairs whose first post falls in the 180 days before c and whose second post falls in the 180 days after c. The same window is applied at c minus 180 days and at c plus 180 days. The comparison is descriptive. It is not a hazard model with covariates, and it is not an estimate of how fast a person moves from shopping to buying. The small-model baseline cannot see onboarding versus long-term ownership, so its ladder stops at one ownership rung. The instruction-model file is the one that can use the six-rung ladder. Repeat-author coverage is the feasibility check. A week sample contains the same person twice less often than a census would.
+
+## 7. Preliminary baseline from the small model
+
+**These numbers are the small zero-shot model. They are not the instruction-model results. They will move when that model is run, and they will move again when human labels exist. They are not a result about buyers.**
+
+### 7.1 Stage shares
+
+Ownership is one class on this model. Onboarding is not identified. The denominator is the labeled file for that audience.
+
+| Stage on the small model | Enthusiasts | Shoppers |
+|---|---:|---:|
+| ownership | 0.387 (n=3504) | 0.629 (n=8670) |
+| unclear | 0.314 (n=2839) | 0.043 (n=592) |
+| consideration | 0.207 (n=1874) | 0.244 (n=3365) |
+| purchase | 0.046 (n=418) | 0.057 (n=784) |
+| awareness | 0.026 (n=231) | 0.024 (n=325) |
+| evaluation | 0.020 (n=178) | 0.003 (n=47) |
+
+### 7.2 Finer aspects
+
+The aspect shares below are the small model's barrier indicators. The eight families are not in this file.
 
 | Measure | Enthusiast share | Shopper share |
 |---|---:|---:|
@@ -97,110 +149,76 @@ The event-window interval resamples clusters, not posts. Enthusiast clusters are
 | battery reliability | 0.112 (n=9044) | 0.041 (n=13783) |
 | dealer or buying friction | 0.033 (n=9044) | 0.027 (n=13783) |
 | environmental impact | 0.066 (n=9044) | 0.047 (n=13783) |
-| owning an electric vehicle | 0.387 (n=9044) | 0.629 (n=13783) |
-| support for electric vehicles | 0.513 (n=9044) | 0.815 (n=13783) |
 
-Figure: `v2/outputs/framing_barrier_shares_monthly.png`. Independent-post intervals on that figure are narrower than the week and month bootstrap in the tables below.
+### 7.3 Discontinuity, point estimates only
 
-### 5.2 Event windows
+Local linear jump in the daily share. Bandwidth chosen on the grid in section 5. No week-cluster interval is attached to this baseline table. The Tesla enthusiast donut is unstable and is not interpreted.
 
-The difference is the event share minus the baseline share. "Includes 0" refers to the design-aware bootstrap interval, not the independent-post interval.
+| Cutoff | Audience | Outcome | Fit | Bandwidth (days) | Jump | Posts before | Posts after | Thin |
+|---|---|---|---|---:|---:|---:|---:|---|
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | main | 180 | 0.012 | 1228 | 1215 | False |
+| ira_signing_2022 | enthusiast | purchase incentives or tax credits | donut | 180 | 0.030 | 1021 | 1199 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | main | 180 | 0.050 | 1231 | 1033 | False |
+| ira_credit_rules_2023 | enthusiast | purchase incentives or tax credits | donut | 180 | 0.052 | 1215 | 1023 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | main | 60 | -0.078 | 923 | 148 | False |
+| tesla_price_cut_2023 | enthusiast | vehicle price or total cost | donut | 60 | -0.393 | 762 | 104 | False |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | main | 60 | 0.009 | 353 | 148 | False |
+| credit_end_2025 | enthusiast | purchase incentives or tax credits | donut | 60 | 0.021 | 142 | 137 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | main | 60 | -0.049 | 193 | 162 | False |
+| ira_signing_2022 | shopper | purchase incentives or tax credits | donut | 60 | 0.004 | 170 | 141 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | main | 180 | 0.017 | 532 | 598 | False |
+| ira_credit_rules_2023 | shopper | purchase incentives or tax credits | donut | 180 | 0.023 | 513 | 569 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | main | 90 | 0.131 | 277 | 297 | False |
+| tesla_price_cut_2023 | shopper | vehicle price or total cost | donut | 90 | 0.051 | 246 | 256 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | main | 180 | -0.056 | 290 | 280 | False |
+| credit_end_2025 | shopper | purchase incentives or tax credits | donut | 180 | -0.094 | 280 | 266 | False |
 
-| Event | Audience | Baseline | Difference | Bootstrap interval | Baseline posts | Includes 0 | Thin month |
-|---|---|---|---:|---|---:|---|---|
-| ira_2022 | enthusiast | prior_3_months | 0.042 | -0.001 to 0.087 | 897 | yes | no |
-| ira_2022 | enthusiast | year_ago | 0.041 | -0.003 to 0.088 | 485 | yes | no |
-| ira_2022 | shopper | prior_3_months | 0.001 | -0.041 to 0.147 | 277 | yes | no |
-| ira_2022 | shopper | year_ago | 0.022 | 0.000 to 0.167 | 95 | yes | no |
-| tesla_price_cut_2023 | enthusiast | prior_3_months | 0.073 | -0.026 to 0.162 | 845 | yes | no |
-| tesla_price_cut_2023 | enthusiast | year_ago | 0.161 | 0.035 to 0.270 | 58 | no | no |
-| tesla_price_cut_2023 | shopper | prior_3_months | 0.097 | 0.025 to 0.840 | 260 | no | no |
-| tesla_price_cut_2023 | shopper | year_ago | 0.127 | -0.737 to 0.874 | 125 | yes | no |
-| nacs_2023 | enthusiast | prior_3_months | -0.069 | -0.233 to 0.064 | 201 | yes | no |
-| nacs_2023 | enthusiast | year_ago | 0.002 | -0.071 to 0.081 | 809 | yes | no |
-| nacs_2023 | shopper | prior_3_months | 0.028 | -0.008 to 0.068 | 269 | yes | no |
-| nacs_2023 | shopper | year_ago | 0.052 | 0.033 to 0.080 | 169 | no | no |
-| credit_deadline_2025 | enthusiast | prior_3_months | 0.015 | -0.017 to 0.052 | 436 | yes | no |
-| credit_deadline_2025 | enthusiast | year_ago | 0.023 | -0.010 to 0.057 | 860 | yes | no |
-| credit_deadline_2025 | shopper | prior_3_months | 0.018 | -0.033 to 0.069 | 139 | yes | no |
-| credit_deadline_2025 | shopper | year_ago | 0.023 | -0.026 to 0.072 | 183 | yes | no |
+### 7.4 Whether authors post twice
 
-Figure: `v2/outputs/framing_event_study.png`.
+| Audience | Posts with a hash | Authors | Authors with 2 or more posts | Share of posts from those authors | Median posts | Max posts |
+|---|---:|---:|---:|---:|---:|---:|
+| all | 19781 | 13903 | 2392 | 0.418 | 1.0 | 91 |
+| enthusiast | 8489 | 6681 | 957 | 0.326 | 1.0 | 79 |
+| shopper | 11292 | 7432 | 1404 | 0.466 | 1.0 | 91 |
 
-### 5.3 Interrupted series
+Pairs that cross a cutoff inside 180 days number about 100 on this file, and about 39 at the credit end. Forward rates on the unsplit ladder are about 0.13 to 0.18, and the placebos 180 days away fall in the same range. The median author has one post. A few hashes contribute many posts, so the repeat-post share is not a panel of distinct buyers. The counts are in `v2/outputs/stage_transition_shocks.csv`.
 
-The level shift is the post-event change in the monthly share of the pre-specified barrier. The interval resamples months.
+An earlier descriptive contrast, event-window share minus a baseline, with a design-aware bootstrap, is in `v2/outputs/FINDINGS.md`. It is not the estimand in section 5.
 
-| Event | Audience | Level shift | Month-bootstrap interval | Months | Includes 0 |
-|---|---|---:|---|---:|---|
-| ira_2022 | enthusiast | 0.031 | -0.064 to 0.058 | 17 | yes |
-| ira_2022 | shopper | -0.011 | -0.047 to 0.015 | 19 | yes |
-| tesla_price_cut_2023 | enthusiast | 0.040 | -0.177 to 0.090 | 19 | yes |
-| tesla_price_cut_2023 | shopper | 0.077 | -0.042 to 0.168 | 19 | yes |
-| nacs_2023 | enthusiast | -0.055 | -0.209 to 0.005 | 19 | yes |
-| nacs_2023 | shopper | 0.012 | -0.058 to 0.055 | 19 | yes |
-| credit_deadline_2025 | enthusiast | 0.009 | -0.042 to 0.041 | 18 | yes |
-| credit_deadline_2025 | shopper | 0.005 | -0.064 to 0.062 | 19 | yes |
+## 8. Instruction-model results
 
-Figure: `v2/outputs/framing_its_level.png`. That figure draws HC1 intervals. The table above is the month bootstrap.
+**PLACEHOLDER. No instruction-model labels have been produced. Do not copy the small-model numbers into this section. Do not fill it from the mock backend used to test the pipeline.**
 
-What these rows can support, even before validation, is a statement about the labeled file: which contrasts still exclude zero after the baseline months were filled, and which ones do not. What they cannot support is a sentence about the effect of the Act, the price cut, the connector announcement, or the credit deadline.
+When `v2/outputs/llm_labels.csv` exists, this command rebuilds the section:
 
-Filling the four thin enthusiast months changed these zero-inclusion decisions (design-aware bootstrap, unvalidated):
+`python v2/run_after_llm.py --llm v2/outputs/llm_labels.csv --out v2/outputs/after_llm`
 
-- ira_2022, enthusiast, prior_3_months: 0.049 (0.002 to 0.096, excluded zero) became 0.042 (-0.001 to 0.087, includes zero). Baseline posts 202 to 897.
-- ira_2022, enthusiast, year_ago: 0.064 (0.024 to 0.106, excluded zero) became 0.041 (-0.003 to 0.088, includes zero). Baseline posts 23 to 485.
-- credit_deadline_2025, enthusiast, year_ago: 0.038 (0.002 to 0.076, excluded zero) became 0.023 (-0.010 to 0.057, includes zero). Baseline posts 72 to 860.
-- Interrupted series, nacs_2023, enthusiast: -0.097 (-0.271 to -0.001, excluded zero) became -0.055 (-0.209 to 0.005, includes zero).
+It writes funnel shares by audience, a stage-by-family heatmap, the discontinuity table with the bandwidth grid, the donut, the placebos, and the week-cluster interval, the stage-transition rates on the six-rung ladder, and agreement between the small model and the instruction model. Agreement with humans is written only when both annotator sheets are passed as `--coder-a` and `--coder-b`. If those files are absent, the command records that they were not provided. It does not invent them.
 
-The before-and-after tables are in `v2/outputs/FINDINGS.md`.
+The cells that belong here, and that are empty on purpose:
 
-### 5.4 Shopper composition
+| Result | Status |
+|---|---|
+| Stage shares by audience, six stages | Not run |
+| Stage-by-family heatmap, by audience | Not run |
+| Discontinuity jumps, with bandwidth grid, donut, placebos, and week-cluster intervals | Not run |
+| Forward-move rates on the six-rung ladder, with placebos | Not run |
+| Small-model versus instruction-model agreement | Not run |
+| Human kappa and model-versus-human accuracy | Not run. The sheet is blank. |
 
-The full shopper file is a poor stand-in for people who are shopping. Two slices are in `v2/outputs/framing_sensitivity_shares.csv` and `framing_sensitivity_contrasts.csv`: r/carbuying alone, and posts the stage label marks as pre-purchase (learning, comparing, evaluating, or buying). On the unvalidated labels, price and dealer friction are high in r/carbuying, and the ownership share there is still above the enthusiast share. The January 2023 price rise in the full shopper file does not reappear in the pre-purchase slice. Those sentences are about the model's stage label, which is itself unvalidated.
+## 9. Limitations
 
-## 6. Validation plan
+English-language Reddit is not the US household population. The enthusiast file is a cluster sample of submissions, not the 603,435-post census. The shopper file is keyword-filtered. Comments are absent. Arctic Shift does not guarantee that the archive is complete. The Academic Torrents license field is empty. Other news happens on the same days as the four cutoffs, so a jump is not an effect. The 1 January 2023 and 13 January 2023 cutoffs are twelve days apart. The small model cannot split ownership. The instruction model has not been run. Labels have not been checked by a person.
 
-The sheet is `v2/annotation/annotation_sheet.csv`: 800 posts (401 enthusiast, 399 shopper), excerpts of 500 characters, code cells empty. The draw oversamples each barrier toward 40 positives per audience, then 25 posts per audience in each of the four event windows, then year-band cells. The practice rows in `annotation_preview.csv` are excluded. Model labels are in `annotation_model_key.csv`, not on the sheet. The codebook is `v2/annotation/CODEBOOK.md`.
+## 10. What remains before submission
 
-`v2/score_agreement.py` reads two coder files and writes Cohen's kappa, Krippendorff's alpha, precision, recall, and F1 of the model against the items both coders marked and agreed on, and a Rogan-Gladen correction of the prevalence. It was run on synthetic labels only. It does not invent a coder. Disagreements are counted and then left out of the gold set. Blanks are missing, not a third category.
-
-The rule already fixed in `v2/paper/introduction.md` is: if the lower bound of the confidence interval on barrier kappa is below 0.60, add 200 adjudicated posts before a substantive claim, and if it is still too low, hold the Transportation Research Part D submission.
-
-No second annotator has been named. This draft does not contact or recruit anyone.
-
-## 7. Limitations
-
-English-language Reddit is not the US household population. The enthusiast file is a cluster sample of submissions, not the 603,435-post census, and the round 6 fill is still a cap of 40 posts per week rather than every submission in those four months. The shopper file is keyword-filtered, so it over-represents owners and supporters talking about Tesla, Rivian, or Hyundai. Comments are absent; Ruan and Lv's corpus is mostly comments. Arctic Shift does not guarantee that the archive is complete. The Academic Torrents license field is empty. Other news happens in the same months as the four shocks, so a level shift is not an effect. The zero-shot model is small. A larger model might label differently; that is an open decision, not a result. Labels have not been checked by a person.
-
-## 8. Open decisions
-
-These are unanswered. The draft does not pick them.
-
-1. **Second annotator.** A labmate will code the sheet. The name is not written here. Nobody was contacted from this repository.
-2. **Stage taxonomy.** Settled. Six stages, onboarding separate from long-term ownership. See the taxonomy note.
-3. **Model.** An open instruction model on Daisy's RTX 4070. The recommended first checkpoint is Qwen2.5-7B-Instruct in 4-bit. Llama-3.1-8B-Instruct and Qwen2.5-14B-Instruct are the alternatives. No paid API. The small NLI model stays the baseline.
-4. **Comments.** Submissions only. A comments pull is a later decision. The cars comments file in the per-subreddit torrent is about 2.2 GB compressed and was not downloaded.
-5. **Upvote filter.** No score threshold is applied. A sensitivity with score at least 2 has not been run.
-
-Framing A is locked. Shopper text stays on the Academic Torrents dumps. Those are not open decisions.
-
-## 9. What has to happen before submission
-
-One page. Nothing below is optional if the target is Transportation Research Part D.
-
-1. Name the second annotator and the adjudication rule. Do not start coding with one person and call it agreement.
-2. Freeze the stage taxonomy (one ownership code, or ownership plus onboarding) before coding starts, and point the codebook at that choice.
-3. Both annotators code `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`. The practice file stays out of the agreement calculation.
-4. Run `v2/score_agreement.py` on the two files and the model key. Report kappa and alpha per barrier, stage, and stance, with the confidence intervals the script writes.
-5. If the lower bound on barrier kappa is below 0.60, draw and code 200 more posts before any substantive sentence. If it is still below that line, do not send the barrier claims to this journal.
-6. Adjudicate disagreements. Score the model against the agreed items. Apply the prevalence correction to the corpus rates, and replace section 5 with those corrected rates.
-7. Decide, in writing, whether a larger open model or a paid API will relabel the corpus. If it will, relabel and repeat steps 4–6. If it will not, say that the instrument is the small CPU model.
-8. Decide comments and the upvote filter. If either is adopted, rerun the contrasts and show the sensitivity. If either is declined, say so in the limitations.
-9. Resolve every `[CITATION NEEDED]` mark. Add the survey papers already in use. Do not add a DOI that has not been opened. Open the primary entries for Cohen, Krippendorff, Rogan-Gladen, and VADER, or drop the method names that lack an entry.
-10. Replace the figures with the validated series. Keep the design-aware intervals. State the sample sizes, the missing months, and that the estimates are descriptive.
-11. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty.
-12. Check the journal's current author guide for length, highlights, and reference style, then format. This draft does not guess those limits.
+1. The labmate codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first. The name is not written here.
+2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md`, then the full local model, then `v2/run_after_llm.py`.
+3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.
+4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline.
+5. Comments stay out. An upvote filter (score at least 2) has not been run. If it is adopted later, show it as a sensitivity.
+6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.
+7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.
 
 ## References
 
@@ -210,6 +228,8 @@ Gilardi, F., Alizadeh, M., and Kubli, M. (2023). ChatGPT outperforms crowd worke
 
 Ha, S., Marchetto, D. J., Dharur, S., and Asensio, O. I. (2021). Topic classification of electric vehicle consumer experiences with transformer-based deep learning. *Patterns*, 2, February 2021. https://doi.org/10.1016/j.patter.2020.100195
 
+Hausman, C., and Rapson, D. S. (2018). Regression discontinuity in time: Considerations for empirical applications. *Annual Review of Resource Economics*, 10, 533–552. https://doi.org/10.1146/annurev-resource-121517-033306
+
 Ruan, T., and Lv, Q. (2022). Public perception of electric vehicles on reddit over the past decade. *Communications in Transportation Research*, 2, 100070. https://doi.org/10.1016/j.commtr.2022.100070
 
 Ruan, T., and Lv, Q. (2023). Public perception of electric vehicles on Reddit and Twitter: A cross-platform analysis. *Transportation Research Interdisciplinary Perspectives*, 21, 100872. https://doi.org/10.1016/j.trip.2023.100872
@@ -218,8 +238,8 @@ Yu, Q., Que, T., Cushing, L. J., Pierce, G., Shen, K., Kejriwal, M., Yao, Y., an
 
 Watchful1. (2026). Subreddit comments/submissions 2005-06 to 2025-12 [Data set]. Academic Torrents. Infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`. The license field on the torrent is empty.
 
-Event dates, as used in `v2/research_design.md`: Pub. L. 117-169; Reuters, 13 January 2023, https://www.reuters.com/business/autos-transportation/tesla-cuts-prices-electric-vehicles-us-market-2023-01-13/; Reuters, 25 May 2023, https://www.reuters.com/business/autos-transportation/tesla-ford-ceos-talk-evs-twitter-forum-2023-05-25/; General Motors news release, 8 June 2023, https://investor.gm.com/news-releases/news-release-details/general-motors-doubles-down-commitment-unified-charging-standard/; Pub. L. 119-21; 26 U.S.C. § 30D; IRS, https://www.irs.gov/clean-vehicle-tax-credits.
+Event dates, as used in `v2/research_design.md`: Pub. L. 117-169; 26 U.S.C. § 30D; Reuters, 13 January 2023, https://www.reuters.com/business/autos-transportation/tesla-cuts-prices-electric-vehicles-us-market-2023-01-13/; Reuters, 25 May 2023, https://www.reuters.com/business/autos-transportation/tesla-ford-ceos-talk-evs-twitter-forum-2023-05-25/; General Motors news release, 8 June 2023, https://investor.gm.com/news-releases/news-release-details/general-motors-doubles-down-commitment-unified-charging-standard/; Pub. L. 119-21; IRS, https://www.irs.gov/clean-vehicle-tax-credits.
 
-Hutto and Gilbert (2014), Cohen, Krippendorff, and Rogan and Gladen: [CITATION NEEDED].
+Hutto and Gilbert (2014), Cohen, Krippendorff, Rogan and Gladen, and the cross-sectional regression-discontinuity bandwidth papers: [CITATION NEEDED].
 
 Survey literature on adoption barriers: [CITATION NEEDED].

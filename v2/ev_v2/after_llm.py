@@ -233,6 +233,40 @@ def llm_model_key(labels: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def attach_scores(prepared: pd.DataFrame, score_path: Path | None) -> pd.DataFrame:
+    if "score" in prepared.columns or score_path is None or not Path(score_path).is_file():
+        return prepared
+    scores = pd.read_csv(score_path)
+    if "id" not in scores.columns or "score" not in scores.columns:
+        return prepared
+    scores = scores[["id", "score"]].copy()
+    scores["id"] = scores["id"].astype(str)
+    return prepared.merge(scores, on="id", how="left")
+
+
+def score_subset(prepared: pd.DataFrame, min_score: int = 2) -> tuple[pd.DataFrame, dict]:
+    """Drop items with score under min_score. Missing scores are counted and left out of this check."""
+    if "score" not in prepared.columns:
+        return prepared.iloc[0:0].copy(), {
+            "status": "no_scores",
+            "min_score": min_score,
+            "n_in": int(len(prepared)),
+            "n_kept": 0,
+            "n_dropped": 0,
+            "n_missing_score": int(len(prepared)),
+        }
+    score = pd.to_numeric(prepared["score"], errors="coerce")
+    kept = prepared[score >= min_score].copy()
+    return kept, {
+        "status": f"score_ge_{min_score}",
+        "min_score": min_score,
+        "n_in": int(len(prepared)),
+        "n_kept": int(len(kept)),
+        "n_dropped": int((score < min_score).sum()),
+        "n_missing_score": int(score.isna().sum()),
+    }
+
+
 def run_tables(
     llm_path: Path,
     small_path: Path,
@@ -241,6 +275,8 @@ def run_tables(
     coder_a: Path | None = None,
     coder_b: Path | None = None,
     n_boot: int = 200,
+    score_path: Path | None = None,
+    min_score: int = 2,
 ) -> dict[str, pd.DataFrame]:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -252,7 +288,7 @@ def run_tables(
     authors = pd.read_csv(author_path) if author_path.is_file() else pd.DataFrame(columns=["id", "author_hash", "created_utc"])
     if len(authors):
         authors["id"] = authors["id"].astype(str)
-    prepared = _with_outcomes(raw, small[meta_cols], authors)
+    prepared = attach_scores(_with_outcomes(raw, small[meta_cols], authors), score_path)
     shares = funnel_shares(raw, small[meta_cols])
     heat = stage_family_heatmap(raw, small[meta_cols])
     pieces = []
@@ -271,6 +307,17 @@ def run_tables(
     shocks.to_csv(out_dir / "stage_transition_shocks.csv", index=False)
     matrix.to_csv(out_dir / "stage_transition_counts.csv", index=False)
     agreement.to_csv(out_dir / "small_vs_llm.csv", index=False)
+    filtered, score_info = score_subset(prepared, min_score=min_score)
+    pd.DataFrame([score_info]).to_csv(out_dir / "score_sensitivity.csv", index=False)
+    if score_info["status"] == f"score_ge_{min_score}" and len(filtered):
+        funnel_shares(raw[raw["id"].astype(str).isin(set(filtered["id"]))], small[meta_cols]).to_csv(
+            out_dir / "funnel_shares_score_ge_2.csv", index=False
+        )
+        sens_pieces = [rdit_table(filtered, audience=str(audience), n_boot=0) for audience in filtered["audience"].dropna().unique()]
+        if sens_pieces:
+            pd.concat(sens_pieces, ignore_index=True).to_csv(out_dir / "rdit_score_ge_2.csv", index=False)
+        _coverage, sens_shocks, _matrix = transition_tables(filtered)
+        sens_shocks.to_csv(out_dir / "stage_transition_shocks_score_ge_2.csv", index=False)
     status = {"coder_sheets": "not_provided", "n_joined": 0}
     if coder_a and coder_b and Path(coder_a).is_file() and Path(coder_b).is_file():
         tables = score_coders(pd.read_csv(coder_a), pd.read_csv(coder_b), model_key=llm_model_key(raw), n_boot=min(n_boot, 200))

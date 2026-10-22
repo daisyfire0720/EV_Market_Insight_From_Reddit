@@ -417,7 +417,7 @@ The manuscript draft that uses these tables is `v2/paper/manuscript.md`. Every s
 <!-- round7-start -->
 ## Round 7 funnel, discontinuity, and transitions (unvalidated)
 
-Daisy locked the 6-stage funnel, with onboarding kept separate from long-term ownership, and the 8 topic families. The note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. The codebook for the labmate is `v2/annotation/CODEBOOK.md`. The blank sheet is `v2/annotation/annotation_sheet.csv`. The small NLI model is still the only label on the corpus. It has one ownership class, so it cannot yet measure onboarding against long-term ownership. Shares below are that model's labels, or a sampling lexicon used only to build the sheet. They are not human codes and they are not effects.
+Daisy locked the 6-stage funnel, with onboarding kept separate from long-term ownership, and the 8 topic families. The note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. The codebook is `v2/annotation/CODEBOOK.md`. Coder B is Ryan (GitHub Ryan-yu-wei). The blank sheet is `v2/annotation/annotation_sheet.csv`. The small NLI model is still the only label on the corpus. It has one ownership class, so it cannot yet measure onboarding against long-term ownership. Shares below are that model's labels, or a sampling lexicon used only to build the sheet. They are not human codes and they are not effects.
 
 The sheet has 800 posts (382 enthusiast, 418 shopper). 800 have an excerpt. 50 are flagged `calibration=yes` and are excluded from kappa. Code cells are empty.
 
@@ -547,5 +547,5 @@ Local linear jump in the daily share, triangular kernel, bandwidth chosen by eve
 | credit_end_2025 | shopper | purchase incentives or tax credits | placebo_-180d | 180 | -0.005 | 625 | 288 | False |
 | credit_end_2025 | shopper | purchase incentives or tax credits | placebo_+180d | 180 | -0.012 | 282 | 272 | False |
 
-GPU instructions for the instruction model are `v2/RUN_ON_MY_GPU.md`. That run has not been done on this machine. The 800-post sheet is what the labmate codes.
+GPU instructions for the instruction model are `v2/RUN_ON_MY_GPU.md`. The default checkpoint is `qwen2.5:14b-instruct`, with `qwen2.5:7b-instruct` as the fallback. That run has not been done on this machine. The 800-post sheet is what Ryan codes.
 <!-- round7-end -->

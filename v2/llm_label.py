@@ -11,7 +11,7 @@ stopped run resume. The prompt asks for JSON only.
 From ``v2/``::
 
     python llm_label.py --backend mock --posts tests/fixtures/llm_posts.csv --out /tmp/llm_out.csv
-    python llm_label.py --backend ollama --model qwen2.5:7b-instruct --posts data/raw/label_posts.csv --out outputs/llm_labels.csv
+    python llm_label.py --backend ollama --posts data/raw/label_posts.csv --out outputs/llm_labels.csv
 
 Windows steps are in ``RUN_ON_MY_GPU.md``.
 """
@@ -35,7 +35,27 @@ from ev_v2.taxonomy import (  # noqa: E402
     STANCE_CODES,
 )
 
-PROMPT_VERSION = "funnel-v1"
+PROMPT_VERSION = "funnel-v2"
+# Largest open instruct model Daisy chose for a 16 GB card. Q4_K_M is about 9 GB.
+# The 7B tag is the fallback when 14B is too slow or runs out of memory.
+DEFAULT_OLLAMA_MODEL = "qwen2.5:14b-instruct"
+FALLBACK_OLLAMA_MODEL = "qwen2.5:7b-instruct"
+DEFAULT_HF_MODEL = "Qwen/Qwen2.5-14B-Instruct"
+FALLBACK_HF_MODEL = "Qwen/Qwen2.5-7B-Instruct"
+DEFAULT_NUM_CTX = 4096
+
+
+def resolve_model(backend: str, model: str, fallback_7b: bool) -> str:
+    """Pick the checkpoint. An explicit --model wins, except the 7B fallback flag."""
+    if fallback_7b:
+        return FALLBACK_HF_MODEL if backend == "transformers" else FALLBACK_OLLAMA_MODEL
+    if model:
+        return model
+    if backend == "transformers":
+        return DEFAULT_HF_MODEL
+    if backend in {"ollama", "vllm"}:
+        return DEFAULT_OLLAMA_MODEL
+    return "mock"
 
 
 def codebook_prompt(title: str, body: str) -> str:
@@ -46,7 +66,8 @@ def codebook_prompt(title: str, body: str) -> str:
     text = f"{title}\n{body}".strip()
     if len(text) > 1500:
         text = text[:1500]
-    return f"""You code one Reddit submission about electric vehicles.
+    kind = "comment" if text.lstrip().lower().startswith("[comment]") else "submission"
+    return f"""You code one Reddit {kind} about electric vehicles.
 Assign the stage from where the writer is in the purchase journey, not from a keyword alone. Charging can be evaluation or onboarding depending on whether they already own the car.
 Assign every topic family that is a real subject of the post, and every finer aspect that is present.
 Stance is the writer's position on electric vehicles as a class, not on one broken charger.
@@ -64,9 +85,9 @@ Aspects (zero or more):
 Stance (choose one): {stances}
 
 Return one JSON object and nothing else, with keys stage, families, aspects, stance, evidence.
-evidence is at most 20 words copied from the submission. Use an empty string if you cannot quote it.
+evidence is at most 20 words copied from the text. Use an empty string if you cannot quote it.
 
-Submission:
+Text:
 {text}
 """
 
@@ -127,32 +148,46 @@ class MockBackend:
 
 
 class OpenAICompatBackend:
-    """vLLM and Ollama both expose this chat-completions shape."""
+    """vLLM uses chat-completions. Ollama uses its native chat call so num_ctx is applied."""
 
-    def __init__(self, base_url: str, model: str, version: str | None = None):
+    def __init__(self, base_url: str, model: str, version: str | None = None, num_ctx: int | None = None, native_ollama: bool = False):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.name = model
         self.version = version or model
+        self.num_ctx = num_ctx
+        self.native_ollama = native_ollama
 
     def complete(self, prompts: list[str]) -> list[str]:
         outputs = []
         for prompt in prompts:
-            body = json.dumps(
-                {
+            if self.native_ollama:
+                root = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+                url = root + "/api/chat"
+                payload_body = {
+                    "model": self.model,
+                    "stream": False,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "options": {"temperature": 0, "num_ctx": self.num_ctx or DEFAULT_NUM_CTX},
+                }
+            else:
+                url = self.base_url + "/chat/completions"
+                payload_body = {
                     "model": self.model,
                     "temperature": 0,
                     "messages": [{"role": "user", "content": prompt}],
                 }
-            ).encode()
             req = urllib.request.Request(
-                self.base_url + "/chat/completions",
-                data=body,
+                url,
+                data=json.dumps(payload_body).encode(),
                 headers={"Content-Type": "application/json"},
             )
             with urllib.request.urlopen(req, timeout=180) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
-            outputs.append(payload["choices"][0]["message"]["content"])
+            if self.native_ollama:
+                outputs.append(payload["message"]["content"])
+            else:
+                outputs.append(payload["choices"][0]["message"]["content"])
         return outputs
 
 
@@ -223,17 +258,22 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4) -> "objec
         if key in cache:
             continue
         title = str(getattr(row, "title", "") or "")
-        body = str(getattr(row, "selftext", "") or getattr(row, "text", "") or "")
-        pending.append((doc_id, codebook_prompt(title, body)))
+        body = getattr(row, "selftext", None)
+        if body is None or (isinstance(body, float) and body != body) or str(body) in {"", "nan"}:
+            body = getattr(row, "body", None) or getattr(row, "text", "") or ""
+        kind = str(getattr(row, "text_type", "") or "submission")
+        prefix = "[comment]\n" if kind == "comment" else ""
+        pending.append((doc_id, codebook_prompt(title, prefix + str(body)), kind))
     handle = cache_path.open("a", encoding="utf-8")
     try:
         for start in range(0, len(pending), batch_size):
             chunk = pending[start : start + batch_size]
-            raws = backend.complete([prompt for _, prompt in chunk])
-            for (doc_id, _), raw in zip(chunk, raws):
+            raws = backend.complete([prompt for _, prompt, _kind in chunk])
+            for (doc_id, _, kind), raw in zip(chunk, raws):
                 parsed = parse_label(raw)
                 stored = {
                     "id": doc_id,
+                    "text_type": kind,
                     "model_name": backend.name,
                     "model_version": backend.version,
                     "prompt_hash": digest,
@@ -263,7 +303,9 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4) -> "objec
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Local instruction-model labels.")
     parser.add_argument("--backend", choices=("mock", "ollama", "vllm", "transformers"), default="mock")
-    parser.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
+    parser.add_argument("--model", default="", help="Empty uses the 14B default for ollama, vLLM, and transformers.")
+    parser.add_argument("--fallback-7b", action="store_true", help="Use qwen2.5:7b-instruct instead of the 14B default.")
+    parser.add_argument("--num-ctx", type=int, default=DEFAULT_NUM_CTX)
     parser.add_argument("--base-url", default="")
     parser.add_argument("--posts", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
@@ -275,13 +317,14 @@ def main(argv: list[str] | None = None) -> int:
     import pandas as pd
 
     posts = pd.read_csv(args.posts)
+    model = resolve_model(args.backend, args.model, args.fallback_7b)
     if args.backend == "mock":
         backend = MockBackend()
     elif args.backend in {"ollama", "vllm"}:
         base = args.base_url or ("http://127.0.0.1:11434/v1" if args.backend == "ollama" else "http://127.0.0.1:8000/v1")
-        backend = OpenAICompatBackend(base, args.model)
+        backend = OpenAICompatBackend(base, model, num_ctx=args.num_ctx, native_ollama=args.backend == "ollama")
     else:
-        backend = TransformersBackend(args.model, four_bit=not args.no_four_bit)
+        backend = TransformersBackend(model, four_bit=not args.no_four_bit)
     cache = args.cache or args.out.with_suffix(".jsonl")
     labeled = label_posts(posts, backend, cache, batch_size=max(1, args.batch_size))
     args.out.parent.mkdir(parents=True, exist_ok=True)

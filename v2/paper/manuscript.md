@@ -12,7 +12,7 @@ Working title used below: option 1.
 
 ## Abstract
 
-Surveys of people who say they might buy an electric vehicle record price, range, and charging as barriers. They miss the month a credit or a price cut arrives, and they miss the wording used when nobody is asking. This paper reads Reddit submissions from 2015 through September 2026. Each submission gets one stage in a six-stage purchase funnel, one or more of eight topic families, a finer barrier aspect when one is present, and a stance. The stage is the writer's place in the journey, not a keyword. Enthusiast posts are a week sample of seven electric-vehicle subreddits. Shopper posts are keyword-matched submissions from r/cars, r/Autos, and r/carbuying. The corpus is labeled by an open instruction model of about 7 to 8 billion parameters, run locally. A smaller zero-shot model is the baseline, not the instrument. Two annotators code 800 posts, including a 50-post calibration subset that is left out of kappa. That sheet is still blank, so this draft has no validated result.
+Surveys of people who say they might buy an electric vehicle record price, range, and charging as barriers. They miss the month a credit or a price cut arrives, and they miss the wording used when nobody is asking. This paper reads Reddit submissions from 2015 through September 2026. Each submission gets one stage in a six-stage purchase funnel, one or more of eight topic families, a finer barrier aspect when one is present, and a stance. The stage is the writer's place in the journey, not a keyword. Enthusiast posts are a week sample of seven electric-vehicle subreddits. Shopper posts are keyword-matched submissions from r/cars, r/Autos, and r/carbuying. The corpus is labeled by Qwen2.5-14B-Instruct, run locally in a 4-bit quant, with a 7B fallback if that model is too slow or runs out of memory. A smaller zero-shot model is the baseline, not the instrument. Two annotators code 800 posts, including a 50-post calibration subset that is left out of kappa. Coder B is Ryan. That sheet is still blank, so this draft has no validated result.
 
 On the small-model baseline the enthusiast file has 9044 posts and the shopper file has 13783. That model has one ownership class, so it cannot separate onboarding from long-term ownership. The discontinuity and the author-transition counts in section 7 are the same baseline. They are not effects. Section 8 is empty until the local model has been run.
 
@@ -45,7 +45,7 @@ Price, range, charging access, and information are the usual survey list. The su
 
 ### 2.2 Social media as a record of electric-vehicle opinion
 
-Ruan and Lv (2022) fit a 20-topic LDA model and compared LIWC, VADER, and AFINN on Reddit through December 2020. The article is in *Communications in Transportation Research*, not Transportation Research Part D. Ruan and Lv (2023) repeat that corpus and add 7,383,327 tweets. Ashby, Weir, and Fussey (2025) use BERTopic and a language model on charging tweets, with manual review of the theme list rather than a double-coded test of document labels. The unit in the present paper is the submission. Ruan and Lv's mass is mostly comments, so a comparison of levels is not like-for-like.
+Ruan and Lv (2022) fit a 20-topic LDA model and compared LIWC, VADER, and AFINN on Reddit through December 2020. The article is in *Communications in Transportation Research*, not Transportation Research Part D. Ruan and Lv (2023) repeat that corpus and add 7,383,327 tweets. Ashby, Weir, and Fussey (2025) use BERTopic and a language model on charging tweets, with manual review of the theme list rather than a double-coded test of document labels. The main text type in the present paper is the submission. Comments are a second text type, used for the stage-transition coverage, with the submissions-only count kept as a robustness check. Ruan and Lv's mass is mostly comments, so a comparison of levels is still not like-for-like.
 
 ### 2.3 Language models as annotators
 
@@ -63,7 +63,7 @@ Counts of enthusiast submissions come from the Arctic Shift API (`https://arctic
 
 The enthusiast text file is not that census. It is one deterministic 7-day window per subreddit-quarter, limit 25, plus a fixed week around each coded event, limit 40. The window rule is in `v2/download_reddit.py`. Round 6 added three further 7-day windows, limit 40, inside four baseline months that the week sample had left thin: August 2021, June 2022, December 2022, and September 2024. The cap on that fill was 3360 posts and 90 minutes of labeling; it appended 2642 posts in 17.55 minutes.
 
-Shopper text is streamed from Academic Torrents zstd dumps (Watchful1, 2026, subreddit submissions 2005-06 to 2025-12, infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`). The keyword filter is a word-boundary match for tesla, rivian, ioniq, "electric vehicle", and "electric car". Bare `ev` is excluded. The extract through December 2025 kept 13,976 posts. January–September 2026 kept 421 keyword posts, of which 413 survived cleaning. The API aggregate for the same three subreddits and the same keywords, January 2015 through September 2026, is 16,993. The two matchers are different, and the dump filter was not retuned to force the totals together. Comments were not downloaded. Submissions only is a locked decision.
+Shopper text is streamed from Academic Torrents zstd dumps (Watchful1, 2026, subreddit submissions 2005-06 to 2025-12, infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`). The keyword filter is a word-boundary match for tesla, rivian, ioniq, "electric vehicle", and "electric car". Bare `ev` is excluded. The extract through December 2025 kept 13,976 posts. January–September 2026 kept 421 keyword posts, of which 413 survived cleaning. The API aggregate for the same three subreddits and the same keywords, January 2015 through September 2026, is 16,993. The two matchers are different, and the dump filter was not retuned to force the totals together. Comments are pulled separately, for the same subreddits and the windows around the four cutoffs, and they stay a second text type. The submission file is unchanged.
 
 After cleaning, the labeled analysis file has 9044 enthusiast posts and 13783 shopper posts. A probable bot, or a post under five tokens, is dropped before labeling. Usernames are not in the committed label file. The annotation sheet redacts `u/` mentions. Full post text stays in gitignored `v2/data/raw/`.
 
@@ -73,7 +73,7 @@ The license field on the Academic Torrents item is empty. A takedown thread exis
 
 ### 4.1 The local instruction model, and the small model as baseline
 
-The instrument for the corpus is an open instruction model in the 7 to 8 billion parameter class, run on a local RTX 4070 with 16 GB of memory. The recommended first checkpoint is Qwen2.5-7B-Instruct in 4-bit. Llama-3.1-8B-Instruct is the alternative that also fits. No paid API is used. The prompt is the codebook: one stage, one or more families, the finer aspects, a stance, and a short quote from the post. The output is JSON. Each row stores the model name, the model version, and a hash of the prompt, so a later paper can compare the small model with the larger one without mixing the files. The runner is `v2/llm_label.py`. The steps for the desktop are `v2/RUN_ON_MY_GPU.md`. A 100-post smoke file is `v2/sample/smoke_100.csv`.
+The instrument for the corpus is the largest open instruct model that fits a local RTX 4070 with 16 GB of memory. The default checkpoint is Qwen2.5-14B-Instruct, served by Ollama as `qwen2.5:14b-instruct` in the Q4_K_M quant (about 9 GB of weights), with a context length of 4096 tokens so the cache stays inside the card. The fallback, if the 14B model is too slow or runs out of memory, is `qwen2.5:7b-instruct`. No paid API is used. The prompt is the codebook: one stage, one or more families, the finer aspects, a stance, and a short quote from the text. A comment is prefixed so the prompt says it is a comment, and the output row stores `text_type`. The output is JSON. Each row stores the model name, the model version, and a hash of the prompt, so a later paper can compare the small model with this one without mixing the files. The runner is `v2/llm_label.py`. The steps for the desktop, including the time comparison of 14B and 7B, are `v2/RUN_ON_MY_GPU.md`. A 100-post smoke file is `v2/sample/smoke_100.csv`. This machine did not time the 14B model.
 
 The small model stays as the baseline and is the only model that has labeled the 22,827 posts so far. It is `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on CPU. Barriers and stage use the template "This text is about {}.". Stance uses "This text expresses {}". A barrier is on when its score is at least 0.5. Dealer friction is also on when a small lexicon matches a markup, a documentation fee, a market adjustment, or a dealer inventory wait, and it is turned off when the model fires on ordinary service or on a charger that merely sits at a dealer and the lexicon did not match. That lexicon check is on invented sentences (`v2/fixtures/dealer_sentences.csv`). The small model has one ownership class. It does not emit the eight families. It is not replaced, and it is not the result.
 
@@ -83,11 +83,17 @@ The codebook is `v2/annotation/CODEBOOK.md`. Stage is one code: awareness, consi
 
 ### 4.3 Annotation and validation
 
-The sheet is `v2/annotation/annotation_sheet.csv`: 800 posts (382 enthusiast, 418 shopper), excerpts of at most 500 characters, code cells empty. The draw covers all six stages and all eight families in each audience, with rare cells filled first. A short lexicon was used only to place some of the small model's ownership posts into the onboarding pool and some into the long-term pool, so both stages appear on the sheet. That lexicon is not a code, and it is not printed on the sheet. Fifty rows are flagged `calibration=yes`. The two annotators code those first, compare them, and freeze the codebook. The 50 are excluded from kappa. The practice rows in `annotation_preview.csv` are also excluded. Model predictions are in `annotation_model_key.csv`, not on the sheet. Daisy is one annotator. The second is a labmate. This project did not contact anyone.
+The sheet is `v2/annotation/annotation_sheet.csv`: 800 posts (382 enthusiast, 418 shopper), excerpts of at most 500 characters, code cells empty. The draw covers all six stages and all eight families in each audience, with rare cells filled first. A short lexicon was used only to place some of the small model's ownership posts into the onboarding pool and some into the long-term pool, so both stages appear on the sheet. That lexicon is not a code, and it is not printed on the sheet. Fifty rows are flagged `calibration=yes`. The two annotators code those first, compare them, and freeze the codebook. The 50 are excluded from kappa. The practice rows in `annotation_preview.csv` are also excluded. Model predictions are in `annotation_model_key.csv`, not on the sheet. Coder A is Daisy. Coder B is Ryan (GitHub Ryan-yu-wei). His instructions are `v2/annotation/README_FOR_RYAN.md`. He writes `Ryan` in the annotator column and saves `coder_ryan.csv`. This project did not contact him.
 
 `v2/score_agreement.py` reads the two finished sheets. It writes Cohen's kappa and Krippendorff's alpha for each aspect, each family, stage, and stance, with a bootstrap interval for kappa. It scores a model only against items both coders marked and agreed on, and it leaves disagreements out of that gold set. It writes precision, recall, and F1, and a Rogan-Gladen correction of the prevalence. Blanks are missing, not a third category. The calibration rows are written to their own table and left out of the main one. The script was run on synthetic labels only. It does not invent a coder.
 
 The rule already fixed is: if the lower bound of the confidence interval on the aspect kappas is below 0.60, add 200 adjudicated posts before a substantive claim, and if it is still too low, hold the Transportation Research Part D submission. The same comparison is then run for the small model and for the local instruction model. `v2/run_after_llm.py` does that second step when both coder files are passed in. Until those files exist, model-versus-human accuracy is not a number in this paper.
+
+### 4.4 Score sensitivity
+
+The main analysis keeps every item. A sensitivity drops items with score under 2. Missing scores are counted and left out of that check. They are not treated as a score of 2 or more. `v2/run_after_llm.py` writes `score_sensitivity.csv`, and, when scores are present, `funnel_shares_score_ge_2.csv`, `rdit_score_ge_2.csv` (point estimates only), and `stage_transition_shocks_score_ge_2.csv`. The main share, discontinuity, and transition tables stay on the full file.
+
+`post_scores.csv` has 22826 submission rows: 12287 with score under 2, 10539 with score at least 2, and 0 with a blank score. 1 labeled submission id had no score row returned, so it is missing rather than a score of 0. That split is a property of the archive scores. It is not an instruction-model result. The sensitivity tables themselves wait for an instruction-model file. This draft does not invent those labels.
 
 ## 5. Discontinuity in time
 
@@ -117,7 +123,7 @@ The interval is a percentile interval from a week-cluster bootstrap. Weeks insid
 
 Authors are hashed. Deleted accounts are dropped. The hash is not a name. Posts by the same hash are ordered by time. A pair is two successive posts. On the six-stage ladder the rungs are awareness, consideration, evaluation, purchase, onboarding, and long-term ownership, in that order. Unclear is not on the ladder. A pair is a forward move when both posts sit on the ladder and the later rung is higher. The rate is the share of pairs that move forward.
 
-For a cutoff c, the shock rate uses pairs whose first post falls in the 180 days before c and whose second post falls in the 180 days after c. The same window is applied at c minus 180 days and at c plus 180 days. The comparison is descriptive. It is not a hazard model with covariates, and it is not an estimate of how fast a person moves from shopping to buying. The small-model baseline cannot see onboarding versus long-term ownership, so its ladder stops at one ownership rung. The instruction-model file is the one that can use the six-rung ladder. Repeat-author coverage is the feasibility check. A week sample contains the same person twice less often than a census would.
+For a cutoff c, the shock rate uses pairs whose first post falls in the 180 days before c and whose second post falls in the 180 days after c. The same window is applied at c minus 180 days and at c plus 180 days. The comparison is descriptive. It is not a hazard model with covariates, and it is not an estimate of how fast a person moves from shopping to buying. The small-model baseline cannot see onboarding versus long-term ownership, so its ladder stops at one ownership rung. The instruction-model file is the one that can use the six-rung ladder. Repeat-author coverage is the feasibility check. A week sample contains the same person twice less often than a census would. Comments are their own text type in that check. The count of authors on both sides is computed twice: submissions and comments together, and submissions alone. The submissions-only count is the robustness check. Section 7.5 reports how many authors are gained.
 
 ## 7. Preliminary baseline from the small model
 
@@ -181,7 +187,22 @@ Local linear jump in the daily share. Bandwidth chosen on the grid in section 5.
 | enthusiast | 8489 | 6681 | 957 | 0.326 | 1.0 | 79 |
 | shopper | 11292 | 7432 | 1404 | 0.466 | 1.0 | 91 |
 
-Pairs that cross a cutoff inside 180 days number about 100 on this file, and about 39 at the credit end. Forward rates on the unsplit ladder are about 0.13 to 0.18, and the placebos 180 days away fall in the same range. The median author has one post. A few hashes contribute many posts, so the repeat-post share is not a panel of distinct buyers. The counts are in `v2/outputs/stage_transition_shocks.csv`.
+### 7.5 Authors on both sides, with comments
+
+Comments are a separate text type. An author is on both sides of a cutoff when at least one item falls in the 180 days before and at least one falls in the 180 days after. The submissions-only count is the robustness check. `n_gained` is the number of authors who meet that definition only after comments are included. The pull is `v2/fetch_comments.py`: comments by the hashed repeat authors, and comments on the sampled submissions, in the same subreddits and the same windows. Bodies stay in gitignored `v2/data/raw/`. The committed file is metadata.
+
+| Cutoff | Submissions only | Submissions and comments | Authors gained |
+|---|---:|---:|---:|
+| ira_signing_2022 | 116 | 148 | 32 |
+| ira_credit_rules_2023 | 115 | 142 | 27 |
+| tesla_price_cut_2023 | 105 | 135 | 30 |
+| credit_end_2025 | 39 | 58 | 19 |
+
+The metadata file has 14306 comments from 49 hashed authors. These counts are coverage, not labels and not effects.
+
+Lower bound. Repeat authors searched so far: 49 of 2392. Comments on the sampled submission threads are not in this table yet. The gain cannot fall as the pull continues. `v2/fetch_comments.py` resumes from its done file. This draft does not invent the finished count.
+
+Pairs that cross a cutoff inside 180 days number about 100 on this file, and about 39 at the credit end. Forward rates on the unsplit ladder are about 0.13 to 0.18, and the placebos 180 days away fall in the same range. The median author has one post. A few hashes contribute many posts, so the repeat-post share is not a panel of distinct buyers. The counts are in `v2/outputs/stage_transition_shocks.csv`. Those pair counts are submissions. The comment gain above is a coverage count, not a new transition rate.
 
 An earlier descriptive contrast, event-window share minus a baseline, with a design-aware bootstrap, is in `v2/outputs/FINDINGS.md`. It is not the estimand in section 5.
 
@@ -193,7 +214,7 @@ When `v2/outputs/llm_labels.csv` exists, this command rebuilds the section:
 
 `python v2/run_after_llm.py --llm v2/outputs/llm_labels.csv --out v2/outputs/after_llm`
 
-It writes funnel shares by audience, a stage-by-family heatmap, the discontinuity table with the bandwidth grid, the donut, the placebos, and the week-cluster interval, the stage-transition rates on the six-rung ladder, and agreement between the small model and the instruction model. Agreement with humans is written only when both annotator sheets are passed as `--coder-a` and `--coder-b`. If those files are absent, the command records that they were not provided. It does not invent them.
+It writes funnel shares by audience, a stage-by-family heatmap, the discontinuity table with the bandwidth grid, the donut, the placebos, and the week-cluster interval, the stage-transition rates on the six-rung ladder, and agreement between the small model and the instruction model. Agreement with humans is written only when both annotator sheets are passed as `--coder-a` and `--coder-b`. If those files are absent, the command records that they were not provided. It does not invent them. When `v2/outputs/post_scores.csv` is present it also writes the score-at-least-2 sensitivity beside the main tables. Comment rows are included when the label file has `text_type=comment`. The submissions-only transition count remains the robustness check.
 
 The cells that belong here, and that are empty on purpose:
 
@@ -204,19 +225,20 @@ The cells that belong here, and that are empty on purpose:
 | Discontinuity jumps, with bandwidth grid, donut, placebos, and week-cluster intervals | Not run |
 | Forward-move rates on the six-rung ladder, with placebos | Not run |
 | Small-model versus instruction-model agreement | Not run |
-| Human kappa and model-versus-human accuracy | Not run. The sheet is blank. |
+| Human kappa and model-versus-human accuracy | Not run. The sheet is blank. Ryan has not coded it. |
+| Score at least 2, sensitivity | Wired. Not filled. The main tables keep every item. |
 
 ## 9. Limitations
 
-English-language Reddit is not the US household population. The enthusiast file is a cluster sample of submissions, not the 603,435-post census. The shopper file is keyword-filtered. Comments are absent. Arctic Shift does not guarantee that the archive is complete. The Academic Torrents license field is empty. Other news happens on the same days as the four cutoffs, so a jump is not an effect. The 1 January 2023 and 13 January 2023 cutoffs are twelve days apart. The small model cannot split ownership. The instruction model has not been run. Labels have not been checked by a person.
+English-language Reddit is not the US household population. The enthusiast file is a cluster sample of submissions, not the 603,435-post census. The shopper file is keyword-filtered. Comments cover repeat authors and sampled threads in the cutoff windows, not every comment in the census. Arctic Shift does not guarantee that the archive is complete. The Academic Torrents license field is empty. Other news happens on the same days as the four cutoffs, so a jump is not an effect. The 1 January 2023 and 13 January 2023 cutoffs are twelve days apart. The small model cannot split ownership. The instruction model has not been run. Labels have not been checked by a person.
 
 ## 10. What remains before submission
 
-1. The labmate codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first. The name is not written here.
-2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md`, then the full local model, then `v2/run_after_llm.py`.
+1. Ryan (coder B) codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first, and returns `coder_ryan.csv`. The steps are `v2/annotation/README_FOR_RYAN.md`. This project did not contact him.
+2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md` on `qwen2.5:14b-instruct`. If 100 posts take longer than about 8 minutes, the 22,827-submission run passes about 30 hours: use `--fallback-7b` or the rented-GPU note in that file. Then run the full file, including comment rows, and `v2/run_after_llm.py`.
 3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.
-4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline.
-5. Comments stay out. An upvote filter (score at least 2) has not been run. If it is adopted later, show it as a sensitivity.
+4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity.
+5. Finish `v2/fetch_comments.py` if `comment_cutoff_coverage.csv` is still missing, then label comments as their own text type. Submissions alone stay the robustness check.
 6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.
 7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.
 

@@ -100,7 +100,7 @@ A complaint about one broken charger is not `oppose` by itself. `oppose` require
 
 ## 5. Validation plan
 
-**Who.** Two annotators. Daisy is one. The second is a labmate, who will code soon. This project did not contact or recruit anyone. The second coder should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated.
+**Who.** Two annotators. Coder A is Daisy. Coder B is Ryan (GitHub Ryan-yu-wei), who already has write access. His steps are `v2/annotation/README_FOR_RYAN.md`. This project did not contact or recruit anyone. The second coder should not be the person who wrote the prompt, if that person is also an author, or the conflict should be stated.
 
 **Practice.** The 25-row `v2/annotation/annotation_preview.csv` is for discussion. It is excluded from kappa. The codebook is revised once, then frozen.
 
@@ -149,14 +149,14 @@ Usernames are kept only in the gitignored local file, so the bot filter can run.
 
 ## 8. Decisions
 
-Framing A is locked, and the paper is built on the funnel. The shopper-text route is the dumps. Submissions only, until a later decision. The stage system is the 6-stage funnel in `v2/docs/reference_taxonomy_6stage_8family.pdf`, with onboarding kept separate from long-term ownership. Each post gets one stage, one or more of the eight topic families, the seven barrier aspects, and a stance. The instrument for the corpus is an open instruction model run on Daisy's own GPU (`v2/llm_label.py`, `v2/RUN_ON_MY_GPU.md`). The small NLI model stays as the baseline. No paid API.
+Framing A is locked, and the paper is built on the funnel. The shopper-text route is the dumps. The stage system is the 6-stage funnel in `v2/docs/reference_taxonomy_6stage_8family.pdf`, with onboarding kept separate from long-term ownership. Each post gets one stage, one or more of the eight topic families, the seven barrier aspects, and a stance. The instrument for the corpus is `qwen2.5:14b-instruct` (Ollama, Q4_K_M, about 9 GB) on Daisy's RTX 4070, with `qwen2.5:7b-instruct` as the fallback (`v2/llm_label.py`, `v2/RUN_ON_MY_GPU.md`). The context length is 4096. The small NLI model stays as the baseline. No paid API.
 
-Still open:
+Decisions on 22 October 2026:
 
-1. The labmate's name is not written in the repo. They will code `v2/annotation/annotation_sheet.csv`. Nobody was contacted from this project.
-2. Which checkpoint to run first. The note recommends Qwen2.5-7B-Instruct in 4-bit on the 16 GB card. Llama-3.1-8B-Instruct and Qwen2.5-14B-Instruct are alternatives. 14B may not fit.
-3. Whether comments should be pulled. The original papers are mostly comments. This design censuses submissions. The per-subreddit comments files exist in the same torrent and are much larger (r/cars comments alone are about 2.16 GB compressed).
-4. Whether a score filter (submission score at least 2) should be a sensitivity check. It is not applied by default.
+1. Coder B is Ryan (GitHub Ryan-yu-wei). He codes `v2/annotation/annotation_sheet.csv` and saves `coder_ryan.csv`. Nobody was contacted from this project.
+2. The default checkpoint is Qwen2.5-14B-Instruct in Q4_K_M. The 7B tag is the fallback if 14B is too slow or runs out of memory. If the 100-post smoke test takes longer than about 8 minutes, the 22,827-submission run passes about 30 hours, and the note points at the 7B fallback or a rented GPU.
+3. Comments are pulled for the same subreddits and the windows around the four cutoffs: comments by hashed repeat authors, and comments on the sampled submissions (`v2/fetch_comments.py`). Comments are their own text type. Submissions alone are the robustness check for who sits on both sides of a cutoff. The full per-subreddit comment dumps are not the pull.
+4. The main analysis keeps every item. Dropping items with score under 2 is a sensitivity in `v2/run_after_llm.py`. Missing scores are counted and left out of that check.
 
 The discontinuity and the author-transition counts in round 7 are scaffolds on the small-model labels. They are replaced when the instruction-model labels, and then the human labels, exist.
 

@@ -29,7 +29,7 @@ def render_round7_markdown(out_dir) -> str:
     lines = [
         "## Round 7 funnel, discontinuity, and transitions (unvalidated)",
         "",
-        "Daisy locked the 6-stage funnel, with onboarding kept separate from long-term ownership, and the 8 topic families. The note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. The codebook for the labmate is `v2/annotation/CODEBOOK.md`. The blank sheet is `v2/annotation/annotation_sheet.csv`. The small NLI model is still the only label on the corpus. It has one ownership class, so it cannot yet measure onboarding against long-term ownership. Shares below are that model's labels, or a sampling lexicon used only to build the sheet. They are not human codes and they are not effects.",
+        "Daisy locked the 6-stage funnel, with onboarding kept separate from long-term ownership, and the 8 topic families. The note is `v2/docs/reference_taxonomy_6stage_8family.pdf`. The codebook is `v2/annotation/CODEBOOK.md`. Coder B is Ryan (GitHub Ryan-yu-wei). The blank sheet is `v2/annotation/annotation_sheet.csv`. The small NLI model is still the only label on the corpus. It has one ownership class, so it cannot yet measure onboarding against long-term ownership. Shares below are that model's labels, or a sampling lexicon used only to build the sheet. They are not human codes and they are not effects.",
         "",
     ]
     meta = out_dir / "annotation_funnel_meta.csv"
@@ -117,7 +117,8 @@ def render_round7_markdown(out_dir) -> str:
         lines.append("")
     lines.append(
         "GPU instructions for the instruction model are `v2/RUN_ON_MY_GPU.md`. "
-        "That run has not been done on this machine. The 800-post sheet is what the labmate codes."
+        "The default checkpoint is `qwen2.5:14b-instruct`, with `qwen2.5:7b-instruct` as the fallback. "
+        "That run has not been done on this machine. The 800-post sheet is what Ryan codes."
     )
     lines.append("")
     return "\n".join(lines)

@@ -1,6 +1,6 @@
 # Codebook for the 800-post sheet
 
-This is the sheet the second annotator codes with Daisy. The taxonomy is Daisy's reference note, committed at `v2/docs/reference_taxonomy_6stage_8family.pdf`. Code the rows where `calibration` is `yes` first (50 posts). Compare those, freeze any wording changes in this file, then code the other 750. The 50 calibration posts are left out of kappa.
+Coder A is Daisy. Coder B is Ryan (GitHub Ryan-yu-wei). Code independently. The taxonomy is Daisy's reference note, committed at `v2/docs/reference_taxonomy_6stage_8family.pdf`. Code the rows where `calibration` is `yes` first (50 posts). Compare those, freeze any wording changes in this file, then code the other 750. The 50 calibration posts are left out of kappa. Ryan's short instructions are `v2/annotation/README_FOR_RYAN.md`.
 
 Do not open `annotation_model_key.csv`. It is the small model's predictions, for the scoring script only. The code cells on `annotation_sheet.csv` are empty on purpose.
 
@@ -22,7 +22,7 @@ Use `1` or `0` for every family and every aspect. Use one stage code and one sta
 | Seven aspect columns, and `none` | `1` if that finer barrier is present. `none` is `1` only when every aspect is `0`. |
 | `stage` | Exactly one of the six stage codes, or `unclear`. |
 | `stance` | Exactly one of `support`, `oppose`, `mixed`, `no_stance`. |
-| `annotator` | Your name or initials, the same string on every row you code. |
+| `annotator` | Daisy writes `Daisy`. Ryan writes `Ryan`. Use that same string on every row you code. |
 | `notes` | Optional. Use it when the stage was a close call. |
 
 `calibration` is already filled. Do not change it.
@@ -121,7 +121,7 @@ From `v2/`:
 ```
 python score_agreement.py \
   --coder-a annotation/coder_daisy.csv \
-  --coder-b annotation/coder_labmate.csv \
+  --coder-b annotation/coder_ryan.csv \
   --model-key annotation/annotation_model_key.csv \
   --corpus outputs/framing_labels.csv \
   --out outputs/agreement

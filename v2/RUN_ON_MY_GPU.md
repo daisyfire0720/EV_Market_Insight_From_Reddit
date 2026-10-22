@@ -1,6 +1,8 @@
 # Run the instruction model on the Windows desktop
 
-The machine this note is written for is a desktop RTX 4070 with 16 GB of VRAM, Windows, Anaconda. The cloud VM that prepared the sheet has no GPU, so the 23,000-post run has not been done. The small NLI model remains the baseline already in `outputs/framing_labels.csv`. This run is the open instruction model. It is still not human validation.
+The machine this note is written for is a desktop RTX 4070 with 16 GB of VRAM, Windows, Anaconda. The cloud VM that prepared the sheet has no GPU, so the 23,000-post run has not been done and the 14B model has not been timed here. The small NLI model remains the baseline already in `outputs/framing_labels.csv`. This run is the open instruction model. It is still not human validation.
+
+Daisy's decision on 22 October 2026: the default is the largest open instruct model that fits the 16 GB card, `qwen2.5:14b-instruct` (Ollama, Q4_K_M, about 9 GB of weights). The fallback is `qwen2.5:7b-instruct` if the 14B model is too slow or runs out of memory.
 
 ## First session: 100 posts
 
@@ -9,12 +11,22 @@ Do this before the full file. The posts are already in git as `sample/smoke_100.
 From `v2`, after Ollama is serving:
 
 ```
-python llm_label.py --backend ollama --model qwen2.5:7b-instruct --base-url http://127.0.0.1:11434/v1 --posts sample/smoke_100.csv --out outputs/llm_smoke.csv --cache data/raw/llm_smoke.jsonl --batch-size 1
+ollama pull qwen2.5:14b-instruct
+python llm_label.py --backend ollama --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts sample/smoke_100.csv --out outputs/llm_smoke.csv --cache data/raw/llm_smoke.jsonl --batch-size 1
 ```
+
+An empty `--model` is `qwen2.5:14b-instruct`. Pass `--model` only if you want a different tag. Pass `--fallback-7b` to use `qwen2.5:7b-instruct` instead:
+
+```
+ollama pull qwen2.5:7b-instruct
+python llm_label.py --backend ollama --fallback-7b --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts sample/smoke_100.csv --out outputs/llm_smoke_7b.csv --cache data/raw/llm_smoke_7b.jsonl --batch-size 1
+```
+
+Keep the 14B and 7B caches in different files. The cache key includes the model name.
 
 Checklist, in order:
 
-1. Time the command. Divide the minutes by 100. Multiply by 22,827. That is the planning time for the full file on this machine.
+1. Time the command. Divide the minutes by 100. Multiply by 22,827 for submissions alone. If you are also labeling comments, multiply by `(22827 + N) / 22827`, where `N` is the number of rows in `outputs/comment_meta.csv`.
 2. Open `outputs/llm_smoke.csv`. `ok` should be true on every row. `n` should be 100. If `ok` is false, the model did not return JSON. Stop.
 3. `stage` should be one of `awareness`, `consideration`, `evaluation`, `purchase`, `onboarding`, `long_term_ownership`, `unclear`. Anything else is an unknown stage. The downstream command drops those rows and counts them.
 4. `families` and `aspects` are code names separated by `|`. A name that is not in `annotation/CODEBOOK.md` is a bad code.
@@ -25,23 +37,29 @@ Checklist, in order:
 python run_after_llm.py --llm outputs/llm_smoke.csv --out outputs/smoke_tables --n-boot 0
 ```
 
-Those tables are a smoke test. Do not put them in the paper.
+Those tables are a smoke test. Do not put them in the paper. If `outputs/post_scores.csv` is present, the same command also writes the score-at-least-2 sensitivity next to the main tables. The main tables still include every row.
+
+## Context length
+
+`--num-ctx 4096` is the default. The 14B Q4_K_M weights are about 9 GB. A 4096-token context keeps the key-value cache small (well under 1 GB with grouped-query attention on this model). Do not raise the context to 32k. That is what runs a 16 GB card out of memory once Windows is also using the GPU. The codebook prompt is about 700 tokens and the JSON answer is about 120, so 4096 is enough for one post.
+
+If `nvidia-smi` shows the 14B model plus the cache leaving less than about 1 GB free, stop and rerun the same command with `--fallback-7b`.
 
 ## What to install
 
-Use Anaconda. A 4-bit 7B model fits in 16 GB. A 14B 4-bit model is tight once the prompt and the Windows desktop are using memory. Start with 7B. Try 14B only if `nvidia-smi` shows several gigabytes free after the 7B model is loaded.
-
-Ollama is the straightforward Windows path. vLLM is easier under WSL2 than under native Windows. `transformers` with 4-bit works when bitsandbytes is installed, and it is the slowest of the three for this many posts.
+Use Anaconda. Ollama is the straightforward Windows path. vLLM is easier under WSL2 than under native Windows. `transformers` with 4-bit works when bitsandbytes is installed, and it is the slowest of the three for this many posts.
 
 ```
-ollama pull qwen2.5:7b-instruct
+ollama pull qwen2.5:14b-instruct
 ```
 
-Other checkpoints the script accepts, if you prefer them:
+The script's defaults:
 
-- `Qwen/Qwen2.5-7B-Instruct` (recommended)
-- `Qwen/Qwen2.5-14B-Instruct` (only if 7B leaves headroom)
-- `meta-llama/Llama-3.1-8B-Instruct` (a gated Hugging Face download; Ollama's `llama3.1:8b-instruct-q4_0` is the local equivalent)
+- Ollama and vLLM, empty `--model`: `qwen2.5:14b-instruct`
+- transformers, empty `--model`: `Qwen/Qwen2.5-14B-Instruct`
+- `--fallback-7b`: `qwen2.5:7b-instruct`, or `Qwen/Qwen2.5-7B-Instruct` on the transformers backend
+
+`meta-llama/Llama-3.1-8B-Instruct` still works if you pass it as `--model`. It is a gated Hugging Face download. It is not the default.
 
 ## Where the post text is
 
@@ -53,28 +71,48 @@ python fetch_label_text.py
 python -c "import pandas as pd, json; rows=[json.loads(l) for l in open('data/raw/label_text.jsonl') if l.strip()]; pd.DataFrame(rows).to_csv('data/raw/label_posts.csv', index=False)"
 ```
 
-`label_posts.csv` needs columns `id`, `title`, and `excerpt` or `selftext`. The labeler reads `title` plus `selftext` or `text`. If the column is named `excerpt`, rename it to `selftext` before the run. Do not commit `label_posts.csv`.
+`label_posts.csv` needs columns `id`, `title`, and `excerpt` or `selftext`. The labeler reads `title` plus `selftext`, `body`, or `text`. If the column is named `excerpt`, rename it to `selftext` before the run. Do not commit `label_posts.csv`.
 
-The fetch is about 100 requests to Arctic Shift. Plan on well under an hour unless the API asks you to slow down.
+The submission fetch is about 100 requests to Arctic Shift. Plan on well under an hour unless the API asks you to slow down.
+
+## Comments
+
+Comments are a second text type. They are not mixed into the submission rows. `fetch_comments.py` pulls comments by the hashed repeat authors, and comments on the sampled submissions, for the same subreddits and the windows around the four cutoffs. It writes `outputs/comment_meta.csv` (hash, time, subreddit, score, link id) and `outputs/comment_cutoff_coverage.csv`. Bodies stay in gitignored `data/raw/comments.jsonl`.
+
+To fetch bodies for a list of comment ids into the text cache:
+
+```
+python fetch_label_text.py --comments outputs/comment_meta.csv
+```
+
+A comment row needs `text_type` equal to `comment` and the text in `body` or `selftext`. The labeler prefixes the body with `[comment]` so the prompt says the item is a comment, and it stores `text_type` on the output row. Submissions stay `text_type=submission`. Label comments into the same `outputs/llm_labels.csv` only after the submission run, or into a separate file and concatenate. Do not overwrite a finished submission file with a comment-only run.
+
+The submissions-only stage-transition count is the robustness check. `run_after_llm.py` does not drop comments out of the main tables when they are in the label file. Keep a copy of the submission-only label file if you want that robustness table rebuilt on its own.
 
 ## The run
 
 From `v2`, with Ollama already serving on port 11434:
 
 ```
-python llm_label.py --backend ollama --model qwen2.5:7b-instruct --base-url http://127.0.0.1:11434/v1 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl --batch-size 1
+python llm_label.py --backend ollama --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl --batch-size 1
 ```
 
-vLLM under WSL2, after `vllm serve Qwen/Qwen2.5-7B-Instruct --max-model-len 4096`:
+If the 14B model is too slow or runs out of memory:
 
 ```
-python llm_label.py --backend vllm --model Qwen/Qwen2.5-7B-Instruct --base-url http://127.0.0.1:8000/v1 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
+python llm_label.py --backend ollama --fallback-7b --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels_7b.jsonl --batch-size 1
 ```
 
-transformers 4-bit, if you would rather not run a server:
+vLLM under WSL2, after `vllm serve Qwen/Qwen2.5-14B-Instruct --max-model-len 4096`:
 
 ```
-python llm_label.py --backend transformers --model Qwen/Qwen2.5-7B-Instruct --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
+python llm_label.py --backend vllm --model Qwen/Qwen2.5-14B-Instruct --base-url http://127.0.0.1:8000/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
+```
+
+transformers 4-bit, if you would rather not run a server (the empty `--model` is the 14B Hugging Face id):
+
+```
+python llm_label.py --backend transformers --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
 ```
 
 Add `--no-four-bit` only if you are sure the full weights fit. On 16 GB they do not.
@@ -91,28 +129,33 @@ After the full file exists:
 python run_after_llm.py --llm outputs/llm_labels.csv --out outputs/after_llm
 ```
 
-That rebuilds funnel shares, the stage-by-family heatmap, the discontinuity table (bandwidth grid, donut, placebos, week-cluster interval), the transition rates, and agreement with the small model. Pass `--coder-a` and `--coder-b` only when both sheets have been filled by people. The command does not invent those sheets. Add `--n-boot 200` if you want the interval; the default is 200.
+That rebuilds funnel shares, the stage-by-family heatmap, the discontinuity table (bandwidth grid, donut, placebos, week-cluster interval), the transition rates, and agreement with the small model. It also writes the score-at-least-2 sensitivity when `outputs/post_scores.csv` is present. Pass `--coder-a` and `--coder-b` only when both sheets have been filled by people. Ryan's sheet is `annotation/coder_ryan.csv`. The command does not invent those sheets. Add `--n-boot 200` if you want the interval; the default is 200.
 
-## How long 23,000 posts take
+## How long it takes
 
-Time the first 100 posts and multiply. Planning numbers for an RTX 4070 16 GB, 4-bit 7B, one post at a time, a codebook prompt of roughly 700 tokens and a JSON answer of roughly 120 tokens:
+This VM has no GPU. Nothing below is a measured tokens-per-second figure for the 14B model. Time the first 100 posts and multiply.
 
-- Prefill is the slow part if the prompt is not cached. At a few thousand tokens per second of prefill, 100 posts is on the order of 5 to 15 minutes.
-- Generation of the JSON is on the order of 1 to 2 seconds per post at typical 7B 4-bit speeds.
-- A single stream is then about **6 to 14 hours** for 22,827 posts.
-- Ollama or llama.cpp with a cached codebook prompt, or vLLM with several sequences in flight, is the short end of that range, closer to **3 to 6 hours**.
-- A 14B model on the same card is slower and may run out of memory. Do not plan on it for the first pass.
+Planning numbers for an RTX 4070 16 GB, one post at a time, a codebook prompt of roughly 700 tokens and a JSON answer of roughly 120 tokens:
 
-If the first 100 posts take longer than 15 minutes, stop and check that the GPU is the device in use (`nvidia-smi`) and that the model is a 4-bit or Q4 quant, not fp16.
+- **7B, Q4.** Prefill of 100 posts is on the order of 5 to 15 minutes if the prompt is not cached. Generation is on the order of 1 to 2 seconds per post. A single stream is then about **6 to 14 hours** for 22,827 submissions. A cached codebook prompt, or several sequences in flight, is the short end, closer to **3 to 6 hours**.
+- **14B, Q4_K_M.** About twice as slow as the 7B on the same card, as a planning assumption, not a measurement. That puts a single stream near **12 to 28 hours** for the 22,827 submissions, before comments. The slow end of that band is next to 30 hours. Comments make it longer. See the rule below.
 
-## Optional: a rented GPU, if the desktop is busy
+**The 30-hour line.** 30 hours times 100 / 22,827 is about **8 minutes**. If the 100-post 14B smoke test takes longer than about 8 minutes, the full 22,827-submission run at that speed passes about 30 hours. Stop the 14B plan for the full file. Use `--fallback-7b`, or the rented-GPU option in the next section. Do not start the full 14B file until that smoke time is known.
 
-Nothing was rented. This is a price check, not a recommendation to spend money. The desktop run is the plan.
+Comments make the run longer. Time is `(22827 + N) / 100` times the smoke time, with `N` the comment rows you will label (`outputs/comment_meta.csv`). The pull was still running when this note was written. A partial cache, 49 of 2,392 repeat authors, already held on the order of 14,000 comments inside the cutoff windows, and submission threads were not fetched yet. 30 hours times 100 / (22827 + 14000) is about **5 minutes**. If the 100-post smoke test takes longer than about 5 minutes, submissions plus only those comments already pass about 30 hours, and the finished comment file will be larger. That is the point where the 14B desktop run should stop in favor of `--fallback-7b` or the rented GPU below. This VM did not time the 14B model. The 14,000 figure is a lower bound from the archive, not a tokens-per-second measurement.
 
-On 21 October 2026 the RunPod pricing page (`https://www.runpod.io/pricing`) listed an on-demand RTX 4090 at $0.34 per hour on Community Cloud and $0.89 per hour on Secure Cloud (24 GB, which is enough for a 4-bit 7B model). The same page listed an L4 at $0.44 per hour (Community) and $0.59 per hour (Secure).
+If the first 100 posts take longer than 15 minutes even on 7B, stop and check that the GPU is the device in use (`nvidia-smi`) and that the model is a 4-bit or Q4 quant, not fp16.
 
-At the Secure Cloud 4090 rate, 14 hours is about $12, and a full day left running by mistake is about $21. At the Community rate the same 14 hours is about $5. Even 48 hours at $0.89 is about $43. All of those are under $100. Marketplace prices move, and a failed start still costs the hours the machine was up. The local 4070 costs nothing if it is free.
+## Optional: a rented GPU, if 14B would pass 30 hours
+
+Nothing was rented. This is a price check, not a recommendation to spend money.
+
+Use this when the 14B smoke test says the 22,827 submissions, or the submissions plus comments, would run past about 30 hours on the 4070. The other option on the same desktop is `--fallback-7b`.
+
+On 21 October 2026 the RunPod pricing page (`https://www.runpod.io/pricing`) listed an on-demand RTX 4090 at $0.34 per hour on Community Cloud and $0.89 per hour on Secure Cloud (24 GB). The same page listed an L4 at $0.44 per hour (Community) and $0.59 per hour (Secure). A 24 GB card has room for the 14B Q4 weights (about 9 GB) and the 4096-token context. Prices were not re-checked after 21 October 2026.
+
+At the Secure Cloud 4090 rate, 14 hours is about $12, a full day is about $21, and 48 hours is about $43. At the Community rate the same 14 hours is about $5. All of those are under $100. Marketplace prices move, and a failed start still costs the hours the machine was up. The local 4070 costs nothing if the 7B fallback is fast enough.
 
 ## What this run is not
 
-It does not replace the 800-post sheet. The labmate and Daisy code `annotation/annotation_sheet.csv` against `annotation/CODEBOOK.md`. `score_agreement.py` compares those sheets with each other and with whichever model key you point it at. Until that happens, every share is unvalidated.
+It does not replace the 800-post sheet. Ryan (coder B) and Daisy (coder A) code `annotation/annotation_sheet.csv` against `annotation/CODEBOOK.md`. Ryan's steps are `annotation/README_FOR_RYAN.md`. `score_agreement.py` compares those sheets with each other and with whichever model key you point it at. Until that happens, every share is unvalidated.

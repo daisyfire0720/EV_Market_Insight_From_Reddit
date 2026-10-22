@@ -32,11 +32,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--coder-a", type=Path, default=None)
     parser.add_argument("--coder-b", type=Path, default=None)
     parser.add_argument("--n-boot", type=int, default=200)
+    parser.add_argument("--scores", type=Path, default=ROOT / "outputs" / "post_scores.csv")
+    parser.add_argument("--min-score", type=int, default=2)
     args = parser.parse_args(argv)
     if not args.llm.is_file():
         print(f"No label file at {args.llm}. This script does not invent one.", file=sys.stderr)
         return 2
-    tables = run_tables(args.llm, args.small, args.authors, args.out, args.coder_a, args.coder_b, n_boot=args.n_boot)
+    score_path = args.scores if args.scores.is_file() else None
+    tables = run_tables(
+        args.llm,
+        args.small,
+        args.authors,
+        args.out,
+        args.coder_a,
+        args.coder_b,
+        n_boot=args.n_boot,
+        score_path=score_path,
+        min_score=args.min_score,
+    )
     validity = tables["validity"].iloc[0]
     print(
         f"used {int(validity['n_used'])} of {int(validity['n_rows'])} rows "

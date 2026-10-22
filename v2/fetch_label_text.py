@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 IDS_URL = "https://arctic-shift.photon-reddit.com/api/posts/ids"
+COMMENT_IDS_URL = "https://arctic-shift.photon-reddit.com/api/comments/ids"
 USER_AGENT = "ev-reddit-research/0.2 (academic sample; Arctic Shift API)"
 RAW = ROOT / "data" / "raw"
 CACHE = RAW / "label_text.jsonl"
@@ -123,17 +124,80 @@ def _slim(row: dict) -> dict:
     }
 
 
+def slim_comment(row: dict) -> dict:
+    """Comment row for the text cache. The username is hashed and not stored."""
+    body = str(row.get("body") or "")
+    if body.lower() in {"[deleted]", "[removed]", "nan"}:
+        body = ""
+    return {
+        "id": str(row.get("id") or ""),
+        "author_hash": _hash_author(str(row.get("author") or "")),
+        "created_utc": row.get("created_utc"),
+        "title": "",
+        "excerpt": body[:EXCERPT],
+        "text_type": "comment",
+        "score": row.get("score"),
+        "subreddit": str(row.get("subreddit") or ""),
+    }
+
+
+def fetch_comment_file(path: Path) -> int:
+    """Fetch comment bodies for ids in a csv. Same cache as submissions, with text_type=comment."""
+    wanted = pd.read_csv(path)
+    if "id" not in wanted.columns:
+        print("The comment file needs an id column.", file=sys.stderr)
+        return 2
+    ids = [str(item) for item in wanted["id"].tolist()]
+    have = _load_cache()
+    missing = [doc_id for doc_id in ids if doc_id not in have or have[doc_id].get("text_type") != "comment"]
+    print(f"comments wanted {len(ids)} missing {len(missing)}", flush=True)
+    RAW.mkdir(parents=True, exist_ok=True)
+    with CACHE.open("a") as handle:
+        for start in range(0, len(missing), 200):
+            chunk = missing[start : start + 200]
+            url = COMMENT_IDS_URL + "?ids=" + ",".join(chunk) + "&fields=id,author,body,created_utc,score,subreddit"
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+            payload = None
+            try:
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    payload = json.loads(resp.read().decode("utf-8"))
+            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError) as exc:
+                print(f"  comment ids failed ({exc})", flush=True)
+                time.sleep(5)
+                continue
+            data = payload.get("data") if isinstance(payload, dict) else None
+            rows = data if isinstance(data, list) else list(data.values()) if isinstance(data, dict) else []
+            for row in rows:
+                slim = slim_comment(row)
+                if not slim["id"]:
+                    continue
+                have[slim["id"]] = slim
+                handle.write(json.dumps(slim) + "\n")
+            print(f"  comments {min(start + 200, len(missing))}/{len(missing)}", flush=True)
+            time.sleep(0.4)
+    print(f"comment cache rows touched {len(missing)}", flush=True)
+    return 0
+
+
 def write_author_table(cache: dict[str, dict]) -> None:
     rows = [
         {"id": doc_id, "author_hash": row.get("author_hash") or "", "created_utc": row.get("created_utc")}
         for doc_id, row in cache.items()
+        if row.get("text_type") != "comment"
     ]
     frame = pd.DataFrame(rows)
     frame.to_csv(AUTHORS, index=False)
     print(f"wrote {AUTHORS} rows={len(frame)}", flush=True)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Fetch submission or comment text.")
+    parser.add_argument("--comments", type=Path, default=None, help="CSV of comment ids. Fetches those instead of submissions.")
+    args = parser.parse_args(argv)
+    if args.comments:
+        return fetch_comment_file(args.comments)
     labels = pd.read_csv(LABELS)
     wanted = [str(item) for item in labels["id"].tolist()]
     have = _load_cache()

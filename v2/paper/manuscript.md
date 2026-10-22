@@ -193,14 +193,18 @@ Comments are a separate text type. An author is on both sides of a cutoff when a
 
 | Cutoff | Submissions only | Submissions and comments | Authors gained |
 |---|---:|---:|---:|
-| ira_signing_2022 | 116 | 148 | 32 |
-| ira_credit_rules_2023 | 115 | 142 | 27 |
-| tesla_price_cut_2023 | 105 | 135 | 30 |
-| credit_end_2025 | 39 | 58 | 19 |
+| ira_signing_2022 | 116 | 3723 | 3607 |
+| ira_credit_rules_2023 | 115 | 3899 | 3784 |
+| tesla_price_cut_2023 | 105 | 3810 | 3705 |
+| credit_end_2025 | 39 | 2491 | 2452 |
 
-The metadata file has 14306 comments from 49 hashed authors. These counts are coverage, not labels and not effects.
+The metadata file has 250794 comments from 34129 hashed authors. These counts are coverage, not labels and not effects.
 
-Lower bound. Repeat authors searched so far: 49 of 2392. Comments on the sampled submission threads are not in this table yet. The gain cannot fall as the pull continues. `v2/fetch_comments.py` resumes from its done file. This draft does not invent the finished count.
+Each side of a cutoff keeps the closest 100 comments returned for that author. If that page is full and none of them are in the study subreddits, the same window is requested again for the subreddits where that author submitted. A server timeout is retried on the same query.
+
+Repeat authors searched: 2392 of 2392. Comments on the sampled submissions that fall inside the cutoff windows are included, one page of 100 comments per thread. The author total counts those commenters as well as the repeat submitters.
+
+The first comment label file is `v2/outputs/comment_label_batch1.csv` (26088 comments). Cutoff-crossing authors are first. The plan is `7b` so that the 22827 submissions plus that file stay at or under 30 hours at the slow end of the planning band (30.0 hours). `v2/outputs/comment_label_batch2.csv` is the optional overflow (224706 comments). Neither file contains comment text. Bodies stay in the gitignored cache. These files are a queue, not labels.
 
 Pairs that cross a cutoff inside 180 days number about 100 on this file, and about 39 at the credit end. Forward rates on the unsplit ladder are about 0.13 to 0.18, and the placebos 180 days away fall in the same range. The median author has one post. A few hashes contribute many posts, so the repeat-post share is not a panel of distinct buyers. The counts are in `v2/outputs/stage_transition_shocks.csv`. Those pair counts are submissions. The comment gain above is a coverage count, not a new transition rate.
 
@@ -235,10 +239,10 @@ English-language Reddit is not the US household population. The enthusiast file 
 ## 10. What remains before submission
 
 1. Ryan (coder B) codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first, and returns `coder_ryan.csv`. The steps are `v2/annotation/README_FOR_RYAN.md`. This project did not contact him.
-2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md` on `qwen2.5:14b-instruct`. If 100 posts take longer than about 8 minutes, the 22,827-submission run passes about 30 hours: use `--fallback-7b` or the rented-GPU note in that file. Then run the full file, including comment rows, and `v2/run_after_llm.py`.
+2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md`. Label the 22,827 submissions plus `v2/outputs/comment_label_batch1.csv`. The model named in `v2/outputs/comment_label_plan.csv` is the one that keeps that pair at or under 30 hours at the slow planning rate. `comment_label_batch2.csv` is optional. Then run `v2/run_after_llm.py`.
 3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.
 4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity.
-5. Finish `v2/fetch_comments.py` if `comment_cutoff_coverage.csv` is still missing, then label comments as their own text type. Submissions alone stay the robustness check.
+5. Label `v2/outputs/comment_label_batch1.csv` as its own text type. Bodies are filled in the gitignored cache with `python v2/fetch_comments.py --backfill v2/outputs/comment_label_batch1.csv`. Submissions alone stay the robustness check. Batch 2 is optional.
 6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.
 7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.
 

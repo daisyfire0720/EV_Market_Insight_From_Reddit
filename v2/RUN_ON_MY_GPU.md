@@ -77,15 +77,18 @@ The submission fetch is about 100 requests to Arctic Shift. Plan on well under a
 
 ## Comments
 
-Comments are a second text type. They are not mixed into the submission rows. `fetch_comments.py` pulls comments by the hashed repeat authors, and comments on the sampled submissions, for the same subreddits and the windows around the four cutoffs. It writes `outputs/comment_meta.csv` (hash, time, subreddit, score, link id) and `outputs/comment_cutoff_coverage.csv`. Bodies stay in gitignored `data/raw/comments.jsonl`.
+Comments are a second text type. They are not mixed into the submission rows. `fetch_comments.py` has already pulled comments by the 2,392 hashed repeat authors, and one page of comments on each sampled submission inside the cutoff windows. Repeat-author queries keep the closest 100 comments on each side of a cutoff. Thread queries keep one page of 100. The committed metadata is `outputs/comment_meta.csv` (250,794 comments: hash, time, subreddit, score, link id) and `outputs/comment_cutoff_coverage.csv`. Bodies stay in gitignored `data/raw/comments.jsonl`.
 
-To fetch bodies for a list of comment ids into the text cache:
+Do not label all 250,794 comments in the same run as the submissions. `outputs/comment_label_plan.csv` is the budget. Cutoff-crossing authors are first (189,179 comments). That is more than the 1,630 comments that still fit with the 22,827 submissions in 30 hours on 14B at the slow planning rate, so the plan is 7B. Label `outputs/comment_label_batch1.csv` (26,088 comments, the closest cutoff-crossing rows). `outputs/comment_label_batch2.csv` (224,706 comments) is optional and is not part of the 30-hour plan.
+
+Fill bodies for batch 1 into the gitignored cache, then build the local label file. Neither file is committed:
 
 ```
-python fetch_label_text.py --comments outputs/comment_meta.csv
+python fetch_comments.py --backfill outputs/comment_label_batch1.csv
+python -c "from ev_v2.comment_batches import materialize_label_input; materialize_label_input('outputs/comment_label_batch1.csv', 'data/raw/comments.jsonl', 'data/raw/comment_label_batch1_posts.csv')"
 ```
 
-A comment row needs `text_type` equal to `comment` and the text in `body` or `selftext`. The labeler prefixes the body with `[comment]` so the prompt says the item is a comment, and it stores `text_type` on the output row. Submissions stay `text_type=submission`. Label comments into the same `outputs/llm_labels.csv` only after the submission run, or into a separate file and concatenate. Do not overwrite a finished submission file with a comment-only run.
+A comment row needs `text_type` equal to `comment` and the text in `body` or `selftext`. The labeler prefixes the body with `[comment]` so the prompt says the item is a comment, and it stores `text_type` on the output row. Submissions stay `text_type=submission`. Label comments into the same `outputs/llm_labels.csv` only after the submission run, or into a separate file and concatenate. Do not overwrite a finished submission file with a comment-only run. The batch csv has no body. The materialized csv does, and it is gitignored.
 
 The submissions-only stage-transition count is the robustness check. `run_after_llm.py` does not drop comments out of the main tables when they are in the label file. Keep a copy of the submission-only label file if you want that robustness table rebuilt on its own.
 
@@ -142,7 +145,9 @@ Planning numbers for an RTX 4070 16 GB, one post at a time, a codebook prompt of
 
 **The 30-hour line.** 30 hours times 100 / 22,827 is about **8 minutes**. If the 100-post 14B smoke test takes longer than about 8 minutes, the full 22,827-submission run at that speed passes about 30 hours. Stop the 14B plan for the full file. Use `--fallback-7b`, or the rented-GPU option in the next section. Do not start the full 14B file until that smoke time is known.
 
-Comments make the run longer. Time is `(22827 + N) / 100` times the smoke time, with `N` the comment rows you will label (`outputs/comment_meta.csv`). The pull was still running when this note was written. A partial cache, 49 of 2,392 repeat authors, already held on the order of 14,000 comments inside the cutoff windows, and submission threads were not fetched yet. 30 hours times 100 / (22827 + 14000) is about **5 minutes**. If the 100-post smoke test takes longer than about 5 minutes, submissions plus only those comments already pass about 30 hours, and the finished comment file will be larger. That is the point where the 14B desktop run should stop in favor of `--fallback-7b` or the rented GPU below. This VM did not time the 14B model. The 14,000 figure is a lower bound from the archive, not a tokens-per-second measurement.
+Submissions alone are 28 hours on 14B and 14 hours on 7B at the slow end of those bands. Submissions plus batch 1 (22,827 + 26,088) are **30.0 hours on 7B** and **60.0 hours on 14B** at the same rates. Submissions plus every in-window comment (250,794) are about 168 hours on 7B and about 336 hours on 14B. Batch 2 is that overflow. These are planning rates, not a timing from this VM.
+
+**The batch-1 smoke line.** 30 hours times 100 / (22,827 + 26,088) is about **3.7 minutes**. If the 100-post 7B smoke test takes longer than about 3.7 minutes, submissions plus batch 1 pass about 30 hours. Stop and use the rented-GPU option below. The 8-minute line above is only the 14B submission file, before comments.
 
 If the first 100 posts take longer than 15 minutes even on 7B, stop and check that the GPU is the device in use (`nvidia-smi`) and that the model is a 4-bit or Q4 quant, not fp16.
 

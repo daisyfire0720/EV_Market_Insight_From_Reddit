@@ -189,13 +189,43 @@ def _comment_coverage_lines(out_dir: Path) -> list[str]:
     status_path = out_dir / "comment_pull_status.csv"
     if status_path.exists():
         status = pd.read_csv(status_path).iloc[0]
+        if "cap_per_side" in status.index:
+            lines.append("")
+            lines.append(
+                f"Each side of a cutoff keeps the closest {int(status['cap_per_side'])} comments returned for that author. "
+                "If that page is full and none of them are in the study subreddits, the same window is requested again for the subreddits where that author submitted. "
+                "A server timeout is retried on the same query."
+            )
         if int(status["complete"]) != 1:
             lines.append("")
             lines.append(
                 f"Lower bound. Repeat authors searched so far: {int(status['n_authors_searched'])} of {int(status['n_repeat_authors'])}. "
-                "Comments on the sampled submission threads are not in this table yet. The gain cannot fall as the pull continues. "
-                "`v2/fetch_comments.py` resumes from its done file. This draft does not invent the finished count."
+                "The gain cannot fall as the pull continues. `v2/fetch_comments.py` resumes from its done file. This draft does not invent the finished count."
             )
+        elif "threads_complete" in status.index and int(status["threads_complete"]) != 1:
+            lines.append("")
+            lines.append(
+                "Repeat authors are fully searched. Comments on the sampled submission threads are not in this table."
+            )
+        elif "threads_complete" in status.index and int(status["threads_complete"]) == 1:
+            lines.append("")
+            lines.append(
+                f"Repeat authors searched: {int(status['n_authors_searched'])} of {int(status['n_repeat_authors'])}. "
+                "Comments on the sampled submissions that fall inside the cutoff windows are included, one page of 100 comments per thread. "
+                "The author total counts those commenters as well as the repeat submitters."
+            )
+    plan_path = out_dir / "comment_label_plan.csv"
+    if plan_path.exists():
+        plan = pd.read_csv(plan_path).iloc[0]
+        lines.append("")
+        lines.append(
+            f"The first comment label file is `v2/outputs/comment_label_batch1.csv` ({int(plan['n_batch1'])} comments). "
+            f"Cutoff-crossing authors are first. The plan is `{plan['model_plan']}` so that the {int(plan['n_submissions'])} submissions plus that file "
+            f"stay at or under 30 hours at the slow end of the planning band "
+            f"({plan['hours_submissions_plus_batch1']} hours). "
+            f"`v2/outputs/comment_label_batch2.csv` is the optional overflow ({int(plan['n_batch2'])} comments). "
+            "Neither file contains comment text. Bodies stay in the gitignored cache. These files are a queue, not labels."
+        )
     return lines
 
 
@@ -469,10 +499,10 @@ def render_manuscript(out_dir) -> str:
             "## 10. What remains before submission",
             "",
             "1. Ryan (coder B) codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first, and returns `coder_ryan.csv`. The steps are `v2/annotation/README_FOR_RYAN.md`. This project did not contact him.",
-            "2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md` on `qwen2.5:14b-instruct`. If 100 posts take longer than about 8 minutes, the 22,827-submission run passes about 30 hours: use `--fallback-7b` or the rented-GPU note in that file. Then run the full file, including comment rows, and `v2/run_after_llm.py`.",
+            "2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md`. Label the 22,827 submissions plus `v2/outputs/comment_label_batch1.csv`. The model named in `v2/outputs/comment_label_plan.csv` is the one that keeps that pair at or under 30 hours at the slow planning rate. `comment_label_batch2.csv` is optional. Then run `v2/run_after_llm.py`.",
             "3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.",
             "4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity.",
-            "5. Finish `v2/fetch_comments.py` if `comment_cutoff_coverage.csv` is still missing, then label comments as their own text type. Submissions alone stay the robustness check.",
+            "5. Label `v2/outputs/comment_label_batch1.csv` as its own text type. Bodies are filled in the gitignored cache with `python v2/fetch_comments.py --backfill v2/outputs/comment_label_batch1.csv`. Submissions alone stay the robustness check. Batch 2 is optional.",
             "6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.",
             "7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.",
             "",

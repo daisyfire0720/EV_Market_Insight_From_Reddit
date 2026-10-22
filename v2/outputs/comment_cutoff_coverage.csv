@@ -1,0 +1,5 @@
+cutoff_id,cutoff,window_days,n_authors_submissions_only,n_authors_submissions_and_comments,n_gained,validated
+ira_signing_2022,2022-08-16,180,116,3723,3607,False
+ira_credit_rules_2023,2023-01-01,180,115,3899,3784,False
+tesla_price_cut_2023,2023-01-13,180,105,3810,3705,False
+credit_end_2025,2025-09-30,180,39,2491,2452,False

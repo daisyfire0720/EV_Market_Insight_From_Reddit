@@ -1,0 +1,32 @@
+{
+  "ran_at_utc": "2026-10-17T04:57:44.217791+00:00",
+  "posts_file": "/workspace/v2/data/raw/posts_downloaded.csv",
+  "input_rows": 8866,
+  "removed_bot": 23,
+  "removed_short_or_empty": 600,
+  "kept_rows": 8243,
+  "partial_count_month_excluded_from_figure": "2026-10",
+  "lda": {
+    "n_topics": 8,
+    "random_state": 42,
+    "note": "ok",
+    "mean_topic_probability_max": 0.6294823451541393,
+    "min_topic_probability_max": 0.125
+  },
+  "vader": "vaderSentiment.SentimentIntensityAnalyzer",
+  "nli": {
+    "ran": true,
+    "validated": false,
+    "model": "MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33",
+    "revision": "262ae02f29173eec1c250f90804dc7edc677dcff",
+    "n": 8243,
+    "barrier_threshold": 0.5,
+    "dealer_rule": "nli score >= 0.5 or dealer-friction lexicon",
+    "seconds": 550.1,
+    "checkpoint": "/workspace/v2/data/raw/nli_scores.jsonl"
+  },
+  "annotation_rows": 800,
+  "funnel_consideration_share_substring": 0.40749727041125805,
+  "funnel_consideration_share_boundary": 0.23680698774717943,
+  "caveat": "Text results describe the downloaded sample, not the census. Volume ratios describe archive counts and are not causal. NLI labels are unvalidated."
+}

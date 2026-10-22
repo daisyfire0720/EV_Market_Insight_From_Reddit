@@ -2,7 +2,7 @@
 
 The machine this note is written for is a desktop RTX 4070 with 16 GB of VRAM, Windows, Anaconda. The cloud VM that prepared the sheet has no GPU, so the 23,000-post run has not been done and the 14B model has not been timed here. The small NLI model remains the baseline already in `outputs/framing_labels.csv`. This run is the open instruction model. It is still not human validation.
 
-Daisy's decision on 22 October 2026: the default is the largest open instruct model that fits the 16 GB card, `qwen2.5:14b-instruct` (Ollama, Q4_K_M, about 9 GB of weights). The fallback is `qwen2.5:7b-instruct` if the 14B model is too slow or runs out of memory.
+Daisy's decision on 22 October 2026, after the comment pull: label the 22,827 submissions plus `outputs/comment_label_batch1.csv` (26,088 comments) with `qwen2.5:14b-instruct` (Ollama, Q4_K_M, about 9 GB of weights) on the RTX 4070. She accepts about 60 hours at the slow planning rate. She is not renting a GPU and she is not switching this run to 7B. `qwen2.5:7b-instruct` and a rented GPU are fallbacks if the smoke test below is too slow or the 14B model runs out of memory. `outputs/comment_label_batch2.csv` stays optional and unlabeled.
 
 ## First session: 100 posts
 
@@ -26,7 +26,7 @@ Keep the 14B and 7B caches in different files. The cache key includes the model 
 
 Checklist, in order:
 
-1. Time the command. Divide the minutes by 100. Multiply by 22,827 for submissions alone. If you are also labeling comments, multiply by `(22827 + N) / 22827`, where `N` is the number of rows in `outputs/comment_meta.csv`.
+1. Time the command. The run of record is 22,827 submissions plus 26,088 batch-1 comments, 48,915 items, about 60 hours at the slow planning rate. 60 hours times 100 / 48,915 is **7.4 minutes**. If these 100 posts take longer than about 7.4 minutes, that 60-hour figure is no longer realistic. Stop the 14B run and use a fallback at the end of this note. Do not start the long run until this time is known.
 2. Open `outputs/llm_smoke.csv`. `ok` should be true on every row. `n` should be 100. If `ok` is false, the model did not return JSON. Stop.
 3. `stage` should be one of `awareness`, `consideration`, `evaluation`, `purchase`, `onboarding`, `long_term_ownership`, `unclear`. Anything else is an unknown stage. The downstream command drops those rows and counts them.
 4. `families` and `aspects` are code names separated by `|`. A name that is not in `annotation/CODEBOOK.md` is a bad code.
@@ -79,7 +79,7 @@ The submission fetch is about 100 requests to Arctic Shift. Plan on well under a
 
 Comments are a second text type. They are not mixed into the submission rows. `fetch_comments.py` has already pulled comments by the 2,392 hashed repeat authors, and one page of comments on each sampled submission inside the cutoff windows. Repeat-author queries keep the closest 100 comments on each side of a cutoff. Thread queries keep one page of 100. The committed metadata is `outputs/comment_meta.csv` (250,794 comments: hash, time, subreddit, score, link id) and `outputs/comment_cutoff_coverage.csv`. Bodies stay in gitignored `data/raw/comments.jsonl`.
 
-Do not label all 250,794 comments in the same run as the submissions. `outputs/comment_label_plan.csv` is the budget. Cutoff-crossing authors are first (189,179 comments). That is more than the 1,630 comments that still fit with the 22,827 submissions in 30 hours on 14B at the slow planning rate, so the plan is 7B. Label `outputs/comment_label_batch1.csv` (26,088 comments, the closest cutoff-crossing rows). `outputs/comment_label_batch2.csv` (224,706 comments) is optional and is not part of the 30-hour plan.
+Label the 22,827 submissions and `outputs/comment_label_batch1.csv` (26,088 comments, cutoff-crossing authors first) on 14B. Do not label the other 224,706 comments in `outputs/comment_label_batch2.csv` unless you later decide to. That file stays optional and unlabeled. Ignore the `model_plan` column in `outputs/comment_label_plan.csv`. It is an old 30-hour sizing note. The run is 14B.
 
 Fill bodies for batch 1 into the gitignored cache, then build the local label file. Neither file is committed:
 
@@ -88,51 +88,46 @@ python fetch_comments.py --backfill outputs/comment_label_batch1.csv
 python -c "from ev_v2.comment_batches import materialize_label_input; materialize_label_input('outputs/comment_label_batch1.csv', 'data/raw/comments.jsonl', 'data/raw/comment_label_batch1_posts.csv')"
 ```
 
-A comment row needs `text_type` equal to `comment` and the text in `body` or `selftext`. The labeler prefixes the body with `[comment]` so the prompt says the item is a comment, and it stores `text_type` on the output row. Submissions stay `text_type=submission`. Label comments into the same `outputs/llm_labels.csv` only after the submission run, or into a separate file and concatenate. Do not overwrite a finished submission file with a comment-only run. The batch csv has no body. The materialized csv does, and it is gitignored.
+A comment row needs `text_type` equal to `comment` and the text in `body`, `selftext`, `text`, or `excerpt`. The labeler prefixes the body with `[comment]` so the prompt says the item is a comment, and it stores `text_type` on the output row. Submissions stay `text_type=submission`. Keep submission labels and comment labels in separate jsonl caches, then merge them with the command in the next section. Do not point a comment run at the submission cache. The batch csv has no body. The materialized csv does, and it is gitignored.
 
 The submissions-only stage-transition count is the robustness check. `run_after_llm.py` does not drop comments out of the main tables when they are in the label file. Keep a copy of the submission-only label file if you want that robustness table rebuilt on its own.
 
-## The run
+## The run, in sessions
 
-From `v2`, with Ollama already serving on port 11434:
+Do the smoke test first. Then, from `v2`, with Ollama already serving on port 11434. `--batch-size 1` means a crash loses at most the post that was in flight. The jsonl cache is append-only. Each finished row is flushed to disk. The cache key is post id, model name, and codebook version. Starting the same command again skips ids already labeled. A torn last line from a power cut is dropped on the next start. If Ollama is down, the script retries three times, writes nothing for the failed post, and exits. Start Ollama and run the same command again.
 
-```
-python llm_label.py --backend ollama --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl --batch-size 1
-```
+Each output row stores `model_name`, `model_version`, and `prompt_hash`. The small NLI rows in `framing_labels.csv` are a different model. Keep both files. Do not overwrite `framing_labels.csv` with this run. `evidence` is a short quote. The quotes are unvalidated model output.
 
-If the 14B model is too slow or runs out of memory:
+A line `progress 1200/22827 new=40 elapsed=0h03m10s eta=27h12m04s` counts ids in that file. `eta` uses the speed of the current session, not the planning rate.
 
-```
-python llm_label.py --backend ollama --fallback-7b --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels_7b.jsonl --batch-size 1
-```
-
-vLLM under WSL2, after `vllm serve Qwen/Qwen2.5-14B-Instruct --max-model-len 4096`:
+Session 1 is the submissions. At the slow planning rate this is the longer of the two pieces (about 28 of the 60 hours). Stop it whenever you need to. Resume with the same command.
 
 ```
-python llm_label.py --backend vllm --model Qwen/Qwen2.5-14B-Instruct --base-url http://127.0.0.1:8000/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
+python llm_label.py --backend ollama --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels_submissions.csv --cache data/raw/llm_labels_submissions.jsonl --batch-size 1
 ```
 
-transformers 4-bit, if you would rather not run a server (the empty `--model` is the 14B Hugging Face id):
+Session 2 is batch 1. `--max-new 5000` is about 6 hours at the planning rate (5,000 / 48,915 times 60 hours). Run it, stop, and run it again until the progress line shows every id in the file. Omit `--max-new` if you would rather leave it running.
 
 ```
-python llm_label.py --backend transformers --posts data/raw/label_posts.csv --out outputs/llm_labels.csv --cache data/raw/llm_labels.jsonl
+python llm_label.py --backend ollama --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/comment_label_batch1_posts.csv --out outputs/llm_labels_comments.csv --cache data/raw/llm_labels_comments.jsonl --batch-size 1 --max-new 5000
 ```
 
-Add `--no-four-bit` only if you are sure the full weights fit. On 16 GB they do not.
-
-Stop the job whenever you need to. The jsonl cache is keyed by post id, model name, and codebook version. Starting the same command again skips posts already labeled.
-
-Each output row stores `model_name`, `model_version`, and `prompt_hash`. The small NLI rows in `framing_labels.csv` are a different model. Keep both files. A small-versus-large comparison can be a later paper. Do not overwrite `framing_labels.csv` with this run.
-
-`evidence` is a short quote. Review it before committing `llm_labels.csv`. The quotes are unvalidated model output.
-
-After the full file exists:
+When both caches are finished, one command checks that every expected id is present once, that each cache line is JSON, and that `ok` is true. Identical duplicate lines are collapsed. A disagreement on the same id, a missing id, or a bad line stops the write. Only then call `run_after_llm.py`.
 
 ```
+python llm_label.py --merge-validate --expect data/raw/label_posts.csv --expect data/raw/comment_label_batch1_posts.csv --caches data/raw/llm_labels_submissions.jsonl --caches data/raw/llm_labels_comments.jsonl --out outputs/llm_labels.csv
 python run_after_llm.py --llm outputs/llm_labels.csv --out outputs/after_llm
 ```
 
-That rebuilds funnel shares, the stage-by-family heatmap, the discontinuity table (bandwidth grid, donut, placebos, week-cluster interval), the transition rates, and agreement with the small model. It also writes the score-at-least-2 sensitivity when `outputs/post_scores.csv` is present. Pass `--coder-a` and `--coder-b` only when both sheets have been filled by people. Ryan's sheet is `annotation/coder_ryan.csv`. The command does not invent those sheets. Add `--n-boot 200` if you want the interval; the default is 200.
+`run_after_llm.py` rebuilds funnel shares, the stage-by-family heatmap, the discontinuity table (bandwidth grid, donut, placebos, week-cluster interval), the transition rates, and agreement with the small model. It also writes the score-at-least-2 sensitivity when `outputs/post_scores.csv` is present. Pass `--coder-a` and `--coder-b` only when both sheets have been filled by people. Ryan's sheet is `annotation/coder_ryan.csv`. The command does not invent those sheets. Add `--n-boot 200` if you want the interval; the default is 200.
+
+vLLM under WSL2, after `vllm serve Qwen/Qwen2.5-14B-Instruct --max-model-len 4096`, uses the same `--posts`, `--cache`, and `--out` paths with `--backend vllm --base-url http://127.0.0.1:8000/v1`. transformers 4-bit, if you would rather not run a server, is `--backend transformers` with the same paths. The empty `--model` is the 14B Hugging Face id. Add `--no-four-bit` only if you are sure the full weights fit. On 16 GB they do not.
+
+Fallback only, if 14B runs out of memory or the smoke test is past 7.4 minutes. Keep this cache separate from the 14B cache:
+
+```
+python llm_label.py --backend ollama --fallback-7b --base-url http://127.0.0.1:11434/v1 --num-ctx 4096 --posts data/raw/label_posts.csv --out outputs/llm_labels_submissions.csv --cache data/raw/llm_labels_submissions_7b.jsonl --batch-size 1
+```
 
 ## How long it takes
 
@@ -141,21 +136,15 @@ This VM has no GPU. Nothing below is a measured tokens-per-second figure for the
 Planning numbers for an RTX 4070 16 GB, one post at a time, a codebook prompt of roughly 700 tokens and a JSON answer of roughly 120 tokens:
 
 - **7B, Q4.** Prefill of 100 posts is on the order of 5 to 15 minutes if the prompt is not cached. Generation is on the order of 1 to 2 seconds per post. A single stream is then about **6 to 14 hours** for 22,827 submissions. A cached codebook prompt, or several sequences in flight, is the short end, closer to **3 to 6 hours**.
-- **14B, Q4_K_M.** About twice as slow as the 7B on the same card, as a planning assumption, not a measurement. That puts a single stream near **12 to 28 hours** for the 22,827 submissions, before comments. The slow end of that band is next to 30 hours. Comments make it longer. See the rule below.
+- **14B, Q4_K_M.** About twice as slow as the 7B on the same card, as a planning assumption, not a measurement. Submissions alone are about **12 to 28 hours**. Submissions plus batch 1 are **60.0 hours** at the slow end of that band. That is the run.
 
-**The 30-hour line.** 30 hours times 100 / 22,827 is about **8 minutes**. If the 100-post 14B smoke test takes longer than about 8 minutes, the full 22,827-submission run at that speed passes about 30 hours. Stop the 14B plan for the full file. Use `--fallback-7b`, or the rented-GPU option in the next section. Do not start the full 14B file until that smoke time is known.
+**The 60-hour line.** 60 hours times 100 / 48,915 is about **7.4 minutes**. If the 100-post 14B smoke test takes longer than about 7.4 minutes, submissions plus batch 1 pass about 60 hours at the speed you just measured. The 60-hour plan is then unrealistic. Stop and use `--fallback-7b`, or the rented-GPU note below. Batch 2 is not part of either number.
 
-Submissions alone are 28 hours on 14B and 14 hours on 7B at the slow end of those bands. Submissions plus batch 1 (22,827 + 26,088) are **30.0 hours on 7B** and **60.0 hours on 14B** at the same rates. Submissions plus every in-window comment (250,794) are about 168 hours on 7B and about 336 hours on 14B. Batch 2 is that overflow. These are planning rates, not a timing from this VM.
+These are planning rates, not a timing from this VM. If the first 100 posts take longer than 15 minutes even on 7B, stop and check that the GPU is the device in use (`nvidia-smi`) and that the model is a 4-bit or Q4 quant, not fp16.
 
-**The batch-1 smoke line.** 30 hours times 100 / (22,827 + 26,088) is about **3.7 minutes**. If the 100-post 7B smoke test takes longer than about 3.7 minutes, submissions plus batch 1 pass about 30 hours. Stop and use the rented-GPU option below. The 8-minute line above is only the 14B submission file, before comments.
+## Fallback: a rented GPU
 
-If the first 100 posts take longer than 15 minutes even on 7B, stop and check that the GPU is the device in use (`nvidia-smi`) and that the model is a 4-bit or Q4 quant, not fp16.
-
-## Optional: a rented GPU, if 14B would pass 30 hours
-
-Nothing was rented. This is a price check, not a recommendation to spend money.
-
-Use this when the 14B smoke test says the 22,827 submissions, or the submissions plus comments, would run past about 30 hours on the 4070. The other option on the same desktop is `--fallback-7b`.
+Nothing was rented. Daisy's run stays on the 4070. This section is a price check for the case where the 14B smoke test is slower than about 7.4 minutes per 100 posts, or the 14B model runs out of memory and the 7B fallback is also too slow.
 
 On 21 October 2026 the RunPod pricing page (`https://www.runpod.io/pricing`) listed an on-demand RTX 4090 at $0.34 per hour on Community Cloud and $0.89 per hour on Secure Cloud (24 GB). The same page listed an L4 at $0.44 per hour (Community) and $0.59 per hour (Secure). A 24 GB card has room for the 14B Q4 weights (about 9 GB) and the 4096-token context. Prices were not re-checked after 21 October 2026.
 

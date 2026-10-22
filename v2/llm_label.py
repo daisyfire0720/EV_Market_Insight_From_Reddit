@@ -21,7 +21,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -43,6 +46,25 @@ FALLBACK_OLLAMA_MODEL = "qwen2.5:7b-instruct"
 DEFAULT_HF_MODEL = "Qwen/Qwen2.5-14B-Instruct"
 FALLBACK_HF_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 DEFAULT_NUM_CTX = 4096
+# Daisy's run of record, 22 October 2026: 14B on the submissions plus batch 1.
+N_SUBMISSIONS = 22827
+N_COMMENT_BATCH1 = 26088
+PLAN_HOURS_14B_WITH_BATCH1 = 60.0
+
+
+class LabelingStopped(RuntimeError):
+    """The backend went away. Rows already flushed stay in the cache."""
+
+
+def smoke_limit_minutes(
+    budget_hours: float = PLAN_HOURS_14B_WITH_BATCH1,
+    n_items: int = N_SUBMISSIONS + N_COMMENT_BATCH1,
+    smoke_n: int = 100,
+) -> float:
+    """Minutes for ``smoke_n`` items at which the full run would pass ``budget_hours``."""
+    if n_items <= 0:
+        return 0.0
+    return budget_hours * smoke_n / n_items * 60.0
 
 
 def resolve_model(backend: str, model: str, fallback_7b: bool) -> str:
@@ -158,36 +180,48 @@ class OpenAICompatBackend:
         self.num_ctx = num_ctx
         self.native_ollama = native_ollama
 
+    def _request(self, prompt: str) -> str:
+        if self.native_ollama:
+            root = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+            url = root + "/api/chat"
+            payload_body = {
+                "model": self.model,
+                "stream": False,
+                "messages": [{"role": "user", "content": prompt}],
+                "options": {"temperature": 0, "num_ctx": self.num_ctx or DEFAULT_NUM_CTX},
+            }
+        else:
+            url = self.base_url + "/chat/completions"
+            payload_body = {
+                "model": self.model,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload_body).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+        if self.native_ollama:
+            return payload["message"]["content"]
+        return payload["choices"][0]["message"]["content"]
+
     def complete(self, prompts: list[str]) -> list[str]:
         outputs = []
         for prompt in prompts:
-            if self.native_ollama:
-                root = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
-                url = root + "/api/chat"
-                payload_body = {
-                    "model": self.model,
-                    "stream": False,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "options": {"temperature": 0, "num_ctx": self.num_ctx or DEFAULT_NUM_CTX},
-                }
-            else:
-                url = self.base_url + "/chat/completions"
-                payload_body = {
-                    "model": self.model,
-                    "temperature": 0,
-                    "messages": [{"role": "user", "content": prompt}],
-                }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload_body).encode(),
-                headers={"Content-Type": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=180) as resp:
-                payload = json.loads(resp.read().decode("utf-8"))
-            if self.native_ollama:
-                outputs.append(payload["message"]["content"])
-            else:
-                outputs.append(payload["choices"][0]["message"]["content"])
+            last: Exception | None = None
+            for attempt in range(3):
+                try:
+                    outputs.append(self._request(prompt))
+                    last = None
+                    break
+                except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                    last = exc
+                    time.sleep(2 * (attempt + 1))
+            if last is not None:
+                raise LabelingStopped(f"backend unavailable after 3 tries ({last})")
         return outputs
 
 
@@ -234,36 +268,86 @@ class TransformersBackend:
 
 
 def _load_cache(path: Path) -> dict[tuple[str, str, str], dict]:
+    """Last complete row wins. A torn last line is cut off so the next append cannot glue to it."""
     done: dict[tuple[str, str, str], dict] = {}
-    if not path.exists():
+    if not path.exists() or path.stat().st_size == 0:
         return done
-    for line in path.read_text().splitlines():
+    raw = path.read_bytes()
+    if not raw.endswith(b"\n"):
+        newline = raw.rfind(b"\n")
+        tail = raw[newline + 1 :]
+        try:
+            json.loads(tail.decode("utf-8"))
+            raw = raw + b"\n"
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raw = raw[: newline + 1] if newline >= 0 else b""
+        path.write_bytes(raw)
+    if not raw:
+        return done
+    for line in raw.decode("utf-8").splitlines():
         if not line.strip():
             continue
-        row = json.loads(line)
-        done[(str(row["id"]), str(row["model_name"]), str(row["prompt_hash"]))] = row
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict) or "id" not in row:
+            continue
+        done[(str(row["id"]), str(row.get("model_name") or ""), str(row.get("prompt_hash") or ""))] = row
     return done
 
 
-def label_posts(frame, backend, cache_path: Path, batch_size: int = 4) -> "object":
+def _eta(seconds: float) -> str:
+    if seconds != seconds or seconds < 0 or seconds == float("inf"):
+        return "unknown"
+    whole = int(seconds)
+    hours, rest = divmod(whole, 3600)
+    minutes, secs = divmod(rest, 60)
+    return f"{hours}h{minutes:02d}m{secs:02d}s"
+
+
+def _row_text(row) -> str:
+    body = getattr(row, "selftext", None)
+    if body is None or (isinstance(body, float) and body != body) or str(body) in {"", "nan"}:
+        body = getattr(row, "body", None) or getattr(row, "text", None) or getattr(row, "excerpt", "") or ""
+    return str(body)
+
+
+def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: int | None = None) -> "object":
     import pandas as pd
 
     digest = prompt_hash()
     cache = _load_cache(cache_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     pending = []
+    skipped = 0
+    seen: set[str] = set()
     for row in frame.itertuples(index=False):
         doc_id = str(row.id)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
         key = (doc_id, backend.name, digest)
         if key in cache:
+            skipped += 1
             continue
         title = str(getattr(row, "title", "") or "")
-        body = getattr(row, "selftext", None)
-        if body is None or (isinstance(body, float) and body != body) or str(body) in {"", "nan"}:
-            body = getattr(row, "body", None) or getattr(row, "text", "") or ""
-        kind = str(getattr(row, "text_type", "") or "submission")
+        kind = getattr(row, "text_type", "")
+        if kind is None or (isinstance(kind, float) and kind != kind) or str(kind) in {"", "nan"}:
+            kind = "submission"
+        else:
+            kind = str(kind)
         prefix = "[comment]\n" if kind == "comment" else ""
-        pending.append((doc_id, codebook_prompt(title, prefix + str(body)), kind))
+        pending.append((doc_id, codebook_prompt(title, prefix + _row_text(row)), kind))
+    file_total = skipped + len(pending)
+    if max_new is not None:
+        pending = pending[: max(0, max_new)]
+    print(
+        f"resume: {skipped} already labeled, {len(pending)} this session, {file_total} ids in this file",
+        flush=True,
+    )
+    started = time.monotonic()
+    new_count = 0
     handle = cache_path.open("a", encoding="utf-8")
     try:
         for start in range(0, len(pending), batch_size):
@@ -288,32 +372,182 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4) -> "objec
                 }
                 cache[(doc_id, backend.name, digest)] = stored
                 handle.write(json.dumps(stored) + "\n")
-            handle.flush()
-            print(f"  labeled {min(start + batch_size, len(pending))}/{len(pending)}", flush=True)
+                handle.flush()
+                os.fsync(handle.fileno())
+                new_count += 1
+                elapsed = time.monotonic() - started
+                rate = new_count / elapsed if elapsed else 0.0
+                remaining = file_total - skipped - new_count
+                eta = remaining / rate if rate else float("inf")
+                print(
+                    f"progress {skipped + new_count}/{file_total} "
+                    f"new={new_count} elapsed={_eta(elapsed)} eta={_eta(eta)}",
+                    flush=True,
+                )
     finally:
+        handle.flush()
+        os.fsync(handle.fileno())
         handle.close()
     rows = []
+    seen = set()
     for row in frame.itertuples(index=False):
-        key = (str(row.id), backend.name, digest)
+        doc_id = str(row.id)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        key = (doc_id, backend.name, digest)
         if key in cache:
             rows.append(cache[key])
+    if max_new is not None and new_count >= max_new and skipped + new_count < file_total:
+        print(f"session cap {max_new} reached. Run the same command again to continue.", flush=True)
     return pd.DataFrame(rows)
 
 
+def _label_signature(row: dict) -> str:
+    keep = {
+        "stage": row.get("stage"),
+        "families": row.get("families"),
+        "aspects": row.get("aspects"),
+        "stance": row.get("stance"),
+        "evidence": row.get("evidence"),
+        "model_name": row.get("model_name"),
+        "prompt_hash": row.get("prompt_hash"),
+        "text_type": row.get("text_type"),
+        "ok": row.get("ok"),
+    }
+    return json.dumps(keep, sort_keys=True, default=str)
+
+
+def merge_label_files(expect_csvs: list[Path], cache_jsonls: list[Path], out_csv: Path) -> dict:
+    """One row per expected id, valid JSON, no conflicting duplicates. Writes the csv only when that holds."""
+    import pandas as pd
+
+    expected: list[str] = []
+    repeated: list[str] = []
+    seen_expect: set[str] = set()
+    for path in expect_csvs:
+        frame = pd.read_csv(path)
+        if "id" not in frame.columns:
+            return {"ok": False, "error": f"{path} has no id column", "missing": [], "extra": [], "conflicts": [], "invalid": []}
+        for doc_id in frame["id"].astype(str):
+            if doc_id in seen_expect:
+                repeated.append(doc_id)
+            seen_expect.add(doc_id)
+            expected.append(doc_id)
+    rows_by_id: dict[str, dict] = {}
+    conflicts: list[str] = []
+    invalid: list[str] = []
+    for path in cache_jsonls:
+        if not path.exists():
+            invalid.append(f"missing cache {path}")
+            continue
+        for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                invalid.append(f"{path.name}:{line_no} not json")
+                continue
+            if not isinstance(row, dict) or "id" not in row:
+                invalid.append(f"{path.name}:{line_no} not an object with id")
+                continue
+            if not bool(row.get("ok")):
+                invalid.append(f"{path.name}:{line_no} id {row.get('id')} ok is not true")
+                continue
+            doc_id = str(row["id"])
+            signature = _label_signature(row)
+            prior = rows_by_id.get(doc_id)
+            if prior is None:
+                row = dict(row)
+                row["_signature"] = signature
+                rows_by_id[doc_id] = row
+            elif prior["_signature"] != signature:
+                conflicts.append(doc_id)
+    missing = [doc_id for doc_id in seen_expect if doc_id not in rows_by_id]
+    extra = sorted(set(rows_by_id) - seen_expect)
+    ok = not repeated and not invalid and not conflicts and not missing and not extra
+    report = {
+        "ok": ok,
+        "n_expected": len(seen_expect),
+        "n_labeled": len(rows_by_id),
+        "missing": missing[:20],
+        "n_missing": len(missing),
+        "extra": extra[:20],
+        "n_extra": len(extra),
+        "conflicts": sorted(set(conflicts))[:20],
+        "n_conflicts": len(set(conflicts)),
+        "invalid": invalid[:20],
+        "n_invalid": len(invalid),
+        "n_repeated_expect": len(repeated),
+    }
+    if ok:
+        ordered = []
+        written: set[str] = set()
+        for doc_id in expected:
+            if doc_id in rows_by_id and doc_id not in written:
+                row = {key: value for key, value in rows_by_id[doc_id].items() if key != "_signature"}
+                ordered.append(row)
+                written.add(doc_id)
+        out_csv.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(ordered).to_csv(out_csv, index=False)
+        report["wrote"] = str(out_csv)
+        report["n_wrote"] = len(ordered)
+    return report
+
+
+def _print_merge_report(report: dict) -> None:
+    if report.get("error"):
+        print(report["error"], flush=True)
+        return
+    status = "ok" if report["ok"] else "failed"
+    print(
+        f"merge {status}: expected {report['n_expected']} labeled {report['n_labeled']} "
+        f"missing {report['n_missing']} extra {report['n_extra']} "
+        f"conflicts {report['n_conflicts']} invalid {report['n_invalid']} "
+        f"repeated_ids {report['n_repeated_expect']}",
+        flush=True,
+    )
+    for key in ("missing", "extra", "conflicts", "invalid"):
+        sample = report.get(key) or []
+        if sample:
+            print(f"  {key}: {sample}", flush=True)
+    if report.get("wrote"):
+        print(f"wrote {report['wrote']} rows={report['n_wrote']}", flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Local instruction-model labels.")
+    parser = argparse.ArgumentParser(
+        description="Local 14B labels for the submissions plus comment batch 1. 7B is a fallback, not the run."
+    )
     parser.add_argument("--backend", choices=("mock", "ollama", "vllm", "transformers"), default="mock")
-    parser.add_argument("--model", default="", help="Empty uses the 14B default for ollama, vLLM, and transformers.")
-    parser.add_argument("--fallback-7b", action="store_true", help="Use qwen2.5:7b-instruct instead of the 14B default.")
+    parser.add_argument("--model", default="", help="Empty uses qwen2.5:14b-instruct, the run of record.")
+    parser.add_argument(
+        "--fallback-7b",
+        action="store_true",
+        help="Fallback only: use qwen2.5:7b-instruct instead of the 14B run.",
+    )
     parser.add_argument("--num-ctx", type=int, default=DEFAULT_NUM_CTX)
     parser.add_argument("--base-url", default="")
-    parser.add_argument("--posts", type=Path, required=True)
-    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--posts", type=Path, default=None)
+    parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--cache", type=Path, default=None)
+    parser.add_argument("--caches", action="append", default=None, type=Path, help="Repeat for each jsonl when merging.")
+    parser.add_argument("--expect", action="append", default=None, type=Path, help="Repeat for each id file when merging.")
+    parser.add_argument("--merge-validate", action="store_true", help="Check every expected id once, then write --out.")
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--max-new", type=int, default=None, help="Stop after this many new rows so a session can end cleanly.")
     parser.add_argument("--four-bit", action="store_true", default=True)
     parser.add_argument("--no-four-bit", action="store_true")
     args = parser.parse_args(argv)
+    if args.merge_validate:
+        if not args.expect or not args.caches or args.out is None:
+            parser.error("--merge-validate needs at least one --expect, one --caches, and --out")
+        report = merge_label_files(args.expect, args.caches, args.out)
+        _print_merge_report(report)
+        return 0 if report["ok"] else 1
+    if args.posts is None or args.out is None:
+        parser.error("--posts and --out are required")
     import pandas as pd
 
     posts = pd.read_csv(args.posts)
@@ -326,7 +560,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         backend = TransformersBackend(model, four_bit=not args.no_four_bit)
     cache = args.cache or args.out.with_suffix(".jsonl")
-    labeled = label_posts(posts, backend, cache, batch_size=max(1, args.batch_size))
+    try:
+        labeled = label_posts(posts, backend, cache, batch_size=max(1, args.batch_size), max_new=args.max_new)
+    except LabelingStopped as exc:
+        print(f"stopped ({exc}). Run the same command again. Finished ids are in {cache}.", flush=True)
+        return 2
     args.out.parent.mkdir(parents=True, exist_ok=True)
     labeled.to_csv(args.out, index=False)
     print(f"wrote {args.out} rows={len(labeled)} model={backend.name} version={backend.version}", flush=True)

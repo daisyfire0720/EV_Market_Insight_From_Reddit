@@ -219,12 +219,11 @@ def _comment_coverage_lines(out_dir: Path) -> list[str]:
         plan = pd.read_csv(plan_path).iloc[0]
         lines.append("")
         lines.append(
-            f"The first comment label file is `v2/outputs/comment_label_batch1.csv` ({int(plan['n_batch1'])} comments). "
-            f"Cutoff-crossing authors are first. The plan is `{plan['model_plan']}` so that the {int(plan['n_submissions'])} submissions plus that file "
-            f"stay at or under 30 hours at the slow end of the planning band "
-            f"({plan['hours_submissions_plus_batch1']} hours). "
-            f"`v2/outputs/comment_label_batch2.csv` is the optional overflow ({int(plan['n_batch2'])} comments). "
-            "Neither file contains comment text. Bodies stay in the gitignored cache. These files are a queue, not labels."
+            f"The run of record is 14B on the {int(plan['n_submissions'])} submissions plus `v2/outputs/comment_label_batch1.csv` "
+            f"({int(plan['n_batch1'])} comments, cutoff-crossing authors first). "
+            f"At the slow planning rate that pair is {plan['hours_14b_slow_batch1']} hours. "
+            f"`v2/outputs/comment_label_batch2.csv` ({int(plan['n_batch2'])} comments) stays optional and unlabeled. "
+            "Neither batch file contains comment text. Bodies stay in the gitignored cache. These files are a queue, not labels."
         )
     return lines
 
@@ -359,7 +358,7 @@ def render_manuscript(out_dir) -> str:
         "",
         "### 4.1 The local instruction model, and the small model as baseline",
         "",
-        "The instrument for the corpus is the largest open instruct model that fits a local RTX 4070 with 16 GB of memory. The default checkpoint is Qwen2.5-14B-Instruct, served by Ollama as `qwen2.5:14b-instruct` in the Q4_K_M quant (about 9 GB of weights), with a context length of 4096 tokens so the cache stays inside the card. The fallback, if the 14B model is too slow or runs out of memory, is `qwen2.5:7b-instruct`. No paid API is used. The prompt is the codebook: one stage, one or more families, the finer aspects, a stance, and a short quote from the text. A comment is prefixed so the prompt says it is a comment, and the output row stores `text_type`. The output is JSON. Each row stores the model name, the model version, and a hash of the prompt, so a later paper can compare the small model with this one without mixing the files. The runner is `v2/llm_label.py`. The steps for the desktop, including the time comparison of 14B and 7B, are `v2/RUN_ON_MY_GPU.md`. A 100-post smoke file is `v2/sample/smoke_100.csv`. This machine did not time the 14B model.",
+        "The instrument for the corpus is the largest open instruct model that fits a local RTX 4070 with 16 GB of memory. The run of record is Qwen2.5-14B-Instruct, served by Ollama as `qwen2.5:14b-instruct` in the Q4_K_M quant (about 9 GB of weights), with a context length of 4096 tokens so the cache stays inside the card. Daisy will label the 22,827 submissions plus the 26,088 comments in batch 1 on that model, about 60 hours at the slow planning rate. `qwen2.5:7b-instruct` and a rented GPU are fallbacks if the 100-post smoke test is slower than about 7.4 minutes or the 14B model runs out of memory. They are not the run. No paid API is used. The prompt is the codebook: one stage, one or more families, the finer aspects, a stance, and a short quote from the text. A comment is prefixed so the prompt says it is a comment, and the output row stores `text_type`. The output is JSON. Each row stores the model name, the model version, and a hash of the prompt, so a later paper can compare the small model with this one without mixing the files. The runner is `v2/llm_label.py`. It appends to a jsonl cache, skips ids already labeled, and can be started again after a crash or an Ollama restart. The desktop steps are `v2/RUN_ON_MY_GPU.md`. A 100-post smoke file is `v2/sample/smoke_100.csv`. This machine did not time the 14B model.",
         "",
         "The small model stays as the baseline and is the only model that has labeled the 22,827 posts so far. It is `MoritzLaurer/deberta-v3-xsmall-zeroshot-v1.1-all-33`, revision `262ae02f29173eec1c250f90804dc7edc677dcff`, on CPU. Barriers and stage use the template \"This text is about {}.\". Stance uses \"This text expresses {}\". A barrier is on when its score is at least 0.5. Dealer friction is also on when a small lexicon matches a markup, a documentation fee, a market adjustment, or a dealer inventory wait, and it is turned off when the model fires on ordinary service or on a charger that merely sits at a dealer and the lexicon did not match. That lexicon check is on invented sentences (`v2/fixtures/dealer_sentences.csv`). The small model has one ownership class. It does not emit the eight families. It is not replaced, and it is not the result.",
         "",
@@ -499,10 +498,10 @@ def render_manuscript(out_dir) -> str:
             "## 10. What remains before submission",
             "",
             "1. Ryan (coder B) codes `v2/annotation/annotation_sheet.csv` against `v2/annotation/CODEBOOK.md`, calibration rows first, and returns `coder_ryan.csv`. The steps are `v2/annotation/README_FOR_RYAN.md`. This project did not contact him.",
-            "2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md`. Label the 22,827 submissions plus `v2/outputs/comment_label_batch1.csv`. The model named in `v2/outputs/comment_label_plan.csv` is the one that keeps that pair at or under 30 hours at the slow planning rate. `comment_label_batch2.csv` is optional. Then run `v2/run_after_llm.py`.",
+            "2. Run the 100-post smoke test in `v2/RUN_ON_MY_GPU.md` on `qwen2.5:14b-instruct`. If 100 posts take longer than about 7.4 minutes, submissions plus batch 1 pass about 60 hours: use the 7B fallback or the rented-GPU note. Otherwise label the 22,827 submissions, then batch 1, with the same 14B command. Resume by starting that command again. Merge and validate before `v2/run_after_llm.py`. Batch 2 stays unlabeled.",
             "3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.",
             "4. Replace section 8 with the command's tables. Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity.",
-            "5. Label `v2/outputs/comment_label_batch1.csv` as its own text type. Bodies are filled in the gitignored cache with `python v2/fetch_comments.py --backfill v2/outputs/comment_label_batch1.csv`. Submissions alone stay the robustness check. Batch 2 is optional.",
+            "5. Batch 1 is part of the 14B run. Batch 2 stays unlabeled. Submissions alone stay the robustness check. Bodies for batch 1 are filled with `python v2/fetch_comments.py --backfill v2/outputs/comment_label_batch1.csv`.",
             "6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.",
             "7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.",
             "",

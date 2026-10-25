@@ -1,0 +1,13 @@
+cutoff_id,fit,validated,n_pairs,n_forward,forward_rate
+ira_signing_2022,main,False,81,15,0.18518518518518517
+ira_signing_2022,placebo_-180d,False,39,3,0.07692307692307693
+ira_signing_2022,placebo_+180d,False,52,8,0.15384615384615385
+ira_credit_rules_2023,main,False,68,11,0.16176470588235295
+ira_credit_rules_2023,placebo_-180d,False,75,16,0.21333333333333335
+ira_credit_rules_2023,placebo_+180d,False,38,4,0.10526315789473684
+tesla_price_cut_2023,main,False,63,12,0.19047619047619047
+tesla_price_cut_2023,placebo_-180d,False,72,16,0.2222222222222222
+tesla_price_cut_2023,placebo_+180d,False,35,2,0.05714285714285714
+credit_end_2025,main,False,18,3,0.16666666666666666
+credit_end_2025,placebo_-180d,False,10,1,0.1
+credit_end_2025,placebo_+180d,False,16,2,0.125

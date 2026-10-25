@@ -12,7 +12,11 @@ The pull is resumable. From ``v2/``::
 from __future__ import annotations
 
 import argparse
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows has no fcntl; use msvcrt there.
+    fcntl = None
+    import msvcrt
 import json
 import sys
 import time
@@ -537,7 +541,11 @@ def _write_outputs(
 def _lock():
     RAW.mkdir(parents=True, exist_ok=True)
     handle = (RAW / "comment_fetch.lock").open("a")
-    fcntl.flock(handle, fcntl.LOCK_EX)
+    if fcntl is not None:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+    else:
+        handle.seek(0)
+        msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
     return handle
 
 

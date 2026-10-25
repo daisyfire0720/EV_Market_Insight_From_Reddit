@@ -32,8 +32,11 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from ev_v2.taxonomy import (  # noqa: E402
+    ASPECT_CODES,
     ASPECTS,
     FAMILIES,
+    FAMILY_CODES,
+    STAGE_CODES,
     STAGES,
     STANCE_CODES,
 )
@@ -106,6 +109,8 @@ Aspects (zero or more):
 
 Stance (choose one): {stances}
 
+Use only the codes listed above, spelled exactly as listed. Do not invent new codes. If no aspect applies, use an empty list.
+
 Return one JSON object and nothing else, with keys stage, families, aspects, stance, evidence.
 evidence is at most 20 words copied from the text. Use an empty string if you cannot quote it.
 
@@ -138,17 +143,28 @@ def parse_label(raw: str) -> dict:
         families = [families]
     if isinstance(aspects, str):
         aspects = [aspects]
+    # Codes outside the codebook never pass silently: drop them from the label and record them.
+    families = [str(item) for item in families]
+    aspects = [str(item) for item in aspects]
+    stage = str(payload.get("stage") or "unclear")
+    # An unknown stage is kept as returned (run_after_llm drops and counts it) and flagged here.
+    unknown = [f"stage:{stage}"] if stage not in STAGE_CODES else []
+    unknown += [f"family:{c}" for c in families if c not in FAMILY_CODES]
+    unknown += [f"aspect:{c}" for c in aspects if c not in ASPECT_CODES]
+    families = [c for c in families if c in FAMILY_CODES]
+    aspects = [c for c in aspects if c in ASPECT_CODES]
     evidence = str(payload.get("evidence") or "")
     words = evidence.split()
     if len(words) > 20:
         evidence = " ".join(words[:20])
     return {
         "ok": True,
-        "stage": str(payload.get("stage") or "unclear"),
-        "families": [str(item) for item in families],
-        "aspects": [str(item) for item in aspects],
+        "stage": stage,
+        "families": families,
+        "aspects": aspects,
         "stance": str(payload.get("stance") or "no_stance"),
         "evidence": evidence,
+        "unknown_codes": unknown,
     }
 
 
@@ -189,6 +205,7 @@ class OpenAICompatBackend:
                 "stream": False,
                 "messages": [{"role": "user", "content": prompt}],
                 "options": {"temperature": 0, "num_ctx": self.num_ctx or DEFAULT_NUM_CTX},
+                "keep_alive": "60m",  # keep the model in VRAM between posts and sessions
             }
         else:
             url = self.base_url + "/chat/completions"
@@ -367,6 +384,7 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: 
                     "aspects": "|".join(parsed.get("aspects") or []),
                     "stance": parsed.get("stance", ""),
                     "evidence": parsed.get("evidence", ""),
+                    "unknown_codes": "|".join(parsed.get("unknown_codes") or []),
                     "ok": bool(parsed.get("ok")),
                     "validated": False,
                 }
@@ -379,6 +397,8 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: 
                 rate = new_count / elapsed if elapsed else 0.0
                 remaining = file_total - skipped - new_count
                 eta = remaining / rate if rate else float("inf")
+                if stored["unknown_codes"]:
+                    print(f"unknown codes flagged for {doc_id}: {stored['unknown_codes']}", flush=True)
                 print(
                     f"progress {skipped + new_count}/{file_total} "
                     f"new={new_count} elapsed={_eta(elapsed)} eta={_eta(eta)}",

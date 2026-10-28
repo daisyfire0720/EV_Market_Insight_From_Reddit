@@ -79,3 +79,13 @@ Recommendation: leave `performance` in `unknown_codes`, keep dropping it, and de
 - Do not pass `--comments-rebalanced` until a file was actually drawn with equal caps on each side.
 - Do not label all 224,706 batch-2 comments.
 - Do not spend the 12.4-hour full relabel on a silent codebook edit.
+
+## Round 13 status (run 2026-10-28)
+
+Ran on the local GPU with `qwen2.5:14b-instruct`, prompt version `funnel-v2-comment-parent` (hash `fe1f44c55cc2133b`). The submission prompt hash is unchanged. `performance` was not added.
+
+- Draw: `build_comments_v2.py`, 8,000 comments, 500 per side for each cutoff and audience (`outputs/comments_v2_draw_counts.csv`). 10,331 missing bodies and 3,108 parents were fetched from Arctic Shift. 2 parents are missing.
+- Labeling: `run_comments_v2.bat` (scheduled task `EV_Reddit_comments_v2`), 11:22 to 13:15 EDT, about 0.85 s per comment. 9 of 8,000 gave no parseable JSON. A retry fixed 2. The other 7 are listed in `outputs/comments_v2_parse_failures.csv` and left out of `comments_v2_posts_merge.csv`. 7,993 were merged and validated (`outputs/llm_labels_comments_v2.csv`).
+- Unclear share: enthusiasts 33.1% (batch 1: 64.6%), shoppers 67.3% (batch 1: 84.8%). The samples differ: batch 1 is the comments closest to each cutoff, and this is a random draw within 180 days.
+- Tables: `outputs/after_llm_comments_v2/`, with 1,000 week-bootstrap draws. `rdit_comments_own_draw.csv` fits each cutoff on its own draw. On that file, the right side of 2023-01-01 and the left side of 2023-01-13 span only about 6 days, so their donut fits are empty.
+- The comment RDiT does not reproduce the two submission headlines. Tesla price cut, shoppers, price talk: +0.5 pp [-5.8, +7.0] pooled, and -2.9 [-6.8, +2.7] on the cut's own draw, against +10.5 [-2.2, +24.2] in submissions. Credit rules, enthusiasts, incentive talk: -5.6 [-8.7, +12.7] on its own draw, against +3.5 [-5.3, +7.2] in submissions. Both were already non-significant, so the comments do not overturn anything. They do not add support either.

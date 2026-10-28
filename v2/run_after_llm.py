@@ -45,6 +45,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Set only after comment windows are rebuilt with equal counts on each side. Batch 1 is not rebalanced.",
     )
+    parser.add_argument(
+        "--comment-n-boot",
+        type=int,
+        default=0,
+        help="Week-bootstrap draws for the rebalanced comment RDiT. Zero keeps point estimates only.",
+    )
     args = parser.parse_args(argv)
     if not args.llm.is_file():
         print(f"No label file at {args.llm}. This script does not invent one.", file=sys.stderr)
@@ -62,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
         min_score=args.min_score,
         comment_meta_path=args.comment_meta,
         comments_rebalanced=args.comments_rebalanced,
+        comment_n_boot=args.comment_n_boot,
     )
     validity = tables["validity"].iloc[0]
     print(

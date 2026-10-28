@@ -144,7 +144,7 @@ def fill_comment_fields(labels: pd.DataFrame, comment_meta: pd.DataFrame | None)
     meta["id"] = meta["id"].astype(str)
     meta = meta.drop_duplicates("id").set_index("id")
     comment_rows = text_kind(work).eq("comment")
-    for column in ("subreddit", "link_id", "created_utc", "author_hash", "score"):
+    for column in ("subreddit", "link_id", "created_utc", "author_hash", "score", "draw_cutoff_id", "draw_side"):
         if column not in meta.columns:
             continue
         mapped = work["id"].map(meta[column])
@@ -373,7 +373,7 @@ def _with_outcomes(
     return kept, disposition
 
 
-def comment_window_balance(comments: pd.DataFrame, window_days: int = WINDOW_DAYS) -> pd.DataFrame:
+def comment_window_balance(comments: pd.DataFrame, window_days: int = WINDOW_DAYS, note: str = "Closest-to-cutoff batch 1, not a balanced window.") -> pd.DataFrame:
     """How many kept comments sit on each side of each cutoff.
 
     The cutoff day is counted on its own. A side more than twice the other is
@@ -435,7 +435,7 @@ def comment_window_balance(comments: pd.DataFrame, window_days: int = WINDOW_DAY
                     "n_missing_time": n_missing,
                     "n_comments": int(mask.sum()),
                     "unbalanced": unbalanced,
-                    "note": "Closest-to-cutoff batch 1, not a balanced window.",
+                    "note": note,
                 }
             )
     return pd.DataFrame(rows, columns=columns)
@@ -471,6 +471,29 @@ def comments_sensitivity_table(
     if len(balance) and "unbalanced" in balance.columns:
         rows.append({"item": "n_unbalanced_cutoff_audiences", "value": int(balance["unbalanced"].sum())})
     return pd.DataFrame(rows)
+
+
+def rdit_comments_own_draw(comments: pd.DataFrame, n_boot: int = 0) -> pd.DataFrame:
+    """Main and donut fits per cutoff, using only the comments drawn for that cutoff.
+
+    Each comment in the v2 draw belongs to one cutoff (``draw_cutoff_id``).
+    Placebo rows are dropped here because the draw does not reach the placebo dates.
+    """
+    if comments.empty or "draw_cutoff_id" not in comments.columns:
+        return pd.DataFrame()
+    pieces = []
+    for spec in CUTOFFS:
+        block = comments[comments["draw_cutoff_id"].astype(str).eq(spec["cutoff_id"])]
+        if block.empty:
+            continue
+        for audience in ("enthusiast", "shopper"):
+            sub = block[block["audience"].eq(audience)]
+            if sub.empty:
+                continue
+            table = rdit_table(sub, audience=audience, n_boot=n_boot)
+            table = table[table["cutoff_id"].eq(spec["cutoff_id"]) & table["fit"].isin(["main", "donut"])]
+            pieces.append(table.assign(sample="own_draw"))
+    return pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame()
 
 
 def small_model_agreement(labels: pd.DataFrame, small: pd.DataFrame) -> pd.DataFrame:
@@ -632,6 +655,7 @@ def run_tables(
     min_score: int = 2,
     comment_meta_path: Path | None = None,
     comments_rebalanced: bool = False,
+    comment_n_boot: int = 0,
 ) -> dict[str, pd.DataFrame]:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -657,7 +681,12 @@ def run_tables(
     logged = drop_log_table(disposition)
     comments = disposition[disposition["status"].eq("kept_comment")].copy()
     comment_shares = shares_from_prepared(comments)
-    balance = comment_window_balance(comments)
+    balance_note = (
+        "All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+        if comments_rebalanced
+        else "Closest-to-cutoff batch 1, not a balanced window."
+    )
+    balance = comment_window_balance(comments, note=balance_note)
     sensitivity = comments_sensitivity_table(disposition, balance, comments_rebalanced=comments_rebalanced)
     report.to_csv(out_dir / "llm_validity.csv", index=False)
     shares.to_csv(out_dir / "funnel_shares_by_audience.csv", index=False)
@@ -682,11 +711,14 @@ def run_tables(
         for aspect, column in ASPECT_TO_BARRIER.items():
             comment_prepared[column] = comment_prepared["aspects"].map(lambda value, code=aspect: code in _split_codes(value))
         comment_pieces = [
-            rdit_table(comment_prepared, audience=str(audience), n_boot=0)
+            rdit_table(comment_prepared, audience=str(audience), n_boot=comment_n_boot)
             for audience in comment_prepared["audience"].dropna().unique()
         ]
         if comment_pieces:
             pd.concat(comment_pieces, ignore_index=True).to_csv(out_dir / "rdit_comments_rebalanced.csv", index=False)
+        own = rdit_comments_own_draw(comment_prepared, n_boot=comment_n_boot)
+        if len(own):
+            own.to_csv(out_dir / "rdit_comments_own_draw.csv", index=False)
     filtered, score_info = score_subset(prepared, min_score=min_score)
     pd.DataFrame([score_info]).to_csv(out_dir / "score_sensitivity.csv", index=False)
     if score_info["status"] == f"score_ge_{min_score}" and len(filtered):

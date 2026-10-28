@@ -42,6 +42,13 @@ from ev_v2.taxonomy import (  # noqa: E402
 )
 
 PROMPT_VERSION = "funnel-v2"
+# Comments v2 (COMMENTS_V2_PLAN.md): same codebook, parent title and excerpt in the prompt.
+PROMPT_VERSION_COMMENTS_V2 = "funnel-v2-comment-parent"
+PARENT_EXCERPT_CHARS = 300
+PARENT_CONTEXT_NOTE = (
+    "The subreddit, parent title, and parent excerpt are context only. Code the comment writer's own "
+    "journey position, topics, and stance, not the parent post's."
+)
 # Largest open instruct model Daisy chose for a 16 GB card. Q4_K_M is about 9 GB.
 # The 7B tag is the fallback when 14B is too slow or runs out of memory.
 DEFAULT_OLLAMA_MODEL = "qwen2.5:14b-instruct"
@@ -83,7 +90,7 @@ def resolve_model(backend: str, model: str, fallback_7b: bool) -> str:
     return "mock"
 
 
-def codebook_prompt(title: str, body: str) -> str:
+def codebook_prompt(title: str, body: str, parent_context: bool = False) -> str:
     stages = "\n".join(f"- {code}: {label}" for code, label in STAGES)
     families = "\n".join(f"- {code}: {label}" for code, label in FAMILIES)
     aspects = "\n".join(f"- {code}: {label}" for code, label in ASPECTS)
@@ -92,8 +99,9 @@ def codebook_prompt(title: str, body: str) -> str:
     if len(text) > 1500:
         text = text[:1500]
     kind = "comment" if text.lstrip().lower().startswith("[comment]") else "submission"
+    context = f"{PARENT_CONTEXT_NOTE}\n" if parent_context else ""
     return f"""You code one Reddit {kind} about electric vehicles.
-Assign the stage from where the writer is in the purchase journey, not from a keyword alone. Charging can be evaluation or onboarding depending on whether they already own the car.
+{context}Assign the stage from where the writer is in the purchase journey, not from a keyword alone. Charging can be evaluation or onboarding depending on whether they already own the car.
 Assign every topic family that is a real subject of the post, and every finer aspect that is present.
 Stance is the writer's position on electric vehicles as a class, not on one broken charger.
 
@@ -119,11 +127,35 @@ Text:
 """
 
 
-def prompt_hash() -> str:
-    sample = codebook_prompt("title", "body")
+def prompt_hash(version: str = PROMPT_VERSION, parent_context: bool = False) -> str:
+    sample = codebook_prompt("title", "body", parent_context=parent_context)
     # Hash the instructions, not the post, so one codebook version shares a cache.
     head = sample.split("Submission:", 1)[0]
-    return hashlib.sha256(f"{PROMPT_VERSION}|{head}".encode()).hexdigest()[:16]
+    return hashlib.sha256(f"{version}|{head}".encode()).hexdigest()[:16]
+
+
+def _clean_text(value) -> str:
+    if value is None or (isinstance(value, float) and value != value):
+        return ""
+    text = str(value)
+    if text.strip().lower() in {"nan", "none", "[removed]", "[deleted]"}:
+        return ""
+    return text.strip()
+
+
+def comment_v2_text(subreddit, parent_title, parent_excerpt, body) -> str:
+    """Comment text with its parent post as context. Missing parent fields stay empty, never invented."""
+    sub = _clean_text(subreddit)
+    excerpt = _clean_text(parent_excerpt)[:PARENT_EXCERPT_CHARS]
+    lines = [
+        "[comment]",
+        f"Subreddit: r/{sub}" if sub else "Subreddit:",
+        f"Parent title: {_clean_text(parent_title)}",
+        f"Parent excerpt: {excerpt}",
+        "Comment:",
+        _clean_text(body),
+    ]
+    return "\n".join(lines)
 
 
 def parse_label(raw: str) -> dict:
@@ -333,7 +365,9 @@ def _row_text(row) -> str:
 def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: int | None = None) -> "object":
     import pandas as pd
 
-    digest = prompt_hash()
+    parent_mode = "parent_title" in getattr(frame, "columns", [])
+    version = PROMPT_VERSION_COMMENTS_V2 if parent_mode else PROMPT_VERSION
+    digest = prompt_hash(version, parent_context=parent_mode)
     cache = _load_cache(cache_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     pending = []
@@ -354,6 +388,15 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: 
             kind = "submission"
         else:
             kind = str(kind)
+        if parent_mode and kind == "comment":
+            text = comment_v2_text(
+                getattr(row, "subreddit", ""),
+                getattr(row, "parent_title", ""),
+                getattr(row, "parent_excerpt", ""),
+                _row_text(row),
+            )
+            pending.append((doc_id, codebook_prompt("", text, parent_context=True), kind))
+            continue
         prefix = "[comment]\n" if kind == "comment" else ""
         pending.append((doc_id, codebook_prompt(title, prefix + _row_text(row)), kind))
     file_total = skipped + len(pending)
@@ -378,7 +421,7 @@ def label_posts(frame, backend, cache_path: Path, batch_size: int = 4, max_new: 
                     "model_name": backend.name,
                     "model_version": backend.version,
                     "prompt_hash": digest,
-                    "prompt_version": PROMPT_VERSION,
+                    "prompt_version": version,
                     "stage": parsed.get("stage", ""),
                     "families": "|".join(parsed.get("families") or []),
                     "aspects": "|".join(parsed.get("aspects") or []),

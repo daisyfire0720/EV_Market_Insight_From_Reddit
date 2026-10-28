@@ -1,0 +1,11 @@
+item,value
+n_comment_rows,7993
+n_kept_comment,7988
+n_dropped_comment,5
+n_audience_parent_link,4004
+n_audience_subreddit,3984
+n_no_audience,0
+rdit_usable,True
+main_specification,submissions
+note,"The caller marked these comment windows as rebalanced. They are still a sensitivity, not the main specification."
+n_unbalanced_cutoff_audiences,4

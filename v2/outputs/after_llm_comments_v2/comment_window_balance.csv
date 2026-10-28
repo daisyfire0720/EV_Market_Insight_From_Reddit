@@ -1,0 +1,9 @@
+cutoff_id,cutoff,audience,window_days,n_left,n_right,n_cutoff_day,n_outside_window,n_missing_time,n_comments,unbalanced,note
+ira_signing_2022,2022-08-16,enthusiast,180,498,2117,0,1378,0,3993,True,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+ira_signing_2022,2022-08-16,shopper,180,499,2113,0,1383,0,3995,True,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+ira_credit_rules_2023,2023-01-01,enthusiast,180,1196,1489,0,1308,0,3993,False,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+ira_credit_rules_2023,2023-01-01,shopper,180,1214,1472,0,1309,0,3995,False,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+tesla_price_cut_2023,2023-01-13,enthusiast,180,2157,500,0,1336,0,3993,True,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+tesla_price_cut_2023,2023-01-13,shopper,180,2159,499,0,1337,0,3995,True,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+credit_end_2025,2025-09-30,enthusiast,180,500,499,0,2994,0,3993,False,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."
+credit_end_2025,2025-09-30,shopper,180,499,500,0,2996,0,3995,False,"All kept comments in the window. A balanced draw is balanced on its own cutoff (draw_cutoff_id), not on every window."

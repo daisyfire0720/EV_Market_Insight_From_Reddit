@@ -141,6 +141,13 @@ def test_manuscript_is_14b_first_and_the_comment_plan_is_not_a_run():
     assert "qwen2.5:7b-instruct" in text
     assert "score under 2" in text
     assert "unvalidated" in text
+    assert "does not reproduce" in text
+    assert "parent title" in text
+    assert "donut" in text
+    status = (root / "paper" / "STATUS.md").read_text()
+    assert "coder_ryan.csv" in status
+    assert "performance" in status
+    assert "[CITATION NEEDED]" in status
     plan = (root / "COMMENTS_V2_PLAN.md").read_text()
     assert "0.91" in plan
     assert "6.6 hours" in plan

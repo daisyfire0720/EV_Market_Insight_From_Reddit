@@ -91,7 +91,7 @@ def instruction_results(out_dir: Path) -> list[str]:
     lines.extend(_rdit_lines(out_dir, after))
     lines.extend(_transition_lines(after))
     lines.extend(_kappa_lines(after))
-    lines.extend(_comment_lines(after))
+    lines.extend(_comment_lines(out_dir, after))
     lines.extend(_disclosure_lines(out_dir, after, validity))
     return lines
 
@@ -404,11 +404,23 @@ def _kappa_lines(after: Path) -> list[str]:
     return lines
 
 
-def _comment_lines(after: Path) -> list[str]:
+def _comment_lines(out_dir: Path, after: Path) -> list[str]:
     lines = [
-        "### 8.7 Comments are a sensitivity, not a discontinuity",
+        "### 8.7 Comments are a sensitivity",
+        "",
+        "Submissions are the main specification. Comment batch 1 is not usable for RDiT. "
+        "The comments v2 draw is a sensitivity. It does not replace section 8.4, and it does not reproduce the two submission jumps.",
+        "",
+        "#### Batch 1, no parent post",
         "",
     ]
+    lines.extend(_batch1_comment_lines(after))
+    lines.extend(_comments_v2_lines(out_dir, after))
+    return lines
+
+
+def _batch1_comment_lines(after: Path) -> list[str]:
+    lines = []
     sens_path = after / "comments_sensitivity.csv"
     share_path = after / "funnel_shares_comments.csv"
     balance_path = after / "comment_window_balance.csv"
@@ -416,7 +428,7 @@ def _comment_lines(after: Path) -> list[str]:
         sens = pd.read_csv(sens_path, dtype=str)
         values = dict(zip(sens["item"], sens["value"]))
         lines.append(
-            f"The label file has {int(float(values.get('n_comment_rows', 0))):,} comment rows. "
+            f"Batch 1 has {int(float(values.get('n_comment_rows', 0))):,} comment rows in the main label file. "
             f"{int(float(values.get('n_kept_comment', 0))):,} have a codebook stage and an audience. "
             f"Audience comes from the parent submission when that submission is in the study file ({int(float(values.get('n_audience_parent_link', 0))):,} comments) "
             f"and otherwise from the subreddit ({int(float(values.get('n_audience_subreddit', 0))):,}). "
@@ -430,9 +442,8 @@ def _comment_lines(after: Path) -> list[str]:
         bits = [f"{row.audience} {_pct(row.share)} (n={int(row.n):,})" for row in unclear.itertuples(index=False)]
         if bits:
             lines.append(
-                "Comment stage is mostly unclear: " + "; ".join(bits) + ". "
-                "The model saw the comment and not the parent post, which is the likely reason. "
-                "The comment share table is `v2/outputs/after_llm/funnel_shares_comments.csv`."
+                "Without the parent post, comment stage is mostly unclear: " + "; ".join(bits) + ". "
+                "The share table is `v2/outputs/after_llm/funnel_shares_comments.csv`."
             )
             lines.append("")
     if balance_path.exists():
@@ -441,13 +452,163 @@ def _comment_lines(after: Path) -> list[str]:
         if len(tesla):
             row = tesla.iloc[0]
             lines.append(
-                f"Inside 180 days of the Tesla cutoff, enthusiast comments with a codebook stage are "
+                f"Inside 180 days of the Tesla cutoff, enthusiast batch-1 comments with a codebook stage are "
                 f"{int(row['n_left']):,} before the day, {int(row['n_cutoff_day']):,} on the day, and {int(row['n_right']):,} after. "
-                "An exploratory file that was not committed, described in `FINDINGS_14B.md`, counted 13,374 left and 2,290 right under a different rule. "
-                "Either way the sides are not a balanced window. The full count is `v2/outputs/after_llm/comment_window_balance.csv`. "
-                "Batch 1 picked comments by closeness to a cutoff. That design is not usable for RDiT unless the windows are rebalanced."
+                "Batch 1 picked comments by closeness to a cutoff. That design is not usable for RDiT."
             )
             lines.append("")
+    return lines
+
+
+def _comments_v2_lines(out_dir: Path, after: Path) -> list[str]:
+    v2 = out_dir / "after_llm_comments_v2"
+    lines = [
+        "#### Comments v2, parent title, balanced draw",
+        "",
+    ]
+    if not (v2 / "rdit_comments_own_draw.csv").exists():
+        lines.append("The comments v2 tables are not in this checkout. This section does not invent them.")
+        lines.append("")
+        return lines
+    draw_path = out_dir / "comments_v2_draw_counts.csv"
+    draw_bit = "The draw is 8,000 comments, 500 on each side of each cutoff for each audience."
+    if draw_path.exists():
+        draw = pd.read_csv(draw_path)
+        if len(draw) and "n_drawn_per_side" in draw.columns:
+            caps = sorted({int(value) for value in draw["n_drawn_per_side"]})
+            # Each row is one cutoff and audience. n_drawn_per_side is the count on each side.
+            total = int(draw["n_drawn_per_side"].sum() * 2)
+            cap_text = str(caps[0]) if len(caps) == 1 else ", ".join(str(c) for c in caps)
+            draw_bit = (
+                f"`v2/outputs/comments_v2_draw_counts.csv` draws {total:,} comments, {cap_text} on each side of each cutoff for each audience."
+            )
+    fail_path = out_dir / "comments_v2_parse_failures.csv"
+    fail_bit = ""
+    if fail_path.exists():
+        n_fail = len(pd.read_csv(fail_path))
+        fail_bit = f" {n_fail} comments returned no parseable JSON and are listed in `v2/outputs/comments_v2_parse_failures.csv`. They are left out, not imputed."
+    lines.append(
+        "Comments v2 follows `v2/COMMENTS_V2_PLAN.md`. "
+        + draw_bit
+        + " Each comment is assigned to one cutoff, the nearest one, inside 180 days, and the cutoff day itself is left out. "
+        "The prompt is `funnel-v2-comment-parent`: the comment, the parent title, and a short parent excerpt. The model is still `qwen2.5:14b-instruct`. The codebook is unchanged. "
+        f"Labels are in `v2/outputs/llm_labels_comments_v2.csv`. Tables are in `v2/outputs/after_llm_comments_v2/`."
+        + fail_bit
+    )
+    lines.append("")
+    lines.extend(_unclear_methods_lines(after, v2))
+    lines.extend(_v2_headline_lines(after, v2))
+    lines.extend(_v2_donut_lines(v2))
+    return lines
+
+
+def _unclear_methods_lines(after: Path, v2: Path) -> list[str]:
+    old = _unclear_shares(after / "funnel_shares_comments.csv")
+    new = _unclear_shares(v2 / "funnel_shares_comments.csv")
+    if not old or not new:
+        return []
+    bits = []
+    for audience in ("enthusiast", "shopper"):
+        if audience in old and audience in new:
+            bits.append(f"{audience} {_pct(old[audience])} without the parent, {_pct(new[audience])} with it")
+    lines = [
+        "The parent title is worth keeping, and the lower unclear rate is a methods point, not a finding about buyers. "
+        "A comment with no parent post often has no journey to code, which is why batch 1 is mostly unclear. "
+        "With the parent title in the prompt, the unclear share is " + "; ".join(bits) + ". "
+        "The two samples are not the same comparison. Batch 1 is the comments closest to a cutoff. Comments v2 is a random draw inside 180 days. "
+        "The drop is therefore not an estimate of the prompt alone. It is still large enough, especially for enthusiasts, that a comment stage without the parent is the wrong instrument. "
+        "Shopper comments stay mostly unclear even with the parent title, so the prompt does not turn every reply into a stage.",
+        "",
+    ]
+    return lines
+
+
+def _unclear_shares(path: Path) -> dict[str, float]:
+    if not path.exists():
+        return {}
+    shares = pd.read_csv(path)
+    out = {}
+    for row in shares[shares["stage"] == "unclear"].itertuples(index=False):
+        out[str(row.audience)] = float(row.share)
+    return out
+
+
+def _v2_headline_lines(after: Path, v2: Path) -> list[str]:
+    submissions = pd.read_csv(after / "rdit.csv") if (after / "rdit.csv").exists() else pd.DataFrame()
+    pooled = pd.read_csv(v2 / "rdit_comments_rebalanced.csv")
+    own = pd.read_csv(v2 / "rdit_comments_own_draw.csv")
+    lines = [
+        "The comment jumps below are consistent with a flat comment share. They are not consistent with the submission point estimates, and they are not effects.",
+        "",
+    ]
+    specs = (
+        (
+            "tesla_price_cut_2023",
+            "shopper",
+            "Shopper price talk at the 13 January 2023 Tesla cuts",
+            True,
+        ),
+        (
+            "ira_credit_rules_2023",
+            "enthusiast",
+            "Enthusiast incentive talk at the 1 January 2023 credit rules",
+            False,
+        ),
+    )
+    for cutoff_id, audience, label, with_pooled in specs:
+        sub = _lookup(submissions, cutoff_id, audience, "main")
+        own_row = _lookup(own, cutoff_id, audience, "main")
+        pool_row = _lookup(pooled, cutoff_id, audience, "main")
+        if sub is None or own_row is None:
+            continue
+        sentence = (
+            f"{label}: {_points(sub['tau'])} {_ci(sub)} in submissions, "
+            f"and {_points(own_row['tau'])} {_ci(own_row)} on the comments drawn for that cutoff"
+        )
+        if with_pooled and pool_row is not None:
+            sentence += f" ({_points(pool_row['tau'])} {_ci(pool_row)} if comments from the other cutoffs are pooled into the same window)"
+        sentence += (
+            f". The own-draw fit uses {int(own_row['days_left'])} days before the cutoff and {int(own_row['days_right'])} days after. "
+            "The comment file does not reproduce the submission jump."
+        )
+        lines.append(sentence)
+        lines.append("")
+    return lines
+
+
+def _v2_donut_lines(v2: Path) -> list[str]:
+    own = pd.read_csv(v2 / "rdit_comments_own_draw.csv")
+    january = own[own["cutoff_id"].isin(["ira_credit_rules_2023", "tesla_price_cut_2023"])]
+    empty = january[(january["fit"] == "donut") & ((january["n_left"] == 0) | (january["n_right"] == 0))]
+    lines = [
+        "The 1 January and 13 January cutoffs are twelve days apart. Assigning each comment to the nearest cutoff leaves about six days on the inner side: the days after 1 January, and the days before 13 January. "
+        "The donut drops seven days around the cutoff, so that short side disappears and the donut fit is empty. "
+        f"That is {len(empty)} own-draw donut rows, one for each audience at each of those two dates (`v2/outputs/after_llm_comments_v2/rdit_comments_own_draw.csv`).",
+        "",
+    ]
+    # One short-side main fit has an interval that excludes zero. Say so, and do not treat it as a result.
+    mains = january[january["fit"] == "main"]
+    sharp = []
+    for _, row in mains.iterrows():
+        if pd.isna(row["tau_lo"]) or pd.isna(row["tau_hi"]):
+            continue
+        short_days = min(int(row["days_left"]), int(row["days_right"]))
+        excludes = row["tau_lo"] > 0 or row["tau_hi"] < 0
+        if short_days <= 7 and excludes:
+            sharp.append(
+                f"{row['audience']} comments about {row['outcome']} on {row['cutoff']} are {_points(row['tau'])} {_ci(row)}, and the shorter side is {short_days} days"
+            )
+    if sharp:
+        lines.append(
+            "One of those short-side fits has an interval that excludes zero: " + "; ".join(sharp) + ". "
+            "Its donut is empty. That interval is not a result, and it is not a submission headline."
+        )
+        lines.append("")
+    lines.append(
+        "The own-draw table is the one that matches the sample. Pooling comments across cutoffs mixes draws that were built for a different date. "
+        "Neither reading supports the submission jumps. Submissions stay the main specification."
+    )
+    lines.append("")
     return lines
 
 

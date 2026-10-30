@@ -1,12 +1,12 @@
 # What remains before submission
 
-Updated 29 October 2026, after the comments v2 sensitivity was folded into the draft. Nothing here is a new label. The codebook was not changed.
+Updated 30 October 2026, after Ryan's 50 calibration rows were scored. Nothing here is a new label. The codebook, the prompts, and the manuscript results were not changed.
 
 The draft is `manuscript.md`. Submissions are the main specification. Comments v2 are a sensitivity in section 8.7. Every model number is unvalidated.
 
 ## Still open
 
-1. **Human kappa.** Ryan has not returned `v2/annotation/coder_ryan.csv`. The sheet is `v2/annotation/annotation_sheet.csv`. Instructions are `v2/annotation/README_FOR_RYAN.md`. The kappa table in section 8 leaves that cell as a placeholder. This project has not contacted him. Until both coder files exist, `v2/score_agreement.py` has nothing real to score, and the 14B shares are what a model said.
+1. **Human kappa.** Ryan uploaded `v2/annotation/annotation_sheet_ryan.xlsx` (commit `f98c050`) and coded only the 50 calibration rows. Daisy scored those rows against the models in `v2/outputs/human_agreement/`. On that set, stage kappa versus 14B is 0.16 [0.02, 0.30] and pooled family kappa is 0.44. That agreement is low. The codebook excludes the calibration rows from the paper's kappa, so section 8 still has an empty human-kappa cell. There is no Daisy-versus-Ryan kappa yet. Next: Daisy codes the same 50 rows, they settle the codebook wording (news and reviews count as unclear, and owner experience without a just-bought cue counts as long-term ownership), then Ryan codes the remaining 750. The README still names `v2/annotation/coder_ryan.csv` as the return file; this first pass arrived as the xlsx. Instructions remain `v2/annotation/README_FOR_RYAN.md`. This project has not contacted him.
 
 2. **`performance` at the codebook freeze.** `aspect:performance` is the one invented code that is not a level mixup (252 rows in the submission run). It stays out of the codebook until Ryan and Daisy freeze the sheet. Do not add it in a silent edit, and do not relabel for it before that freeze. The recommendation is in `v2/COMMENTS_V2_PLAN.md`.
 

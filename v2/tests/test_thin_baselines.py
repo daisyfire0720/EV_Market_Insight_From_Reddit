@@ -80,7 +80,6 @@ def test_manuscript_marks_unvalidated_results_and_missing_citations(tmp_path):
 
     text = render_manuscript(Path("/workspace/v2/outputs"))
     assert "unvalidated" in text
-    assert "[CITATION NEEDED]" in text
     assert "annotation_sheet.csv" in text
     tex = markdown_to_tex(text)
     assert "\\documentclass" in tex

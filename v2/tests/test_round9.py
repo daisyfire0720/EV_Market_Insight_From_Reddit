@@ -188,5 +188,5 @@ def test_manuscript_names_ryan_the_14b_model_and_the_score_check():
     assert "qwen2.5:7b-instruct" in text
     assert "score under 2" in text
     assert "annotation_sheet.csv" in text
-    assert "[CITATION NEEDED]" in text
+    assert "references.bib" in text
     assert "unvalidated" in text

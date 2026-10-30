@@ -10,7 +10,7 @@ The draft is `manuscript.md`. Submissions are the main specification. Comments v
 
 2. **`performance` at the codebook freeze.** `aspect:performance` is the one invented code that is not a level mixup (252 rows in the submission run). It stays out of the codebook until Ryan and Daisy freeze the sheet. Do not add it in a silent edit, and do not relabel for it before that freeze. The recommendation is in `v2/COMMENTS_V2_PLAN.md`.
 
-3. **Every `[CITATION NEEDED]`.** The draft still marks the survey barrier papers, Hutto and Gilbert (VADER), Cohen, Krippendorff, Rogan and Gladen, and the cross-sectional bandwidth papers. Do not add a DOI that has not been opened.
+3. **Citations.** The marks in the draft body are resolved. `references.bib` holds the DOIs checked against Crossref on 30 October 2026: the survey and review papers (Egbue and Long 2012; Rezvani, Jansson, and Bodin 2015; Coffman, Bernstein, and Wee 2017), Hutto and Gilbert 2014, Cohen 1960, Krippendorff 2004, Rogan and Gladen 1978, and the cross-sectional bandwidth papers (Imbens and Kalyanaraman 2012; Calonico, Cattaneo, and Titiunik 2014), plus the sources the draft already named. No `[CITATION NEEDED]` mark remains in `manuscript.md`. One claim was softened instead of cited: a separate paper that isolates an information barrier, as distinct from the knowledge difference in Egbue and Long, was not opened. Do not add a DOI that has not been opened. The alternative title is in `ALT_FRAMING.md` and is not the working title.
 
 4. **Journal paragraphs.** Data availability and ethics are not written: public posts, no attempt to identify users, dumps not republished, Academic Torrents license field empty. The journal's length and reference style have not been checked.
 
@@ -28,4 +28,4 @@ A paper that leads with those jumps is leading with estimates that are not disti
 
 The parent-title prompt is worth a methods paragraph. Comment stage without the parent post was 65 to 85 percent unclear. With the parent title, enthusiast comments are about 33 percent unclear, close to the submission rate, and shopper comments are still about 67 percent unclear. Batch 1 and comments v2 are different samples, so that drop is not a clean estimate of the prompt. It is a reason to keep the parent in any later comment labeling. It is not a reason to rerun the submission discontinuity.
 
-Decision needed: whether the title and the abstract keep the four shocks in the lead, or move the shocks to a sensitivity and lead with the funnel description and the measurement limits. This draft now states the comment non-replication and the empty donuts. It does not retitle the paper.
+Decision needed: whether the title and the abstract keep the four shocks in the lead, or move the shocks to a sensitivity and lead with the funnel description and the measurement limits. A draft of that alternative is `ALT_FRAMING.md`. It is not adopted. The working title and the abstract in `manuscript.md` are unchanged.

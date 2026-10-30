@@ -41,21 +41,21 @@ The hypotheses that match those questions are in `v2/paper/introduction.md`. The
 
 ### 2.1 Surveys of adoption barriers
 
-Price, range, charging access, and information are the usual survey list. The survey papers already in use for this project belong here. [CITATION NEEDED]
+The survey record used here is three papers whose publisher pages were opened, not a list this project had already named in its files. Egbue and Long (2012) [@egbue2012barriers] survey technology enthusiasts: battery range is the largest concern, then cost, and knowledge of the technology differs across groups. Rezvani, Jansson, and Bodin (2015) [@rezvani2015advances] review consumer-adoption studies: purchase cost is a barrier, and a negative evaluation of range remained after hands-on experience. Coffman, Bernstein, and Wee (2017) [@coffman2017revisited] review the same literature: public charging is associated with uptake, and much of the evidence is a survey about a hypothetical purchase. A paper that isolates an information barrier, as distinct from the knowledge difference in Egbue and Long, was not opened. This draft does not add one.
 
 ### 2.2 Social media as a record of electric-vehicle opinion
 
-Ruan and Lv (2022) fit a 20-topic LDA model and compared LIWC, VADER, and AFINN on Reddit through December 2020. The article is in *Communications in Transportation Research*, not Transportation Research Part D. Ruan and Lv (2023) repeat that corpus and add 7,383,327 tweets. Ashby, Weir, and Fussey (2025) use BERTopic and a language model on charging tweets, with manual review of the theme list rather than a double-coded test of document labels. The main text type in the present paper is the submission. Comments were labeled as a second text type and then left out of the discontinuity: the labeled batch is unbalanced around the cutoffs, and most comment stages are unclear. Ruan and Lv's mass is mostly comments, so a comparison of levels is still not like-for-like.
+Ruan and Lv (2022) [@ruan2022reddit] fit a 20-topic LDA model and compared LIWC, VADER, and AFINN on Reddit through December 2020. The article is in *Communications in Transportation Research*, not Transportation Research Part D. Ruan and Lv (2023) [@ruan2023cross] repeat that corpus and add 7,383,327 tweets. Ashby, Weir, and Fussey (2025) [@ashby2025charging] use BERTopic and a language model on charging tweets, with manual review of the theme list rather than a double-coded test of document labels. The main text type in the present paper is the submission. Comments were labeled as a second text type and then left out of the discontinuity: the labeled batch is unbalanced around the cutoffs, and most comment stages are unclear. Ruan and Lv's mass is mostly comments, so a comparison of levels is still not like-for-like.
 
 ### 2.3 Language models as annotators
 
-Gilardi, Alizadeh, and Kubli (2023) report that zero-shot ChatGPT beat crowd workers by about 25 percentage points on average across four samples (n = 6,183), and they treat validation as part of the method. Yu et al. (2025) double-coded sentiment on 3,188 charging-station reviews (Cohen's κ = 0.81) and problem categories (human κ = 0.71); language-model accuracy on the categories was 0.77 to 0.82. Ha, Marchetto, Dharur, and Asensio (2021) train a transformer on expert-annotated charging reviews. That paper is the template for a supervised classifier after a gold set exists. An accuracy figure for Ha et al. is not repeated here, because it was not re-checked against the publisher page in this project. VADER is named by Ruan and Lv (2022); the primary VADER paper was not opened here. [CITATION NEEDED]
+Gilardi, Alizadeh, and Kubli (2023) [@gilardi2023chatgpt] report that zero-shot ChatGPT beat crowd workers by about 25 percentage points on average across four samples (n = 6,183), and they treat validation as part of the method. Yu et al. (2025) [@yu2025equity] double-coded sentiment on 3,188 charging-station reviews (Cohen's κ = 0.81) and problem categories (human κ = 0.71); language-model accuracy on the categories was 0.77 to 0.82. Ha, Marchetto, Dharur, and Asensio (2021) [@ha2021topic] train a transformer on expert-annotated charging reviews. That paper is the template for a supervised classifier after a gold set exists. An accuracy figure for Ha et al. is not repeated here, because it was not re-checked against the publisher page in this project. VADER, the dictionary named by Ruan and Lv (2022), is Hutto and Gilbert (2014) [@hutto2014vader].
 
-Cohen's kappa, Krippendorff's alpha, and the Rogan-Gladen prevalence correction are the agreement statistics the scoring script computes. The bibliographic entries for those three methods were not opened in this project. [CITATION NEEDED]
+Cohen's kappa is Cohen (1960) [@cohen1960coefficient]. Krippendorff's alpha is the coefficient discussed by Krippendorff (2004) [@krippendorff2004reliability]. The prevalence correction computed by the scoring script is Rogan and Gladen (1978) [@rogan1978prevalence]. Those three entries were checked against the publisher record before they were added.
 
 ### 2.4 Discontinuity in time
 
-Hausman and Rapson (2018), *Annual Review of Resource Economics* 10:533–552, https://doi.org/10.1146/annurev-resource-121517-033306, set out how a regression discontinuity in time differs from a cross-sectional discontinuity: estimation often uses observations far from the cutoff, serial correlation can bias the jump, and a test for sorting around the cutoff is often beside the point. This paper uses that framing. It does not add a second methods citation that has not been opened. The cross-sectional bandwidth literature is [CITATION NEEDED].
+Hausman and Rapson (2018) [@hausman2018rdit], *Annual Review of Resource Economics* 10:533–552, https://doi.org/10.1146/annurev-resource-121517-033306, set out how a regression discontinuity in time differs from a cross-sectional discontinuity: estimation often uses observations far from the cutoff, serial correlation can bias the jump, and a test for sorting around the cutoff is often beside the point. This paper uses that framing. The cross-sectional bandwidth papers used only as that contrast are Imbens and Kalyanaraman (2012) [@imbens2012bandwidth], on a data-driven bandwidth for the local-linear regression-discontinuity estimator, and Calonico, Cattaneo, and Titiunik (2014) [@calonico2014robust], on confidence intervals that depend on the bandwidth. This paper does not use their estimators.
 
 ## 3. Data
 
@@ -372,29 +372,44 @@ English-language Reddit is not the US household population. The enthusiast file 
 3. Run `v2/score_agreement.py` on the two coder files. If the lower bound on aspect kappa is below 0.60, code 200 more posts before any substantive sentence.
 4. Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity. Do not describe a jump as an effect.
 5. Comments v2 has been run. It is a sensitivity, not a new headline. Batch 2 stays unlabeled. Submissions stay the main specification. The checklist is `v2/paper/STATUS.md`.
-6. Resolve every `[CITATION NEEDED]` mark. Do not add a DOI that has not been opened.
+6. Sources that were opened are in `v2/paper/references.bib`. Each one is marked in this draft with its BibTeX key. Do not add a DOI that has not been opened. A claim with no opened source is listed in `v2/paper/STATUS.md`.
 7. Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.
 
 ## References
 
-Ashby, C., Weir, D., and Fussey, P. (2025). Understanding public views on electric vehicle charging: A thematic analysis. *Transportation Research Interdisciplinary Perspectives*, 29, 101325. https://doi.org/10.1016/j.trip.2025.101325
+Ashby, C., Weir, D., and Fussey, P. (2025) [@ashby2025charging]. Understanding public views on electric vehicle charging: A thematic analysis. *Transportation Research Interdisciplinary Perspectives*, 29, 101325. https://doi.org/10.1016/j.trip.2025.101325
 
-Gilardi, F., Alizadeh, M., and Kubli, M. (2023). ChatGPT outperforms crowd workers for text-annotation tasks. *PNAS*, 120(30), e2305016120. https://doi.org/10.1073/pnas.2305016120
+Calonico, S., Cattaneo, M. D., and Titiunik, R. (2014) [@calonico2014robust]. Robust nonparametric confidence intervals for regression-discontinuity designs. *Econometrica*, 82(6), 2295–2326. https://doi.org/10.3982/ECTA11757
 
-Ha, S., Marchetto, D. J., Dharur, S., and Asensio, O. I. (2021). Topic classification of electric vehicle consumer experiences with transformer-based deep learning. *Patterns*, 2, February 2021. https://doi.org/10.1016/j.patter.2020.100195
+Coffman, M., Bernstein, P., and Wee, S. (2017) [@coffman2017revisited]. Electric vehicles revisited: a review of factors that affect adoption. *Transport Reviews*, 37(1), 79–93. https://doi.org/10.1080/01441647.2016.1217282
 
-Hausman, C., and Rapson, D. S. (2018). Regression discontinuity in time: Considerations for empirical applications. *Annual Review of Resource Economics*, 10, 533–552. https://doi.org/10.1146/annurev-resource-121517-033306
+Cohen, J. (1960) [@cohen1960coefficient]. A coefficient of agreement for nominal scales. *Educational and Psychological Measurement*, 20(1), 37–46. https://doi.org/10.1177/001316446002000104
 
-Ruan, T., and Lv, Q. (2022). Public perception of electric vehicles on reddit over the past decade. *Communications in Transportation Research*, 2, 100070. https://doi.org/10.1016/j.commtr.2022.100070
+Egbue, O., and Long, S. (2012) [@egbue2012barriers]. Barriers to widespread adoption of electric vehicles: An analysis of consumer attitudes and perceptions. *Energy Policy*, 48, 717–729. https://doi.org/10.1016/j.enpol.2012.06.009
 
-Ruan, T., and Lv, Q. (2023). Public perception of electric vehicles on Reddit and Twitter: A cross-platform analysis. *Transportation Research Interdisciplinary Perspectives*, 21, 100872. https://doi.org/10.1016/j.trip.2023.100872
+Gilardi, F., Alizadeh, M., and Kubli, M. (2023) [@gilardi2023chatgpt]. ChatGPT outperforms crowd workers for text-annotation tasks. *PNAS*, 120(30), e2305016120. https://doi.org/10.1073/pnas.2305016120
 
-Yu, Q., Que, T., Cushing, L. J., Pierce, G., Shen, K., Kejriwal, M., Yao, Y., and Zhu, Y. (2025). Equity and reliability of public electric vehicle charging stations in the United States. *Nature Communications*. https://doi.org/10.1038/s41467-025-60091-y
+Ha, S., Marchetto, D. J., Dharur, S., and Asensio, O. I. (2021) [@ha2021topic]. Topic classification of electric vehicle consumer experiences with transformer-based deep learning. *Patterns*, 2, February 2021. https://doi.org/10.1016/j.patter.2020.100195
 
-Watchful1. (2026). Subreddit comments/submissions 2005-06 to 2025-12 [Data set]. Academic Torrents. Infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`. The license field on the torrent is empty.
+Hausman, C., and Rapson, D. S. (2018) [@hausman2018rdit]. Regression discontinuity in time: Considerations for empirical applications. *Annual Review of Resource Economics*, 10, 533–552. https://doi.org/10.1146/annurev-resource-121517-033306
+
+Hutto, C., and Gilbert, E. (2014) [@hutto2014vader]. VADER: A parsimonious rule-based model for sentiment analysis of social media text. *Proceedings of the International AAAI Conference on Web and Social Media*, 8(1), 216–225. https://doi.org/10.1609/icwsm.v8i1.14550
+
+Imbens, G., and Kalyanaraman, K. (2012) [@imbens2012bandwidth]. Optimal bandwidth choice for the regression discontinuity estimator. *The Review of Economic Studies*, 79(3), 933–959. https://doi.org/10.1093/restud/rdr043
+
+Krippendorff, K. (2004) [@krippendorff2004reliability]. Reliability in content analysis: Some common misconceptions and recommendations. *Human Communication Research*, 30(3), 411–433. https://doi.org/10.1111/j.1468-2958.2004.tb00738.x
+
+Rezvani, Z., Jansson, J., and Bodin, J. (2015) [@rezvani2015advances]. Advances in consumer electric vehicle adoption research: A review and research agenda. *Transportation Research Part D*, 34, 122–136. https://doi.org/10.1016/j.trd.2014.10.010
+
+Rogan, W. J., and Gladen, B. (1978) [@rogan1978prevalence]. Estimating prevalence from the results of a screening test. *American Journal of Epidemiology*, 107(1), 71–76. https://doi.org/10.1093/oxfordjournals.aje.a112510
+
+Ruan, T., and Lv, Q. (2022) [@ruan2022reddit]. Public perception of electric vehicles on reddit over the past decade. *Communications in Transportation Research*, 2, 100070. https://doi.org/10.1016/j.commtr.2022.100070
+
+Ruan, T., and Lv, Q. (2023) [@ruan2023cross]. Public perception of electric vehicles on Reddit and Twitter: A cross-platform analysis. *Transportation Research Interdisciplinary Perspectives*, 21, 100872. https://doi.org/10.1016/j.trip.2023.100872
+
+Yu, Q., Que, T., Cushing, L. J., Pierce, G., Shen, K., Kejriwal, M., Yao, Y., and Zhu, Y. (2025) [@yu2025equity]. Equity and reliability of public electric vehicle charging stations in the United States. *Nature Communications*, 16. https://doi.org/10.1038/s41467-025-60091-y
+
+Watchful1. (2026) [@watchful1_2026]. Subreddit comments/submissions 2005-06 to 2025-12 [Data set]. Academic Torrents. Infohash `3e3f64dee22dc304cdd2546254ca1f8e8ae542b4`. The license field on the torrent is empty. No DOI.
 
 Event dates, as used in `v2/research_design.md`: Pub. L. 117-169; 26 U.S.C. § 30D; Reuters, 13 January 2023, https://www.reuters.com/business/autos-transportation/tesla-cuts-prices-electric-vehicles-us-market-2023-01-13/; Reuters, 25 May 2023, https://www.reuters.com/business/autos-transportation/tesla-ford-ceos-talk-evs-twitter-forum-2023-05-25/; General Motors news release, 8 June 2023, https://investor.gm.com/news-releases/news-release-details/general-motors-doubles-down-commitment-unified-charging-standard/; Pub. L. 119-21; IRS, https://www.irs.gov/clean-vehicle-tax-credits.
 
-Hutto and Gilbert (2014), Cohen, Krippendorff, Rogan and Gladen, and the cross-sectional regression-discontinuity bandwidth papers: [CITATION NEEDED].
-
-Survey literature on adoption barriers: [CITATION NEEDED].

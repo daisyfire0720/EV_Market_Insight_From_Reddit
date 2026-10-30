@@ -1,0 +1,8 @@
+ryan,awareness,consideration,evaluation,purchase,onboarding,long_term_ownership,unclear
+awareness,0,0,0,0,0,0,0
+consideration,0,0,0,0,0,0,1
+evaluation,0,3,0,0,0,0,0
+purchase,0,1,0,2,0,0,1
+onboarding,0,0,0,0,3,0,0
+long_term_ownership,0,1,1,0,3,1,3
+unclear,11,3,4,1,0,0,11

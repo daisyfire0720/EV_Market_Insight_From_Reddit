@@ -1,0 +1,51 @@
+id,audience,subreddit,title,ryan_stage,qwen14b_stage,small_stage,ryan_families,qwen14b_families,ryan_stance,qwen14b_stance,ryan_note_zh,stage_agree,families_agree
+1au0rnt,enthusiast,Rivian,Review: TuxMats floor mats for R1S,long_term_ownership,unclear,evaluation,reliability_service,,no_stance,no_stance,评价脚垫,False,False
+zray8q,enthusiast,Ioniq5,Owners with hitches installed: what do you have and how do you like it?,long_term_ownership,consideration,evaluation,cost_incentives|reliability_service,purchase_selection|reliability_service,no_stance,no_stance,比较电车拖车钩,False,False
+nb5x7x,enthusiast,teslamotors,Can I put 500 Doge down In Lieu of Cash?,purchase,unclear,evaluation,cost_incentives,,no_stance,no_stance,500个狗狗币替代现金支,False,False
+2wlzhq,enthusiast,electricvehicles,Does anybody on this subreddit work in the EV industry?,unclear,awareness,awareness,,policy_market,no_stance,no_stance,招募电动车行业从业者回答约10个问题,False,False
+59kl9n,enthusiast,electricvehicles,"Airbus skunk works developing single-seat autonomous aircraft (electric propulsion, aiming for working prototype by 2020)",unclear,unclear,awareness,,,no_stance,no_stance,空客单座自主电动飞行器。,True,True
+13q5guz,enthusiast,evcharging,"Analysis Paralysis - Ioniq 6, garage, solar panels, which home charger?",onboarding,onboarding,ownership,charging_energy,charging_energy,support,no_stance,刚买车 家用充有关,True,True
+v2pjjn,enthusiast,electricvehicles,Cash Flow Analysis?,evaluation,consideration,purchase,cost_incentives|transition_narratives,purchase_selection|cost_incentives,support,support,想要卖掉两辆truck买kia 电动车,False,False
+144ciqv,enthusiast,BoltEV,"Bolt ""EV pool""?",purchase,consideration,purchase,dealer_access,purchase_selection|dealer_access,support,no_stance,订车 有后续更新,False,False
+1ntjzjx,enthusiast,BoltEV,A 2018 Bolt. Feels too good to be true,evaluation,consideration,ownership,purchase_selection|battery_range|cost_incentives|reliability_service,purchase_selection|reliability_service,support,mixed,二手车值得购买,False,False
+1fm5p99,enthusiast,Rivian,Shout out to Brooklyn Service Center ,long_term_ownership,onboarding,ownership,reliability_service,reliability_service,no_stance,support,赞美售后服务,False,True
+1fo778b,enthusiast,KiaEV6,Ambient light ,consideration,unclear,consideration,purchase_selection,,no_stance,no_stance,比较两个型号,False,False
+1iedzdy,enthusiast,Rivian,Charging w/Solar?,long_term_ownership,evaluation,consideration,charging_energy,charging_energy,no_stance,no_stance,有关太阳能发电充电/probably has it already？,False,True
+109vpyq,enthusiast,electricvehicles,Jaguar I-Pace catches fire in Norway while charging.,unclear,evaluation,ownership,charging_energy|reliability_service,reliability_service,no_stance,oppose,新闻 电动车起火,False,False
+wo65ec,enthusiast,Rivian,"Seen on Instagram, does anyone have any additional information on this, or even if it’s real honestly.",unclear,awareness,unclear,,,no_stance,no_stance,内容缺失 无法判断任何,False,True
+1nsmyn1,enthusiast,Rivian,iOS App Battery usage changed?,long_term_ownership,unclear,unclear,reliability_service,,no_stance,no_stance,ios相关软件问题,False,False
+sqz3f4,shopper,cars,Can we talk about mod bias with relation to the Ioniq 5 dealer markup thread posted earlier?,unclear,unclear,evaluation,cost_incentives|dealer_access,,no_stance,no_stance,论坛管理about dealer加价,True,False
+164nx33,shopper,cars,"(Doug Demuro) 2023 Hyundai Ioniq 6 Full Review: Cool, Quirky, and Under $50,000",unclear,consideration,evaluation,cost_incentives,purchase_selection,no_stance,support,分享评测,False,False
+qru24x,shopper,cars,"Subaru reveals the Solterra SUV, its first electric vehicle",unclear,awareness,awareness,policy_market,purchase_selection,no_stance,no_stance,产品发布新闻,False,False
+an3amx,shopper,cars,"Anyone heard of Jet Industries, Inc electric car company from Detroit?",unclear,awareness,awareness,policy_market,purchase_selection|transition_narratives,no_stance,no_stance,研究电车历史,False,False
+5vc0ev,shopper,cars,Picked up my dream car at the dealership last night!,unclear,purchase,ownership,,purchase_selection,no_stance,support,似乎是油车,False,False
+1ndnzoi,shopper,cars,BMW M240 Review after 1 year + Why I moved to a Tesla Model 3,long_term_ownership,long_term_ownership,ownership,reliability_service|transition_narratives,reliability_service|transition_narratives,support,support,从油车换电车 喜爱电车,True,True
+tm7tlb,shopper,cars,Polestar 2 Single Motor Begins Selling in USA for as low as 33K*,unclear,consideration,purchase,battery_range|cost_incentives|policy_market,purchase_selection|cost_incentives,support,support,认为车价格好 似乎有倾向,False,False
+1jcmvdp,shopper,carbuying,Classic Bate and Switch from Dealer,purchase,purchase,ownership,cost_incentives|dealer_access|transition_narratives,dealer_access,no_stance,oppose,抱怨dealer,True,False
+69bal4,shopper,cars,"If you fast charge, Tesla will permanently degrade your car.",unclear,evaluation,ownership,charging_energy|battery_range|reliability_service,battery_range,no_stance,oppose,对tesla政策批评,False,False
+34nvk7,shopper,Autos,Went to the McLaren Open Road Driving Event,unclear,unclear,unclear,,,no_stance,no_stance,超跑驾驶 nothing with EV,True,True
+3sapof,shopper,cars,What is the worst thing a non-car person has said to you?,unclear,unclear,consideration,battery_range|transition_narratives,,oppose,no_stance,似乎对电车竞速等有负面印象,True,False
+moqkht,shopper,cars,"Toyota says electric cars are overrated & believes in Diversity of cars (Hydrogen/Hybrid Cars) and plans to outsell Tesla by having diverse range of cars. Meanwhile Elon is on record said that ""Hydrogen cars are Silly"". Thoughts?",unclear,unclear,consideration,policy_market|transition_narratives,policy_market|transition_narratives,no_stance,mixed,只是讨论企业路线,True,True
+10c5dsv,shopper,cars,Tesla Model S PLAID Owner's Review: Things I Love and Hate!,long_term_ownership,onboarding,ownership,reliability_service,reliability_service,no_stance,mixed,喜爱讨厌未知,False,True
+13meb22,shopper,cars,r/RealTesla on Reddit: Tesla fraudulently charged my card stealing from me and I’m sure this has happened too many others,unclear,unclear,ownership,cost_incentives|reliability_service,,no_stance,no_stance,特斯拉乱扣费 对电车整体印象未知,True,False
+13j9zrf,shopper,cars,Tesla Model 3 Performance Review - Soulless Speed,unclear,evaluation,ownership,,battery_range|reliability_service,no_stance,oppose,model 3 测评 只是说开车没声音,False,False
+1obmzbo,shopper,cars,Future EVs: Every Electric Vehicle Coming Soon,unclear,awareness,consideration,policy_market,purchase_selection,no_stance,no_stance,即将推出的电车清单,False,False
+14uirtn,shopper,cars,Potentially controversial car opinions thread,unclear,unclear,consideration,policy_market,,no_stance,no_stance,质疑lucid 商业策略,True,False
+uxdk19,enthusiast,Ioniq5,Can somebody tell me where the gas tank is? /s,unclear,awareness,unclear,,transition_narratives,no_stance,oppose,开玩笑 油箱在哪,False,False
+tf0lql,shopper,cars,Which electric car segment will sell like hot cakes for whoever makes it first?,unclear,awareness,consideration,purchase_selection|policy_market,purchase_selection,no_stance,no_stance,讨论那种电动车可以热卖,False,False
+8ckw07,shopper,cars,Tesla Model S P100D honors rematch against Dodge Demon in drag battle,unclear,unclear,ownership,,,no_stance,no_stance,特斯拉和油车比赛直线加速,True,True
+35s42k,shopper,Autos,"Tesla Motors Inc. said it will modify its vehicles to fit China’s national charging standards, the latest move by the electric-car maker to boost sales in the world’s largest auto market.",unclear,unclear,ownership,charging_energy|policy_market,charging_energy|policy_market,no_stance,no_stance,新闻 特斯拉适应中国电网规格,True,True
+wp6ssp,enthusiast,Rivian,Rivian RiDE - Easter egg?,unclear,unclear,unclear,reliability_service,,no_stance,no_stance,Rivian RiDE 软件彩蛋 （疑似车主？）,True,False
+4gl64h,shopper,cars,Tesla Model S P90D Ludicrous Proves Tesla Is the New Apple,unclear,awareness,ownership,policy_market,purchase_selection|policy_market,no_stance,support,类比特斯拉为苹果,False,False
+7bwfbb,enthusiast,electricvehicles,Senate Tax bill will keep $7500 EV credit,unclear,consideration,ownership,cost_incentives|policy_market,cost_incentives,no_stance,support,新闻有关7500税收减免,False,False
+mm5678,enthusiast,BoltEV,Ever driven off without the keys?,long_term_ownership,unclear,unclear,reliability_service,,no_stance,no_stance,钥匙落在亲戚家还能开130mile,False,False
+v3bj5w,enthusiast,Ioniq5,Time for a 75mph highway range test!,unclear,evaluation,consideration,battery_range,battery_range,no_stance,no_stance,highway测试 不知道是刚买还是长期有unclear,False,True
+1r67377,enthusiast,teslamotors,Just got a Model 3 Performance. Top things to do / Get,onboarding,onboarding,ownership,reliability_service,reliability_service,support,no_stance,刚买model3 该做什么,True,True
+zdg95b,enthusiast,KiaEV6,Charging failures,long_term_ownership,onboarding,ownership,charging_energy|reliability_service,charging_energy,no_stance,no_stance,charging有问题 似乎长期拥有,False,False
+4hnrf3,shopper,cars,2016 china famous brand DAHE 320 plug-in Vehicles OR 4 wheeler battery electric car with luxury automotive interior and durable quality for sale,unclear,awareness,purchase,dealer_access,purchase_selection,no_stance,no_stance,中国电车销售广告,False,False
+1ej7ve4,shopper,Autos,Tesla Car Shipping in Action | Rapid Auto Shipping,unclear,unclear,ownership,dealer_access,,no_stance,no_stance,商业运输展示,True,False
+8n6b6g,shopper,cars,Dutch RemetzCar unveils Tesla Model S wagon conversion,unclear,awareness,ownership,,purchase_selection,no_stance,no_stance,车型改装新闻,False,False
+1jwfmvp,shopper,cars,"Tesla Cybertruck With 350-Mile Range, Lighter Weight Breaks New Ground",unclear,awareness,ownership,battery_range,purchase_selection|battery_range,no_stance,support,cybertruck新闻,False,False
+a32yh6,shopper,cars,Tesla Getting delivered to Austin,purchase,purchase,ownership,dealer_access,purchase_selection,no_stance,no_stance,tesla运到Austin了 似乎刚买,True,False
+qzw5l6,shopper,cars,Rivian R1S or R1T | Is it worth the roughly $80k,evaluation,consideration,consideration,purchase_selection|cost_incentives,purchase_selection|cost_incentives,no_stance,no_stance,比较两个型号,False,True
+142xr99,enthusiast,electricvehicles,Charger Stuck,onboarding,onboarding,ownership,charging_energy|reliability_service,charging_energy,no_stance,no_stance,新车主 充电桩卡住,True,False

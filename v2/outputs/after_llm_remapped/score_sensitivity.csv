@@ -1,0 +1,2 @@
+status,min_score,n_in,n_kept,n_dropped,n_missing_score
+score_ge_2,2,22825,10538,12287,0

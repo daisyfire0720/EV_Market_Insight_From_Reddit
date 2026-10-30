@@ -1,0 +1,9 @@
+cutoff_id,cutoff,audience,window_days,n_left,n_right,n_cutoff_day,n_outside_window,n_missing_time,n_comments,unbalanced,note
+ira_signing_2022,2022-08-16,enthusiast,180,3097,11213,677,4108,0,19095,True,"Closest-to-cutoff batch 1, not a balanced window."
+ira_signing_2022,2022-08-16,shopper,180,883,4455,246,1392,0,6976,True,"Closest-to-cutoff batch 1, not a balanced window."
+ira_credit_rules_2023,2023-01-01,enthusiast,180,7159,7403,425,4108,0,19095,False,"Closest-to-cutoff batch 1, not a balanced window."
+ira_credit_rules_2023,2023-01-01,shopper,180,2973,2529,82,1392,0,6976,False,"Closest-to-cutoff batch 1, not a balanced window."
+tesla_price_cut_2023,2023-01-13,enthusiast,180,12022,1470,1495,4108,0,19095,True,"Closest-to-cutoff batch 1, not a balanced window."
+tesla_price_cut_2023,2023-01-13,shopper,180,4714,646,224,1392,0,6976,True,"Closest-to-cutoff batch 1, not a balanced window."
+credit_end_2025,2025-09-30,enthusiast,180,2292,979,837,14987,0,19095,True,"Closest-to-cutoff batch 1, not a balanced window."
+credit_end_2025,2025-09-30,shopper,180,578,567,247,5584,0,6976,False,"Closest-to-cutoff batch 1, not a balanced window."

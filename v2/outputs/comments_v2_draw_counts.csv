@@ -1,0 +1,9 @@
+cutoff_id,cutoff,audience,cap,n_candidates_left,n_candidates_right,n_usable_left,n_usable_right,n_drawn_per_side,trimmed_to_short_side,validated
+ira_signing_2022,2022-08-16,enthusiast,500,38490,15902,788,797,500,False,False
+ira_signing_2022,2022-08-16,shopper,500,19644,10832,732,769,500,False,False
+ira_credit_rules_2023,2023-01-01,enthusiast,500,25881,2446,783,796,500,False,False
+ira_credit_rules_2023,2023-01-01,shopper,500,11974,1656,771,753,500,False,False
+tesla_price_cut_2023,2023-01-13,enthusiast,500,4611,32602,770,788,500,False,False
+tesla_price_cut_2023,2023-01-13,shopper,500,1375,19875,778,760,500,False,False
+credit_end_2025,2025-09-30,enthusiast,500,23141,15138,792,796,500,False,False
+credit_end_2025,2025-09-30,shopper,500,10555,11278,775,776,500,False,False

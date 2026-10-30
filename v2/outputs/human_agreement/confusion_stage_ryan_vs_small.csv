@@ -1,0 +1,6 @@
+ryan,awareness,consideration,evaluation,ownership,purchase,unclear
+consideration,0,1,0,0,0,0
+evaluation,0,1,0,1,1,0
+ownership,0,1,2,7,0,2
+purchase,0,0,1,2,1,0
+unclear,4,6,2,12,2,4

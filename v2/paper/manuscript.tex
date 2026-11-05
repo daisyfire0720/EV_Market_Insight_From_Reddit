@@ -521,6 +521,21 @@ Neither headline jump survives dropping posts with score under 2. The enthusiast
 English-language Reddit is not the US household population. The enthusiast file is a cluster sample of submissions, not the 603,435-post census. The shopper file is keyword-filtered. Comments cover repeat authors and sampled threads in the cutoff windows, not every comment in the census. Arctic Shift does not guarantee that the archive is complete. The Academic Torrents license field is empty. Other news happens on the same days as the four cutoffs, so a jump is not an effect. The 1 January 2023 and 13 January 2023 cutoffs are twelve days apart. The small model cannot split ownership. The 14B model can, and that split is still a model label.
 
 
+\section{Draft journal paragraphs}
+
+The next two paragraphs are drafts of the data-availability and ethics statements a journal may ask for. They have not been checked against a journal style guide. This draft does not set a word limit.
+
+
+\subsection{Data availability}
+
+Only public Reddit posts are used. Enthusiast submission counts come from the Arctic Shift archive. Shopper submissions are taken from the Academic Torrents dumps assembled by Watchful1 (2026) [@watchful1\_2026]. The license field on that item is empty. The dumps are not republished. Full post text and comment bodies stay out of the repository. Committed files are counts, model labels, and hashed author identifiers. Usernames are not in those files. No DOI is given for the dump item.
+
+
+\subsection{Ethics}
+
+Only public posts are used. No attempt is made to identify users. Usernames are hashed before a committed file is written, and a deleted or removed account is stored with an empty hash. The annotation sheet redacts \texttt{u/} mentions. The dumps are not republished. The license field on the Academic Torrents item is empty.
+
+
 \section{10. What remains before submission}
 
 \begin{enumerate}
@@ -530,7 +545,7 @@ English-language Reddit is not the US household population. The enthusiast file 
 \item Keep section 7 labeled as the small-model baseline. Keep the score-at-least-2 tables as the sensitivity. Do not describe a jump as an effect.
 \item Comments v2 has been run. It is a sensitivity, not a new headline. Batch 2 stays unlabeled. Submissions stay the main specification. The checklist is \texttt{v2/paper/STATUS.md}.
 \item Sources that were opened are in \texttt{v2/paper/references.bib}. Each one is marked in this draft with its BibTeX key. Do not add a DOI that has not been opened. A claim with no opened source is listed in \texttt{v2/paper/STATUS.md}.
-\item Write the data-availability and ethics paragraphs the journal asks for: public posts, no attempt to identify users, dumps not republished, license field empty. Check the journal's current author guide for length and reference style. This draft does not guess those limits.
+\item The data-availability and ethics paragraphs are drafted above. Daisy still checks them against the journal's current author guide. This draft does not guess a word limit or a style.
 \end{enumerate}
 
 

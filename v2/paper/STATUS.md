@@ -1,6 +1,6 @@
 # What remains before submission
 
-Updated 30 October 2026, after Ryan's 50 calibration rows were scored. Nothing here is a new label. The codebook, the prompts, and the manuscript results were not changed.
+Updated 5 November 2026. Draft data-availability and ethics paragraphs are in the manuscript. The codebook, the prompts, the labels, the kappa scoring, and the working title were not changed.
 
 The draft is `manuscript.md`. Submissions are the main specification. Comments v2 are a sensitivity in section 8.7. Every model number is unvalidated.
 
@@ -12,7 +12,7 @@ The draft is `manuscript.md`. Submissions are the main specification. Comments v
 
 3. **Citations.** The marks in the draft body are resolved. `references.bib` holds the DOIs checked against Crossref on 30 October 2026: the survey and review papers (Egbue and Long 2012; Rezvani, Jansson, and Bodin 2015; Coffman, Bernstein, and Wee 2017), Hutto and Gilbert 2014, Cohen 1960, Krippendorff 2004, Rogan and Gladen 1978, and the cross-sectional bandwidth papers (Imbens and Kalyanaraman 2012; Calonico, Cattaneo, and Titiunik 2014), plus the sources the draft already named. No `[CITATION NEEDED]` mark remains in `manuscript.md`. One claim was softened instead of cited: a separate paper that isolates an information barrier, as distinct from the knowledge difference in Egbue and Long, was not opened. Do not add a DOI that has not been opened. The alternative title is in `ALT_FRAMING.md` and is not the working title.
 
-4. **Journal paragraphs.** Data availability and ethics are not written: public posts, no attempt to identify users, dumps not republished, Academic Torrents license field empty. The journal's length and reference style have not been checked.
+4. **Journal paragraphs.** Data availability and ethics are drafted in `manuscript.md` (and `manuscript.tex`) under "Draft journal paragraphs." They say that only public Reddit posts are used, that no attempt is made to identify users, that the dumps are not republished, and that the Academic Torrents license field is empty. They still need Daisy's check against the journal's style. This draft does not name a word limit.
 
 ## Framing, for Daisy to decide
 

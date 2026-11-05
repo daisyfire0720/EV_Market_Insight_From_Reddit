@@ -1,0 +1,10 @@
+field,n,percent_agreement,cohen_kappa,n_small_ownership_unsplit,note,validated
+stage_comparable,10631,0.304769071583106,0.10753077055690237,12148,Ownership on the small model is not scored against onboarding or long-term ownership.,False
+incentives_policy,22779,0.9413055884806181,0.3413669043666678,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+price_tco,22779,0.8344527854602923,0.4380182060817031,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+charging_access,22779,0.9433688924008956,0.6898725063393486,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+range,22779,0.9240089556170157,0.4079526830001099,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+battery_reliability,22779,0.8614513367575398,0.203207125025345,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+dealer_friction,22779,0.8886254883884279,0.16881659201375462,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+environment,22779,0.8451644058123711,0.06239207692775707,0,Small-model barrier versus instruction-model aspect. Not a human gold label.,False
+family,0,,,0,The small model has no topic-family field. No family agreement is computed.,False

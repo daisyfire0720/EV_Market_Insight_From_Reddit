@@ -1,0 +1,20 @@
+{
+  "validated": false,
+  "n_windows": 84,
+  "max_posts": 3360,
+  "label_budget_minutes": 90,
+  "n_downloaded": 2887,
+  "n_kept": 2642,
+  "n_appended": 2642,
+  "n_labels_before": 20185,
+  "n_labels_after": 22827,
+  "label_minutes": 17.55,
+  "kept_by_month": {
+    "2021-08": 462,
+    "2022-06": 695,
+    "2022-12": 697,
+    "2024-09": 788
+  },
+  "removed_bot": 0,
+  "removed_short": 245
+}

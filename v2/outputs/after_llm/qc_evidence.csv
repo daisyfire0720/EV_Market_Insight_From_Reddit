@@ -1,0 +1,4 @@
+text_type,n,n_with_evidence,share_empty,verbatim_exact,verbatim_ignoring_punctuation,note
+comment,26088,11472,0.5602575896964122,0.9297419804741981,0.9484832635983264,Share of non-empty evidence strings found in the post text. Exact ignores case and whitespace only.
+submission,22825,14355,0.3710843373493976,0.9526994078718216,0.9609892023685127,Share of non-empty evidence strings found in the post text. Exact ignores case and whitespace only.
+all,48913,25827,0.4719808639829902,0.9425020327564178,0.9554342354899911,Share of non-empty evidence strings found in the post text. Exact ignores case and whitespace only.

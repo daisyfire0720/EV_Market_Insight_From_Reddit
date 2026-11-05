@@ -1,0 +1,15 @@
+audience,stage,k,n,share,validated
+enthusiast,onboarding,1790,5826,0.3072433916924133,False
+enthusiast,unclear,1607,5826,0.27583247511156883,False
+enthusiast,consideration,824,5826,0.1414349467902506,False
+enthusiast,awareness,659,5826,0.11311362856162033,False
+enthusiast,evaluation,650,5826,0.11156882938551321,False
+enthusiast,purchase,183,5826,0.03141091658084449,False
+enthusiast,long_term_ownership,113,5826,0.019395811877789222,False
+shopper,unclear,1992,4691,0.4246429332764869,False
+shopper,awareness,1447,4691,0.3084630142826689,False
+shopper,consideration,605,4691,0.1289703687913025,False
+shopper,evaluation,258,4691,0.054998934129183545,False
+shopper,onboarding,230,4691,0.04903005755702409,False
+shopper,long_term_ownership,108,4691,0.02302280963547218,False
+shopper,purchase,51,4691,0.010871882327861864,False

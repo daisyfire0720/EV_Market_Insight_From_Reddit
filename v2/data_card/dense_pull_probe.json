@@ -1,0 +1,9 @@
+{
+  "union_subreddit_months": 329,
+  "union_posts": 282348,
+  "pages_at_limit_100": 2824,
+  "evcharging_2021_08_posts": 17,
+  "evcharging_2021_08_seconds": 1.64,
+  "evcharging_2021_08_complete": true,
+  "prose": "The full enthusiast window is 12 months before each shock through 6 months after. The union of those windows is 329 subreddit-months and 282,348 submissions in the monthly census. At the search page size of 100, that is about 2,824 requests. A timed request for r/evcharging in August 2021 returned 17 posts in 1.64 seconds and was the whole month. At that pace the transfer is on the order of 1.3 hours. Labeling 282,348 posts at the earlier CPU rate of about 140 posts a minute is about 34 hours. The full window was not downloaded and was not labeled. The IRA year-ago cell in the week sample is still the 23-post cell in the Framing A table. What was checked this round is the census total and one complete small month (r/evcharging, August 2021)."
+}

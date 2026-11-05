@@ -1,0 +1,2 @@
+model_plan,n_submissions,n_comments,n_priority,slots_14b,slots_7b,n_batch1,n_batch2,plan_hours_submissions,hours_submissions_plus_batch1,hours_14b_slow_batch1,hours_7b_slow_batch1,hours_14b_slow_all_comments,validated
+7b,22827,250794,189179,1630,26088,26088,224706,14.0,30.0,60.0,30.0,335.63,False

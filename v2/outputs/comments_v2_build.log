@@ -1,0 +1,152 @@
+comment meta 250794 candidates in windows 245400
+body backfill wanted 10331 missing 10331
+  bodies 100/10331
+  bodies 200/10331
+  bodies 300/10331
+  bodies 400/10331
+  bodies 500/10331
+  bodies 600/10331
+  bodies 700/10331
+  bodies 800/10331
+  bodies 900/10331
+  bodies 1000/10331
+  bodies 1100/10331
+  bodies 1200/10331
+  bodies 1300/10331
+  bodies 1400/10331
+  bodies 1500/10331
+  bodies 1600/10331
+  bodies 1700/10331
+  bodies 1800/10331
+  bodies 1900/10331
+  bodies 2000/10331
+  bodies 2100/10331
+  bodies 2200/10331
+  bodies 2300/10331
+  bodies 2400/10331
+  bodies 2500/10331
+  bodies 2600/10331
+  bodies 2700/10331
+  bodies 2800/10331
+  bodies 2900/10331
+  bodies 3000/10331
+  bodies 3100/10331
+  bodies 3200/10331
+  bodies 3300/10331
+  bodies 3400/10331
+  bodies 3500/10331
+  bodies 3600/10331
+  bodies 3700/10331
+  bodies 3800/10331
+  bodies 3900/10331
+  bodies 4000/10331
+  bodies 4100/10331
+  bodies 4200/10331
+  bodies 4300/10331
+  bodies 4400/10331
+  bodies 4500/10331
+  bodies 4600/10331
+  bodies 4700/10331
+  bodies 4800/10331
+  bodies 4900/10331
+  bodies 5000/10331
+  bodies 5100/10331
+  bodies 5200/10331
+  bodies 5300/10331
+  bodies 5400/10331
+  bodies 5500/10331
+  bodies 5600/10331
+  bodies 5700/10331
+  bodies 5800/10331
+  bodies 5900/10331
+  bodies 6000/10331
+  bodies 6100/10331
+  bodies 6200/10331
+  bodies 6300/10331
+  bodies 6400/10331
+  bodies 6500/10331
+  bodies 6600/10331
+  bodies 6700/10331
+  bodies 6800/10331
+  bodies 6900/10331
+  bodies 7000/10331
+  bodies 7100/10331
+  bodies 7200/10331
+  bodies 7300/10331
+  bodies 7400/10331
+  bodies 7500/10331
+  bodies 7600/10331
+  bodies 7700/10331
+  bodies 7800/10331
+  bodies 7900/10331
+  bodies 8000/10331
+  bodies 8100/10331
+  bodies 8200/10331
+  bodies 8300/10331
+  bodies 8400/10331
+  bodies 8500/10331
+  bodies 8600/10331
+  bodies 8700/10331
+  bodies 8800/10331
+  bodies 8900/10331
+  bodies 9000/10331
+  bodies 9100/10331
+  bodies 9200/10331
+  bodies 9300/10331
+  bodies 9400/10331
+  bodies 9500/10331
+  bodies 9600/10331
+  bodies 9700/10331
+  bodies 9800/10331
+  bodies 9900/10331
+  bodies 10000/10331
+  bodies 10100/10331
+  bodies 10200/10331
+  bodies 10300/10331
+  bodies 10331/10331
+bodies filled 10331
+prefix 800: drawn 8000; cells short of what candidates allow 0
+parent fetch wanted 3108 missing 3108
+  parents 100/3108
+  parents 200/3108
+  parents 300/3108
+  parents 400/3108
+  parents 500/3108
+  parents 600/3108
+  parents 700/3108
+  parents 800/3108
+  parents 900/3108
+  parents 1000/3108
+  parents 1100/3108
+  parents 1200/3108
+  parents 1300/3108
+  parents 1400/3108
+  parents 1500/3108
+  parents 1600/3108
+  parents 1700/3108
+  parents 1800/3108
+  parents 1900/3108
+  parents 2000/3108
+  parents 2100/3108
+  parents 2200/3108
+  parents 2300/3108
+  parents 2400/3108
+  parents 2500/3108
+  parents 2600/3108
+  parents 2700/3108
+  parents 2800/3108
+  parents 2900/3108
+  parents 3000/3108
+  parents 3100/3108
+  parents 3108/3108
+wrote C:\Users\Daisy\Downloads\Research\EV Reddit\v2_branch\v2\data\raw\comments_v2_posts.csv rows=8000
+parent source: {'label_posts': 4010, 'archive': 3988, 'missing': 2}
+            cutoff_id   audience  n_candidates_left  n_candidates_right  n_usable_left  n_usable_right  n_drawn_per_side
+     ira_signing_2022 enthusiast              38490               15902            788             797               500
+     ira_signing_2022    shopper              19644               10832            732             769               500
+ira_credit_rules_2023 enthusiast              25881                2446            783             796               500
+ira_credit_rules_2023    shopper              11974                1656            771             753               500
+ tesla_price_cut_2023 enthusiast               4611               32602            770             788               500
+ tesla_price_cut_2023    shopper               1375               19875            778             760               500
+      credit_end_2025 enthusiast              23141               15138            792             796               500
+      credit_end_2025    shopper              10555               11278            775             776               500

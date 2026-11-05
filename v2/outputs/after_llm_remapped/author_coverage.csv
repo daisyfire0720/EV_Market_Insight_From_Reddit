@@ -1,0 +1,4 @@
+audience,n_posts,n_authors,n_repeat_authors,n_posts_from_repeat_authors,share_posts_from_repeat_authors,max_posts_per_author,median_posts_per_author
+all,19780,13902,2392,8270,0.41809908998988876,91,1.0
+enthusiast,8488,6680,957,2765,0.3257540056550424,79,1.0
+shopper,11292,7432,1404,5264,0.46617074034714845,91,1.0

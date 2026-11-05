@@ -1,0 +1,1 @@
+13rktx5: model returned non-codebook JSON 3 times (deterministic decoding); exact duplicate title/text of 13rkt8q, which labeled fine. Excluded from merge on 2026-10-25.

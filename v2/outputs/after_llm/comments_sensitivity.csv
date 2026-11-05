@@ -1,0 +1,11 @@
+item,value
+n_comment_rows,26088
+n_kept_comment,26071
+n_dropped_comment,17
+n_audience_parent_link,10714
+n_audience_subreddit,15357
+n_no_audience,0
+rdit_usable,False
+main_specification,submissions
+note,"Batch-1 comments were selected by closeness to a cutoff, so the two sides are not a balanced window. This sensitivity is not usable for RDiT unless the sample is rebalanced. The main specification remains submissions only."
+n_unbalanced_cutoff_audiences,5

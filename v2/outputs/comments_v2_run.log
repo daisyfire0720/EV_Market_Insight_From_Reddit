@@ -1,0 +1,209 @@
+2026-10-28 11:22:07 === run_comments_v2.ps1 started pid=15388 ===
+2026-10-28 11:22:07 START comments_v2 (attempt 1)
+2026-10-28 11:22:07 resume: 50 already labeled, 7950 this session, 8000 ids in this file
+2026-10-28 11:22:48 progress 100/8000 new=50 elapsed=0h00m40s eta=1h47m45s
+2026-10-28 11:24:16 progress 200/8000 new=150 elapsed=0h02m08s eta=1h51m31s
+2026-10-28 11:24:32 unknown codes flagged for ihw4rvn: family:environment
+2026-10-28 11:24:34 unknown codes flagged for i16h550: aspect:performance
+2026-10-28 11:25:17 unknown codes flagged for nkw6ma1: aspect:performance
+2026-10-28 11:25:42 progress 300/8000 new=250 elapsed=0h03m34s eta=1h50m15s
+2026-10-28 11:27:07 progress 400/8000 new=350 elapsed=0h05m00s eta=1h48m39s
+2026-10-28 11:27:38 unknown codes flagged for j3zjhqq: family:environment
+2026-10-28 11:27:57 unknown codes flagged for ilvhyol: family:environment
+2026-10-28 11:28:32 progress 500/8000 new=450 elapsed=0h06m24s eta=1h46m45s
+2026-10-28 11:29:58 progress 600/8000 new=550 elapsed=0h07m50s eta=1h45m30s
+2026-10-28 11:30:16 unknown codes flagged for isyqc38: family:environment
+2026-10-28 11:31:25 progress 700/8000 new=650 elapsed=0h09m18s eta=1h44m27s
+2026-10-28 11:31:59 unknown codes flagged for inxoeog: aspect:dealer_access
+2026-10-28 11:32:53 progress 800/8000 new=750 elapsed=0h10m45s eta=1h43m17s
+2026-10-28 11:34:16 progress 900/8000 new=850 elapsed=0h12m08s eta=1h41m24s
+2026-10-28 11:34:20 unknown codes flagged for mmyqx3a: aspect:reliability_service
+2026-10-28 11:35:39 unknown codes flagged for it755dh: aspect:reliability_service
+2026-10-28 11:35:44 progress 1000/8000 new=950 elapsed=0h13m36s eta=1h40m17s
+2026-10-28 11:37:11 progress 1100/8000 new=1050 elapsed=0h15m03s eta=1h38m57s
+2026-10-28 11:38:35 progress 1200/8000 new=1150 elapsed=0h16m27s eta=1h37m21s
+2026-10-28 11:40:01 unknown codes flagged for j3zfd2f: family:environment
+2026-10-28 11:40:03 progress 1300/8000 new=1250 elapsed=0h17m55s eta=1h36m04s
+2026-10-28 11:41:26 progress 1400/8000 new=1350 elapsed=0h19m19s eta=1h34m27s
+2026-10-28 11:42:42 unknown codes flagged for j3zdueu: family:environment
+2026-10-28 11:42:44 unknown codes flagged for ng11bps: aspect:reliability_service
+2026-10-28 11:42:50 progress 1500/8000 new=1450 elapsed=0h20m42s eta=1h32m50s
+2026-10-28 11:42:54 unknown codes flagged for j24r6cl: aspect:supply_chain
+2026-10-28 11:43:09 unknown codes flagged for j3x17fu: aspect:cost_incentives
+2026-10-28 11:44:13 progress 1600/8000 new=1550 elapsed=0h22m06s eta=1h31m15s
+2026-10-28 11:44:33 unknown codes flagged for ndzwbj2: aspect:reliability_service
+2026-10-28 11:44:42 unknown codes flagged for j2s5sgh: aspect:cost_incentives
+2026-10-28 11:44:47 unknown codes flagged for ng61bw8: aspect:reliability_service
+2026-10-28 11:45:07 unknown codes flagged for mrb0zv0: family:environment
+2026-10-28 11:45:28 unknown codes flagged for jlg6bvb: aspect:reliability
+2026-10-28 11:45:40 progress 1700/8000 new=1650 elapsed=0h23m32s eta=1h29m53s
+2026-10-28 11:45:45 unknown codes flagged for jpy2e2z: family:environment
+2026-10-28 11:47:04 progress 1800/8000 new=1750 elapsed=0h24m57s eta=1h28m23s
+2026-10-28 11:47:45 unknown codes flagged for npiipuo: family:environment
+2026-10-28 11:48:19 unknown codes flagged for j2ydk58: aspect:reliability_service
+2026-10-28 11:48:28 progress 1900/8000 new=1850 elapsed=0h26m21s eta=1h26m53s
+2026-10-28 11:48:51 unknown codes flagged for j37i79e: family:environment
+2026-10-28 11:49:53 progress 2000/8000 new=1950 elapsed=0h27m45s eta=1h25m24s
+2026-10-28 11:50:42 unknown codes flagged for ilvhlrn: family:environment
+2026-10-28 11:50:53 unknown codes flagged for ibzzga0: family:environment
+2026-10-28 11:51:20 progress 2100/8000 new=2050 elapsed=0h29m12s eta=1h24m03s
+2026-10-28 11:51:56 unknown codes flagged for nf379f2: aspect:reliability_service
+2026-10-28 11:52:46 progress 2200/8000 new=2150 elapsed=0h30m39s eta=1h22m41s
+2026-10-28 11:52:48 unknown codes flagged for iw0cy8d: family:environment
+2026-10-28 11:53:24 unknown codes flagged for icdpxw6: aspect:reliability_service
+2026-10-28 11:54:12 progress 2300/8000 new=2250 elapsed=0h32m05s eta=1h21m16s
+2026-10-28 11:55:24 unknown codes flagged for ittetxt: aspect:policy_market
+2026-10-28 11:55:41 progress 2400/8000 new=2350 elapsed=0h33m33s eta=1h19m58s
+2026-10-28 11:57:07 progress 2500/8000 new=2450 elapsed=0h34m59s eta=1h18m33s
+2026-10-28 11:58:37 progress 2600/8000 new=2550 elapsed=0h36m29s eta=1h17m16s
+2026-10-28 11:59:28 unknown codes flagged for myu8fqw: stage:transition_narratives
+2026-10-28 12:00:03 progress 2700/8000 new=2650 elapsed=0h37m56s eta=1h15m52s
+2026-10-28 12:01:27 progress 2800/8000 new=2750 elapsed=0h39m19s eta=1h14m22s
+2026-10-28 12:02:32 unknown codes flagged for j3os13u: aspect:charging_curve
+2026-10-28 12:02:50 progress 2900/8000 new=2850 elapsed=0h40m42s eta=1h12m51s
+2026-10-28 12:04:14 progress 3000/8000 new=2950 elapsed=0h42m07s eta=1h11m23s
+2026-10-28 12:05:39 progress 3100/8000 new=3050 elapsed=0h43m31s eta=1h09m55s
+2026-10-28 12:06:06 unknown codes flagged for iq0eqod: stage:dealer_access
+2026-10-28 12:07:07 progress 3200/8000 new=3150 elapsed=0h44m59s eta=1h08m33s
+2026-10-28 12:07:11 unknown codes flagged for imbsejk: family:environment
+2026-10-28 12:08:11 unknown codes flagged for ni7a0oe: aspect:reliability_service
+2026-10-28 12:08:22 unknown codes flagged for iqefp4q: family:environment
+2026-10-28 12:08:30 progress 3300/8000 new=3250 elapsed=0h46m23s eta=1h07m04s
+2026-10-28 12:09:12 unknown codes flagged for jgh9lrm: stage:dealer_access
+2026-10-28 12:09:56 progress 3400/8000 new=3350 elapsed=0h47m48s eta=1h05m39s
+2026-10-28 12:11:24 progress 3500/8000 new=3450 elapsed=0h49m16s eta=1h04m16s
+2026-10-28 12:12:45 progress 3600/8000 new=3550 elapsed=0h50m38s eta=1h02m45s
+2026-10-28 12:14:08 progress 3700/8000 new=3650 elapsed=0h52m00s eta=1h01m16s
+2026-10-28 12:14:56 unknown codes flagged for j2od8xl: stage:cost_incentives
+2026-10-28 12:15:06 unknown codes flagged for iq4wmk8: aspect:reliability_service
+2026-10-28 12:15:18 unknown codes flagged for ii2o5mh: family:environment
+2026-10-28 12:15:32 progress 3800/8000 new=3750 elapsed=0h53m25s eta=0h59m49s
+2026-10-28 12:16:35 unknown codes flagged for j3432lb: aspect:reliability_service
+2026-10-28 12:16:59 progress 3900/8000 new=3850 elapsed=0h54m51s eta=0h58m25s
+2026-10-28 12:18:18 unknown codes flagged for j12n4b7: family:environment
+2026-10-28 12:18:28 progress 4000/8000 new=3950 elapsed=0h56m20s eta=0h57m03s
+2026-10-28 12:19:39 unknown codes flagged for i0kezhk: aspect:reliability
+2026-10-28 12:19:57 progress 4100/8000 new=4050 elapsed=0h57m49s eta=0h55m41s
+2026-10-28 12:21:17 unknown codes flagged for j3z8wsm: family:environment
+2026-10-28 12:21:22 progress 4200/8000 new=4150 elapsed=0h59m15s eta=0h54m15s
+2026-10-28 12:21:31 unknown codes flagged for ja8bl06: aspect:cost_incentives
+2026-10-28 12:22:47 progress 4300/8000 new=4250 elapsed=1h00m39s eta=0h52m48s
+2026-10-28 12:22:53 unknown codes flagged for jgv2fll: family:environment
+2026-10-28 12:23:36 unknown codes flagged for j2rttvi: aspect:weight
+2026-10-28 12:24:13 progress 4400/8000 new=4350 elapsed=1h02m06s eta=0h51m23s
+2026-10-28 12:24:34 unknown codes flagged for j2sdcq2: family:environment
+2026-10-28 12:25:43 progress 4500/8000 new=4450 elapsed=1h03m35s eta=0h50m01s
+2026-10-28 12:27:01 unknown codes flagged for iwv8csv: family:environment
+2026-10-28 12:27:11 progress 4600/8000 new=4550 elapsed=1h05m03s eta=0h48m37s
+2026-10-28 12:27:53 unknown codes flagged for iyhigjs: aspect:cost_incentives
+2026-10-28 12:27:54 unknown codes flagged for j3x7f68: family:environment
+2026-10-28 12:28:40 progress 4700/8000 new=4650 elapsed=1h06m33s eta=0h47m14s
+2026-10-28 12:30:08 progress 4800/8000 new=4750 elapsed=1h08m00s eta=0h45m49s
+2026-10-28 12:31:31 progress 4900/8000 new=4850 elapsed=1h09m23s eta=0h44m21s
+2026-10-28 12:32:54 progress 5000/8000 new=4950 elapsed=1h10m47s eta=0h42m53s
+2026-10-28 12:33:38 unknown codes flagged for ilobi39: aspect:cost_incentives
+2026-10-28 12:34:20 progress 5100/8000 new=5050 elapsed=1h12m13s eta=0h41m28s
+2026-10-28 12:34:39 unknown codes flagged for iixcwdh: aspect:reliability_service
+2026-10-28 12:35:09 unknown codes flagged for j3ozbwo: aspect:reliability_service
+2026-10-28 12:35:45 progress 5200/8000 new=5150 elapsed=1h13m38s eta=0h40m02s
+2026-10-28 12:36:58 unknown codes flagged for o171vhm: aspect:reliability_service
+2026-10-28 12:37:10 progress 5300/8000 new=5250 elapsed=1h15m03s eta=0h38m35s
+2026-10-28 12:37:44 unknown codes flagged for i7oijwa: aspect:cost_incentives
+2026-10-28 12:38:35 progress 5400/8000 new=5350 elapsed=1h16m27s eta=0h37m09s
+2026-10-28 12:40:00 progress 5500/8000 new=5450 elapsed=1h17m53s eta=0h35m43s
+2026-10-28 12:41:26 progress 5600/8000 new=5550 elapsed=1h19m19s eta=0h34m18s
+2026-10-28 12:42:13 unknown codes flagged for o4poyiy: aspect:reliability_service
+2026-10-28 12:42:53 progress 5700/8000 new=5650 elapsed=1h20m45s eta=0h32m52s
+2026-10-28 12:44:17 progress 5800/8000 new=5750 elapsed=1h22m10s eta=0h31m26s
+2026-10-28 12:45:05 unknown codes flagged for j3txy44: stage:dealer_access
+2026-10-28 12:45:11 unknown codes flagged for jheayur: aspect:configuration
+2026-10-28 12:45:46 progress 5900/8000 new=5850 elapsed=1h23m38s eta=0h30m01s
+2026-10-28 12:45:59 unknown codes flagged for ilmxtqy: family:environment
+2026-10-28 12:46:50 unknown codes flagged for mx4xeku: aspect:cost_incentives
+2026-10-28 12:47:11 progress 6000/8000 new=5950 elapsed=1h25m04s eta=0h28m35s
+2026-10-28 12:47:28 unknown codes flagged for iy47ua2: aspect:reliability_service
+2026-10-28 12:48:38 progress 6100/8000 new=6050 elapsed=1h26m30s eta=0h27m10s
+2026-10-28 12:50:05 progress 6200/8000 new=6150 elapsed=1h27m57s eta=0h25m44s
+2026-10-28 12:51:29 progress 6300/8000 new=6250 elapsed=1h29m22s eta=0h24m18s
+2026-10-28 12:52:54 progress 6400/8000 new=6350 elapsed=1h30m47s eta=0h22m52s
+2026-10-28 12:53:25 unknown codes flagged for j41ya8l: family:environment
+2026-10-28 12:54:20 progress 6500/8000 new=6450 elapsed=1h32m13s eta=0h21m26s
+2026-10-28 12:55:46 progress 6600/8000 new=6550 elapsed=1h33m38s eta=0h20m00s
+2026-10-28 12:57:12 progress 6700/8000 new=6650 elapsed=1h35m04s eta=0h18m35s
+2026-10-28 12:58:33 unknown codes flagged for j3vrpft: aspect:dealer_access
+2026-10-28 12:58:36 progress 6800/8000 new=6750 elapsed=1h36m28s eta=0h17m09s
+2026-10-28 13:00:00 progress 6900/8000 new=6850 elapsed=1h37m53s eta=0h15m43s
+2026-10-28 13:01:24 progress 7000/8000 new=6950 elapsed=1h39m17s eta=0h14m17s
+2026-10-28 13:02:48 unknown codes flagged for iz6wva6: family:environment
+2026-10-28 13:02:48 progress 7100/8000 new=7050 elapsed=1h40m41s eta=0h12m51s
+2026-10-28 13:04:11 progress 7200/8000 new=7150 elapsed=1h42m04s eta=0h11m25s
+2026-10-28 13:05:40 progress 7300/8000 new=7250 elapsed=1h43m33s eta=0h09m59s
+2026-10-28 13:06:21 unknown codes flagged for jnabh9o: aspect:cost_incentives
+2026-10-28 13:06:54 unknown codes flagged for j34dma6: aspect:reliability_service
+2026-10-28 13:07:07 progress 7400/8000 new=7350 elapsed=1h45m00s eta=0h08m34s
+2026-10-28 13:07:15 unknown codes flagged for jhyvksm: aspect:cost_incentives
+2026-10-28 13:08:21 unknown codes flagged for j3xbm2g: aspect:weight
+2026-10-28 13:08:34 progress 7500/8000 new=7450 elapsed=1h46m26s eta=0h07m08s
+2026-10-28 13:09:58 progress 7600/8000 new=7550 elapsed=1h47m50s eta=0h05m42s
+2026-10-28 13:11:26 progress 7700/8000 new=7650 elapsed=1h49m19s eta=0h04m17s
+2026-10-28 13:12:54 progress 7800/8000 new=7750 elapsed=1h50m47s eta=0h02m51s
+2026-10-28 13:13:27 unknown codes flagged for j32wa2x: family:environment
+2026-10-28 13:14:22 progress 7900/8000 new=7850 elapsed=1h52m14s eta=0h01m25s
+2026-10-28 13:15:48 progress 8000/8000 new=7950 elapsed=1h53m41s eta=0h00m00s
+2026-10-28 13:15:48 wrote outputs\llm_labels_comments_v2.csv rows=8000 model=qwen2.5:14b-instruct version=qwen2.5:14b-instruct
+2026-10-28 13:15:48 END comments_v2 exit=0
+2026-10-28 13:15:48 START merge-validate comments_v2
+2026-10-28 13:15:50 merge failed: expected 8000 labeled 7991 missing 9 extra 0 conflicts 0 invalid 9 repeated_ids 0
+2026-10-28 13:15:50   missing: ['n6ih9cs', 'ixtdkm3', 'ike11jd', 'j3myxej', 'imnx050', 'i9gqjqq', 'ir2wajy', 'iatea23', 'nxzpb2g']
+2026-10-28 13:15:50   invalid: ['llm_labels_comments_v2.jsonl:1343 id ike11jd ok is not true', 'llm_labels_comments_v2.jsonl:1516 id n6ih9cs ok is not true', 'llm_labels_comments_v2.jsonl:5103 id nxzpb2g ok is not true', 'llm_labels_comments_v2.jsonl:5471 id ixtdkm3 ok is not true', 'llm_labels_comments_v2.jsonl:5987 id imnx050 ok is not true', 'llm_labels_comments_v2.jsonl:6528 id ir2wajy ok is not true', 'llm_labels_comments_v2.jsonl:6833 id j3myxej ok is not true', 'llm_labels_comments_v2.jsonl:7311 id iatea23 ok is not true', 'llm_labels_comments_v2.jsonl:7378 id i9gqjqq ok is not true']
+2026-10-28 13:15:50 END merge-validate comments_v2 exit=1
+2026-10-28 13:15:50 START merge-validate submissions+comments_v2
+2026-10-28 13:15:51 merge failed: expected 30825 labeled 30816 missing 9 extra 0 conflicts 0 invalid 9 repeated_ids 0
+2026-10-28 13:15:51   missing: ['nxzpb2g', 'j3myxej', 'ixtdkm3', 'n6ih9cs', 'iatea23', 'imnx050', 'i9gqjqq', 'ike11jd', 'ir2wajy']
+2026-10-28 13:15:51   invalid: ['llm_labels_comments_v2.jsonl:1343 id ike11jd ok is not true', 'llm_labels_comments_v2.jsonl:1516 id n6ih9cs ok is not true', 'llm_labels_comments_v2.jsonl:5103 id nxzpb2g ok is not true', 'llm_labels_comments_v2.jsonl:5471 id ixtdkm3 ok is not true', 'llm_labels_comments_v2.jsonl:5987 id imnx050 ok is not true', 'llm_labels_comments_v2.jsonl:6528 id ir2wajy ok is not true', 'llm_labels_comments_v2.jsonl:6833 id j3myxej ok is not true', 'llm_labels_comments_v2.jsonl:7311 id iatea23 ok is not true', 'llm_labels_comments_v2.jsonl:7378 id i9gqjqq ok is not true']
+2026-10-28 13:15:51 END merge-validate combined exit=1
+2026-10-28 13:15:51 === run_comments_v2.ps1 finished ===
+2026-10-28 13:18:54 === run_comments_v2.ps1 started pid=9832 ===
+2026-10-28 13:18:54 START comments_v2 (attempt 1)
+2026-10-28 13:18:55 resume: 7991 already labeled, 9 this session, 8000 ids in this file
+2026-10-28 13:19:05 progress 8000/8000 new=9 elapsed=0h00m09s eta=0h00m00s
+2026-10-28 13:19:05 wrote outputs\llm_labels_comments_v2.csv rows=8000 model=qwen2.5:14b-instruct version=qwen2.5:14b-instruct
+2026-10-28 13:19:05 END comments_v2 exit=0
+2026-10-28 13:19:05 START merge-validate comments_v2
+2026-10-28 13:19:05 merge failed: expected 8000 labeled 7993 missing 7 extra 0 conflicts 0 invalid 7 repeated_ids 0
+2026-10-28 13:19:05   missing: ['j3myxej', 'nxzpb2g', 'iatea23', 'i9gqjqq', 'ir2wajy', 'imnx050', 'ike11jd']
+2026-10-28 13:19:05   invalid: ['llm_labels_comments_v2.jsonl:7992 id ike11jd ok is not true', 'llm_labels_comments_v2.jsonl:7994 id nxzpb2g ok is not true', 'llm_labels_comments_v2.jsonl:7996 id imnx050 ok is not true', 'llm_labels_comments_v2.jsonl:7997 id ir2wajy ok is not true', 'llm_labels_comments_v2.jsonl:7998 id j3myxej ok is not true', 'llm_labels_comments_v2.jsonl:7999 id iatea23 ok is not true', 'llm_labels_comments_v2.jsonl:8000 id i9gqjqq ok is not true']
+2026-10-28 13:19:05 END merge-validate comments_v2 exit=1
+2026-10-28 13:19:05 START merge-validate submissions+comments_v2
+2026-10-28 13:19:06 merge failed: expected 30825 labeled 30818 missing 7 extra 0 conflicts 0 invalid 7 repeated_ids 0
+2026-10-28 13:19:06   missing: ['i9gqjqq', 'ir2wajy', 'iatea23', 'imnx050', 'ike11jd', 'nxzpb2g', 'j3myxej']
+2026-10-28 13:19:06   invalid: ['llm_labels_comments_v2.jsonl:7992 id ike11jd ok is not true', 'llm_labels_comments_v2.jsonl:7994 id nxzpb2g ok is not true', 'llm_labels_comments_v2.jsonl:7996 id imnx050 ok is not true', 'llm_labels_comments_v2.jsonl:7997 id ir2wajy ok is not true', 'llm_labels_comments_v2.jsonl:7998 id j3myxej ok is not true', 'llm_labels_comments_v2.jsonl:7999 id iatea23 ok is not true', 'llm_labels_comments_v2.jsonl:8000 id i9gqjqq ok is not true']
+2026-10-28 13:19:06 END merge-validate combined exit=1
+2026-10-28 13:19:06 === run_comments_v2.ps1 finished ===
+2026-10-28 13:20:27 === run_comments_v2.ps1 started pid=14036 ===
+2026-10-28 13:20:28 START comments_v2 (attempt 1)
+2026-10-28 13:20:28 resume: 7993 already labeled, 0 this session, 7993 ids in this file
+2026-10-28 13:20:28 wrote outputs\llm_labels_comments_v2.csv rows=7993 model=qwen2.5:14b-instruct version=qwen2.5:14b-instruct
+2026-10-28 13:20:28 END comments_v2 exit=0
+2026-10-28 13:20:28 START merge-validate comments_v2
+2026-10-28 13:20:29 merge ok: expected 7993 labeled 7993 missing 0 extra 0 conflicts 0 invalid 0 repeated_ids 0
+2026-10-28 13:20:29 wrote outputs\llm_labels_comments_v2.csv rows=7993
+2026-10-28 13:20:29 END merge-validate comments_v2 exit=0
+2026-10-28 13:20:29 START merge-validate submissions+comments_v2
+2026-10-28 13:20:30 merge ok: expected 30818 labeled 30818 missing 0 extra 0 conflicts 0 invalid 0 repeated_ids 0
+2026-10-28 13:20:30 wrote data\raw\llm_labels_with_comments_v2.csv rows=30818
+2026-10-28 13:20:30 END merge-validate combined exit=0
+2026-10-28 13:20:30 START run_after_llm comments_v2
+2026-10-28 13:21:54 used 30767 of 30818 rows (bad json 0, unknown stage 51)
+2026-10-28 13:21:54   kept_submission: 22779
+2026-10-28 13:21:54   kept_comment: 7988
+2026-10-28 13:21:54   kept_other: 0
+2026-10-28 13:21:54   not_ok: 0
+2026-10-28 13:21:54   unknown_stage: 51
+2026-10-28 13:21:54   duplicate_id: 0
+2026-10-28 13:21:54   no_submission_meta: 0
+2026-10-28 13:21:54   no_audience: 0
+2026-10-28 13:21:54 comments RDiT usable: True
+2026-10-28 13:21:54 wrote outputs\after_llm_comments_v2
+2026-10-28 13:21:54 END run_after_llm exit=0
+2026-10-28 13:21:54 === run_comments_v2.ps1 finished ===
